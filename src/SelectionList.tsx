@@ -2,7 +2,7 @@ import { Button, IconButton, List, ListItem, ListItemText } from "@mui/material"
 import { Selection } from "./Workspace";
 import Delete from "@mui/icons-material/Delete";
 import { useState } from "react";
-import { AttributeAssignmentDialog } from "./AttributeAssignmentDialog";
+import { E13Editor } from "./E13Editor";
 import { Add, Check, PlusOne } from "@mui/icons-material";
 
 interface SelectionListProps {

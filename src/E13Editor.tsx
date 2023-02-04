@@ -1,13 +1,13 @@
 import { Check } from "@mui/icons-material"
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem, Select, TextField } from "@mui/material"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { v4 } from "uuid"
-import { ObjectEditor } from "./ObjectEditor"
+import { Attr, ObjectEditor } from "./ObjectEditor"
 import { E13, Selection } from "./Workspace"
 
-interface AttributeAssignmentDialogProps {
-    on: Selection
-    setSelection: (newSelection: Selection) => void
+interface E13EditorProps {
+    e13?: E13
+    setE13: (e13: E13) => void
 
     open: boolean
     onClose: () => void
@@ -29,22 +29,25 @@ const properties = [{
     label: 'is a'
 }]
 
-export const AttributeAssignmentDialog = ({ on, setSelection, open, onClose }: AttributeAssignmentDialogProps) => {
+export const E13Editor = ({ e13, setE13, open, onClose }: E13EditorProps) => {
     const [treatise, setTreatise] = useState('nivers1667')
-    const [property, setProperty] = useState('hasCadence')
-    const [object, setObject] = useState<Object>()
-    const [comment, setComment] = useState('')
+    const [property, setProperty] = useState(e13?.property || 'hasCadence')
+    const [attribute, setAttribute] = useState<Attr | undefined>(e13?.attribute)
+    const [comment, setComment] = useState(e13?.comment || '')
+
+    useEffect(() => {
+        if (!open) return
+        setProperty(e13?.property || 'hasCadence')
+        setAttribute(e13?.attribute)
+        setComment(e13?.comment || '')
+    }, [e13, open])
 
     const saveToPod = () => {
-        setSelection({
-            id: on.id,
-            attributes: [...(on.attributes || []), {
-                id: v4(),
-                property,
-                attribute: object,
-                comment
-            }],
-            refs: on.refs
+        setE13({
+            id: v4(),
+            property,
+            attribute,
+            comment
         })
     }
 
@@ -88,8 +91,8 @@ export const AttributeAssignmentDialog = ({ on, setSelection, open, onClose }: A
 
                 <ObjectEditor
                     type={property === 'hasCadence' ? 'cadence' : 'figure'}
-                    object={object}
-                    setObject={setObject} />
+                    object={attribute}
+                    setObject={setAttribute} />
 
                 <br />Comment:
                 <TextField

@@ -1,8 +1,8 @@
 import { Add, Delete, Edit, Save } from "@mui/icons-material"
 import { IconButton, List, ListItem, ListItemText, Paper } from "@mui/material"
 import { useEffect, useState } from "react"
-import { AttributeAssignmentDialog } from "./AttributeAssignmentDialog"
-import { Selection } from "./Workspace"
+import { E13Editor } from "./E13Editor"
+import { E13, Selection } from "./Workspace"
 import Grid2 from '@mui/material/Unstable_Grid2'
 
 interface SelectionEditorProps {
@@ -12,6 +12,7 @@ interface SelectionEditorProps {
 
 export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProps) => {
     const [e13Open, setE13Open] = useState<boolean>(false)
+    const [selectedE13, setSelectedE13] = useState<string>()
 
     useEffect(() => {
         // highlight the current selection in the score 
@@ -60,6 +61,7 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
                                         secondaryAction={
                                             <>
                                             <IconButton onClick={() => {
+                                                setSelectedE13(attribute.id)
                                                 setE13Open(true)
                                             }}>
                                                 <Edit />
@@ -107,9 +109,24 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
                 </Grid2>
             </Paper>
 
-            <AttributeAssignmentDialog
-                on={selection}
-                setSelection={setSelection}
+            <E13Editor
+                e13={selection.attributes.find(attr => attr.id === selectedE13)}
+                setE13={(e13) => {
+                    console.log('updating')
+                    const newAttributes = selection.attributes.slice()
+                    const index = newAttributes.findIndex(attr => attr.id === selectedE13)
+                    if (index === -1) {
+                        newAttributes.push(e13)
+                    }
+                    else {
+                        newAttributes[index] = e13
+                    }
+                    setSelection({
+                        id: selection.id, 
+                        refs: selection.refs,
+                        attributes: newAttributes
+                    })
+                }}
                 open={e13Open}
                 onClose={() => setE13Open(false)} />
         </>

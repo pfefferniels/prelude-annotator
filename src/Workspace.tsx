@@ -6,12 +6,12 @@ import { SelectionList } from "./SelectionList"
 import Verovio from "./Verovio"
 import { WorkPicker } from "./WorkPicker"
 import Grid2 from '@mui/material/Unstable_Grid2'
-import { Object } from "./ObjectEditor"
+import { Attr } from "./ObjectEditor"
 
 export interface E13 {
     id: string
     property: string
-    attribute?: Object
+    attribute?: Attr
     comment: string
 }
 
