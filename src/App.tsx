@@ -1,25 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { LoginButton, SessionProvider } from '@inrupt/solid-ui-react';
+import { Workspace } from './Workspace';
+import { WorkPicker } from './WorkPicker';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <SessionProvider sessionId="prelude-annotator">
+      <div className="App">
+        <header className="App-header">
+          <LoginButton
+            oidcIssuer="https://inrupt.net"
+            redirectUrl="https://localhost:3000/"
+          />
+        </header>
+        <Workspace />
+      </div>
+    </SessionProvider>
   );
 }
 
