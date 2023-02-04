@@ -1,9 +1,12 @@
-import { Check } from "@mui/icons-material"
+import { buildThing, createThing, saveSolidDatasetAt, setThing } from "@inrupt/solid-client"
+import { useDataset, useSession } from "@inrupt/solid-ui-react"
+import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem, Select, TextField } from "@mui/material"
 import { useEffect, useState } from "react"
 import { v4 } from "uuid"
+import { crm, dcterms } from "./namespaces"
 import { Attr, ObjectEditor } from "./ObjectEditor"
-import { E13, Selection } from "./Workspace"
+import { E13 } from "./Workspace"
 
 interface E13EditorProps {
     e13?: E13
@@ -14,13 +17,13 @@ interface E13EditorProps {
 }
 
 const treatises = [{
-    uri: '...',
+    uri: 'http://raw.github.com/nivers.ttl',
     name: 'nivers1667',
     label: 'Nivers, Traité de la composition, Paris 1667'
 }]
 
 const properties = [{
-    uri: 'example.org/hasCadence',
+    uri: 'http://example.org/hasCadence',
     name: 'hasCadence',
     label: 'has cadence'
 }, {
@@ -30,6 +33,9 @@ const properties = [{
 }]
 
 export const E13Editor = ({ e13, setE13, open, onClose }: E13EditorProps) => {
+    const { dataset } = useDataset()
+    const { session } = useSession()
+
     const [treatise, setTreatise] = useState('nivers1667')
     const [property, setProperty] = useState(e13?.property || 'hasCadence')
     const [attribute, setAttribute] = useState<Attr | undefined>(e13?.attribute)
@@ -43,12 +49,32 @@ export const E13Editor = ({ e13, setE13, open, onClose }: E13EditorProps) => {
     }, [e13, open])
 
     const saveToPod = () => {
+        const id = v4()
+
         setE13({
-            id: v4(),
+            id: id,
             property,
             attribute,
             comment
         })
+
+        const e13Thing = buildThing(createThing())
+            .addUrl(RDF.type, crm('F13_Attribute_Assignment'))
+            .addStringNoLocale(RDFS.label, id)
+            .addDate(dcterms('created'), new Date(Date.now()))
+            .addStringNoLocale(crm('P33_used_specific_technique'), treatises.find(t => t.name === treatise)?.uri || 'http://unknown')
+            .addUrl(crm('P14_carried_out_by'), session.info.webId || 'http://unknown')
+            .addUrl(crm('P177_assigned_property_of_type'), properties.find(p => p.name === property)?.uri || 'http://unknown')
+            .addStringNoLocale(crm('P3_has_note'), comment)
+            .build();
+
+        if (!dataset) {
+            console.warn('No dataset found to save the new work to.');
+            return;
+        }
+
+        const modifiedDataset = setThing(dataset, e13Thing);
+        saveSolidDatasetAt('https://pfefferniels.inrupt.net/notes/test.ttl', modifiedDataset, { fetch: session.fetch as any });
     }
 
     return (
