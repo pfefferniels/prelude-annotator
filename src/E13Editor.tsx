@@ -74,7 +74,7 @@ export const E13Editor = ({ e13, setE13, open, onClose }: E13EditorProps) => {
         }
 
         const modifiedDataset = setThing(dataset, e13Thing);
-        saveSolidDatasetAt('https://pfefferniels.inrupt.net/notes/test.ttl', modifiedDataset, { fetch: session.fetch as any });
+        saveSolidDatasetAt('https://pfefferniels.inrupt.net/preludes/works.ttl', modifiedDataset, { fetch: session.fetch as any });
     }
 
     return (

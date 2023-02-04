@@ -55,7 +55,7 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
                     <Grid2 xs={6}>
                         Contains the following E13 Attribute Assignments
                         <List>
-                            {selection.attributes.map(attribute => {
+                            {selection.attributes.map((attribute, i) => {
                                 return (
                                     <ListItem
                                         secondaryAction={
@@ -66,7 +66,14 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
                                             }}>
                                                 <Edit />
                                             </IconButton>
-                                            <IconButton>
+                                            <IconButton onClick={() => {
+                                                selection.attributes.splice(i, 1)
+                                                setSelection({
+                                                    id: selection.id,
+                                                    refs: selection.refs,
+                                                    attributes: selection.attributes
+                                                })
+                                            }}>
                                                 <Delete />
                                             </IconButton>
                                             </>

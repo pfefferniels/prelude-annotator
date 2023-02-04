@@ -14,7 +14,7 @@ function App() {
           <LoginForm />
         </header>
 
-        <DatasetProvider datasetUrl={'https://pfefferniels.inrupt.net/notes/test.ttl'}>
+        <DatasetProvider datasetUrl={'https://pfefferniels.inrupt.net/preludes/works.ttl'}>
           <Workspace />
         </DatasetProvider>
       </div>
