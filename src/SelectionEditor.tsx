@@ -1,5 +1,5 @@
 import { Add, Delete, Edit, Save } from "@mui/icons-material"
-import { IconButton, List, ListItem, ListItemText, Paper } from "@mui/material"
+import { IconButton, List, ListItem, ListItemText, Paper, Typography } from "@mui/material"
 import { useEffect, useState } from "react"
 import { E13Editor } from "./E13Editor"
 import { E13, Selection } from "./Workspace"
@@ -54,7 +54,7 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
             .addUrl(crm('P106i_forms_part_of'), workURI)
 
         selection.refs.forEach(ref => {
-            selectionThing.addUrl(crm('P106_is_composed_of'),`${workURI}#${ref}`)
+            selectionThing.addUrl(crm('P106_is_composed_of'), `${workURI}#${ref}`)
         })
 
         // TODO move E13 Builder here
@@ -116,8 +116,8 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                         </List>
                     </Grid2>
                     <Grid2 xs={4}>
-                        Affects the following MEI elements:
                         <Paper>
+                            <Typography>Affects the following MEI elements</Typography>
                             <List>
                                 {selection.refs.map(ref => {
                                     return (

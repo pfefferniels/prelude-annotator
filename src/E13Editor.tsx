@@ -62,7 +62,7 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
         const e13Thing = buildThing(createThing({
             name: id
         }))
-            .addUrl(RDF.type, crm('F13_Attribute_Assignment'))
+            .addUrl(RDF.type, crm('E13_Attribute_Assignment'))
             .addStringNoLocale(RDFS.label, id)
             .addDate(dcterms('created'), new Date(Date.now()))
             .addStringNoLocale(crm('P33_used_specific_technique'), treatises.find(t => t.name === treatise)?.uri || 'http://unknown')
