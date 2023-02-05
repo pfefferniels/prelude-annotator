@@ -4,13 +4,21 @@ import { useEffect, useState } from "react"
 import { E13Editor } from "./E13Editor"
 import { E13, Selection } from "./Workspace"
 import Grid2 from '@mui/material/Unstable_Grid2'
+import { useDataset, useSession } from "@inrupt/solid-ui-react"
+import { buildThing, createThing, setThing, saveSolidDatasetAt } from "@inrupt/solid-client"
+import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
+import { crm, dcterms } from "./namespaces"
 
 interface SelectionEditorProps {
+    workURI: string
     selection: Selection | undefined
     setSelection: (selection: Selection) => void
 }
 
-export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProps) => {
+export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionEditorProps) => {
+    const { dataset } = useDataset()
+    const { session } = useSession()
+
     const [e13Open, setE13Open] = useState<boolean>(false)
     const [selectedE13, setSelectedE13] = useState<string>()
 
@@ -30,7 +38,29 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
     })
 
     const saveToPod = () => {
+        if (!selection) return
+
+        if (!dataset) {
+            console.warn('No dataset found to save the new work to.')
+            return
+        }
+
         // saves the given selection in the POD
+        const selectionThing = buildThing(createThing({
+            name: selection.id
+        }))
+            .addUrl(RDF.type, crm('E90_Symbolic_Object'))
+            .addDate(dcterms('created'), new Date(Date.now()))
+            .addUrl(crm('P106i_forms_part_of'), workURI)
+
+        selection.refs.forEach(ref => {
+            selectionThing.addUrl(crm('P106_is_composed_of'),`${workURI}#${ref}`)
+        })
+
+        // TODO move E13 Builder here
+
+        const modifiedDataset = setThing(dataset, selectionThing.build());
+        saveSolidDatasetAt('https://pfefferniels.inrupt.net/preludes/works.ttl', modifiedDataset, { fetch: session.fetch as any });
 
     }
 
@@ -60,22 +90,22 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
                                     <ListItem
                                         secondaryAction={
                                             <>
-                                            <IconButton onClick={() => {
-                                                setSelectedE13(attribute.id)
-                                                setE13Open(true)
-                                            }}>
-                                                <Edit />
-                                            </IconButton>
-                                            <IconButton onClick={() => {
-                                                selection.attributes.splice(i, 1)
-                                                setSelection({
-                                                    id: selection.id,
-                                                    refs: selection.refs,
-                                                    attributes: selection.attributes
-                                                })
-                                            }}>
-                                                <Delete />
-                                            </IconButton>
+                                                <IconButton onClick={() => {
+                                                    setSelectedE13(attribute.id)
+                                                    setE13Open(true)
+                                                }}>
+                                                    <Edit />
+                                                </IconButton>
+                                                <IconButton onClick={() => {
+                                                    selection.attributes.splice(i, 1)
+                                                    setSelection({
+                                                        id: selection.id,
+                                                        refs: selection.refs,
+                                                        attributes: selection.attributes
+                                                    })
+                                                }}>
+                                                    <Delete />
+                                                </IconButton>
                                             </>
                                         }
                                         key={`selection_editor_${attribute.id}`}>
@@ -117,9 +147,9 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
             </Paper>
 
             <E13Editor
+                selectionURI={selection.id}
                 e13={selection.attributes.find(attr => attr.id === selectedE13)}
                 setE13={(e13) => {
-                    console.log('updating')
                     const newAttributes = selection.attributes.slice()
                     const index = newAttributes.findIndex(attr => attr.id === selectedE13)
                     if (index === -1) {
@@ -129,7 +159,7 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
                         newAttributes[index] = e13
                     }
                     setSelection({
-                        id: selection.id, 
+                        id: selection.id,
                         refs: selection.refs,
                         attributes: newAttributes
                     })

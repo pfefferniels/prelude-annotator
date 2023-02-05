@@ -1,4 +1,4 @@
-import { buildThing, createThing, getFile, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, overwriteFile, saveSolidDatasetAt, setThing } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, getFile, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, overwriteFile, saveSolidDatasetAt, setThing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { Add, OpenInNew } from "@mui/icons-material"
@@ -13,11 +13,12 @@ interface WorkPickerProps {
     open: boolean
     onClose: () => void
 
+    setWorkURI: (uri: string) => void
     setMEI: (mei: string) => void
     setSelections: (selections: Selection[]) => void
 }
 
-export const WorkPicker = ({ open, onClose, setMEI, setSelections }: WorkPickerProps) => {
+export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }: WorkPickerProps) => {
     const { dataset } = useDataset()
     const { session } = useSession()
 
@@ -47,11 +48,40 @@ export const WorkPicker = ({ open, onClose, setMEI, setSelections }: WorkPickerP
     }, [open, onClose, setMEI, setSelections])
 
     const openWork = async (uri: string) => {
+        setWorkURI(uri)
+
+        // load MEI
         const file = await getFile(uri, { fetch: session.fetch })
         const mei = await file.text()
         setMEI(mei)
-        
-        setSelections([])
+
+        // load selections
+        if (!dataset) {
+            console.warn('Cannot load any selections, no dataset given.')
+            setSelections([])
+            return
+        }
+
+        const things = getThingAll(dataset)
+        setSelections(
+            things
+                .filter(thing => {
+                    console.log(getUrl(thing, crm('P106i_forms_part_of')) === uri)
+                    // TODO: should use has_type instead
+                    return getUrlAll(thing, RDF.type).includes(crm('E90_Symbolic_Object')) &&
+                        getUrl(thing, crm('P106i_forms_part_of')) === uri
+                })
+                .map(thing => {
+                    const refs = getUrlAll(thing, crm('P106_is_composed_of')).map(url => url.split('#').at(-1) || '')
+
+                    // TODO read E13s
+                    return {
+                        id: asUrl(thing).split('#').at(-1) || '',
+                        refs: refs,
+                        attributes: []
+                    }
+                })
+        )
     }
 
     const storeMEI = async (meiSource: HTMLInputElement) => {

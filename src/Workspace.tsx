@@ -22,6 +22,7 @@ export interface Selection {
 }
 
 export const Workspace = () => {
+    const [workURI, setWorkURI] = useState('')
     const [mei, setMEI] = useState('')
     const [selections, setSelections] = useState<Selection[]>([])
     const [activeSelectionId, setActiveSelectionId] = useState('')
@@ -69,6 +70,7 @@ export const Workspace = () => {
             <WorkPicker
                 open={true}
                 onClose={() => setWorkPickerOpen(false)}
+                setWorkURI={setWorkURI}
                 setMEI={setMEI}
                 setSelections={setSelections} />
         )
@@ -97,6 +99,7 @@ export const Workspace = () => {
 
                 <Grid2 xs={8}>
                     <SelectionEditor
+                        workURI={workURI}
                         setSelection={setSelection}
                         selection={selections.find(selection => selection.id === activeSelectionId)} />
                 </Grid2>

@@ -9,6 +9,7 @@ import { Attr, ObjectEditor } from "./ObjectEditor"
 import { E13 } from "./Workspace"
 
 interface E13EditorProps {
+    selectionURI: string
     e13?: E13
     setE13: (e13: E13) => void
 
@@ -32,7 +33,7 @@ const properties = [{
     label: 'is a'
 }]
 
-export const E13Editor = ({ e13, setE13, open, onClose }: E13EditorProps) => {
+export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13EditorProps) => {
     const { dataset } = useDataset()
     const { session } = useSession()
 
@@ -52,18 +53,21 @@ export const E13Editor = ({ e13, setE13, open, onClose }: E13EditorProps) => {
         const id = v4()
 
         setE13({
-            id: id,
+            id,
             property,
             attribute,
             comment
         })
 
-        const e13Thing = buildThing(createThing())
+        const e13Thing = buildThing(createThing({
+            name: id
+        }))
             .addUrl(RDF.type, crm('F13_Attribute_Assignment'))
             .addStringNoLocale(RDFS.label, id)
             .addDate(dcterms('created'), new Date(Date.now()))
             .addStringNoLocale(crm('P33_used_specific_technique'), treatises.find(t => t.name === treatise)?.uri || 'http://unknown')
             .addUrl(crm('P14_carried_out_by'), session.info.webId || 'http://unknown')
+            .addUrl(crm('P140_assigned_attribute_to'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + selectionURI)
             .addUrl(crm('P177_assigned_property_of_type'), properties.find(p => p.name === property)?.uri || 'http://unknown')
             .addStringNoLocale(crm('P3_has_note'), comment)
             .build();
@@ -79,7 +83,7 @@ export const E13Editor = ({ e13, setE13, open, onClose }: E13EditorProps) => {
 
     return (
         <Dialog open={open} onClose={onClose}>
-            <DialogTitle>Add E13 Attribute Assignment</DialogTitle>
+            <DialogTitle>E13 Attribute Assignment</DialogTitle>
 
             <DialogContent>
                 Treatise:
