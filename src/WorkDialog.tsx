@@ -1,7 +1,8 @@
 import { asUrl, buildThing, createThing, getSourceUrl, getStringNoLocale, getUrl, overwriteFile, saveSolidDatasetAt, setStringNoLocale, setThing, setUrl, Thing } from "@inrupt/solid-client";
 import { useDataset, useSession } from "@inrupt/solid-ui-react";
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, TextField } from "@mui/material";
+import { Stack } from "@mui/system";
 import { useEffect, useState } from "react";
 import { v4 } from "uuid";
 import { crm, crmdig, frbroo } from "./namespaces";
@@ -74,28 +75,34 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
 
     return (
         <Dialog open={open} onClose={onClose}>
-            <DialogTitle>Create or Add Work</DialogTitle>
+            <DialogTitle>Create or Edit Work</DialogTitle>
             <DialogContent>
-                Title: <TextField value={title} onChange={(e) => setTitle(e.target.value)} />
+                <Stack spacing={3}>
+                    <TextField size='small' variant='standard' label='Title' placeholder='Title' value={title} onChange={(e) => setTitle(e.target.value)} />
 
-                <input
-                    style={{
-                        display: 'none'
-                    }}
-                    type='file'
-                    id='upload-mei'
-                    name='upload-mei'
-                    accept='.mei,.xml'
-                    onChange={async (e) => {
-                        await saveMeiFile(e.target as HTMLInputElement)
-                    }}
-                />
-                <label htmlFor='upload-mei'>
-                    Upload MEI
-                </label>
+                    <input
+                        style={{
+                            display: 'none'
+                        }}
+                        type='file'
+                        id='upload-mei'
+                        name='upload-mei'
+                        accept='.mei,.xml'
+                        onChange={async (e) => {
+                            await saveMeiFile(e.target as HTMLInputElement)
+                        }}
+                    />
 
-                or specify MEI url 
-                <TextField value={meiUri} onChange={(e) => setMeiUri(e.target.value)} />
+                    <Stack direction='row' spacing={2}>
+                        <Button>
+                            <label htmlFor='upload-mei'>
+                                Upload MEI
+                            </label>
+                        </Button>
+                        <Divider orientation='vertical' flexItem>or</Divider>
+                        <TextField size='small' variant='standard' label='MEI URL' value={meiUri} onChange={(e) => setMeiUri(e.target.value)} />
+                    </Stack>
+                </Stack>
             </DialogContent>
             <DialogActions>
                 <Button variant='contained' onClick={async () => {
