@@ -53,7 +53,7 @@ export const Workspace = () => {
                 keySig <= -2 ? { pname: 'a', accid: 'f' } : { pname: 'g', accid: 's' },
                 { pname: 'a' },
                 { pname: 'b', accid: 'f' },
-                { pname: 'b', accid: 'f' }]
+                { pname: 'b' }]
             const result = pitchNames[q]
             result.oct = Math.trunc(p / 12 - 1)
             return result

@@ -1,7 +1,8 @@
 import { buildThing, createThing, saveSolidDatasetAt, setThing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem, Select, TextField } from "@mui/material"
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, TextField } from "@mui/material"
+import { Stack } from "@mui/system"
 import { useEffect, useState } from "react"
 import { v4 } from "uuid"
 import { crm, dcterms } from "./namespaces"
@@ -68,6 +69,7 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
             .addStringNoLocale(crm('P33_used_specific_technique'), treatises.find(t => t.name === treatise)?.uri || 'http://unknown')
             .addUrl(crm('P14_carried_out_by'), session.info.webId || 'http://unknown')
             .addUrl(crm('P140_assigned_attribute_to'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + selectionURI)
+            .addUrl(crm('P141_assigned'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + attribute?.id || v4())
             .addUrl(crm('P177_assigned_property_of_type'), properties.find(p => p.name === property)?.uri || 'http://unknown')
             .addStringNoLocale(crm('P3_has_note'), comment)
             .build();
@@ -86,48 +88,55 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
             <DialogTitle>E13 Attribute Assignment</DialogTitle>
 
             <DialogContent>
-                Treatise:
-                <Select
-                    size='small'
-                    value={treatise}
-                    onChange={(e) => setTreatise(e.target.value)}>
-                    {treatises.map(treatise => {
-                        return (
-                            <MenuItem
-                                key={treatise.name}
-                                value={treatise.name}>
-                                {treatise.label}
-                            </MenuItem>
-                        )
-                    })}
-                </Select>
-                <br />
+                <Stack spacing={2}>
+                    <FormControl variant='standard'>
+                        <InputLabel>Treatise</InputLabel>
 
-                Assigned property:
-                <Select
-                    size='small'
-                    value={property}
-                    onChange={(e) => setProperty(e.target.value)}>
-                    {properties.map(property => {
-                        return (
-                            <MenuItem
-                                key={`property_${property.name}`}
-                                value={property.name}>
-                                {property.label}
-                            </MenuItem>
-                        )
-                    })}
-                </Select>
+                        <Select
+                            size='small'
+                            value={treatise}
+                            onChange={(e) => setTreatise(e.target.value)}>
+                            {treatises.map(treatise => {
+                                return (
+                                    <MenuItem
+                                        key={treatise.name}
+                                        value={treatise.name}>
+                                        {treatise.label}
+                                    </MenuItem>
+                                )
+                            })}
+                        </Select>
+                    </FormControl>
 
-                <ObjectEditor
-                    type={property === 'hasCadence' ? 'cadence' : 'figure'}
-                    object={attribute}
-                    setObject={setAttribute} />
+                    <FormControl variant='standard'>
+                        <InputLabel>Assigned Property</InputLabel>
+                        <Select
+                            size='small'
+                            value={property}
+                            onChange={(e) => setProperty(e.target.value)}>
+                            {properties.map(property => {
+                                return (
+                                    <MenuItem
+                                        key={`property_${property.name}`}
+                                        value={property.name}>
+                                        {property.label}
+                                    </MenuItem>
+                                )
+                            })}
+                        </Select>
+                    </FormControl>
 
-                <br />Comment:
-                <TextField
-                    size='small'
-                    value={comment} onChange={(e) => setComment(e.target.value)} />
+                    <ObjectEditor
+                        type={property === 'hasCadence' ? 'cadence' : 'figure'}
+                        object={attribute}
+                        setObject={setAttribute} />
+
+                    <TextField
+                        label='Comment'
+                        placeholder='Comment'
+                        size='small'
+                        value={comment} onChange={(e) => setComment(e.target.value)} />
+                </Stack>
             </DialogContent>
 
             <DialogActions>
