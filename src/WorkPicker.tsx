@@ -70,9 +70,15 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }:
             console.warn('no MEI url given')
             return
         }
+        const xslt = await (await fetch('insertMeasures.xsl')).text()
+        const xsltProcessor = new XSLTProcessor()
+        xsltProcessor.importStylesheet(new DOMParser().parseFromString(xslt, 'application/xml'))
+
         const file = await getFile(fileUrl, { fetch: session.fetch })
         const mei = await file.text()
-        setMEI(mei)
+        const result = xsltProcessor.transformToDocument(new DOMParser().parseFromString(mei, 'application/xml'))
+
+        setMEI(new XMLSerializer().serializeToString(result))
 
         // load selections
         if (!dataset) {

@@ -37,29 +37,66 @@ export const Workspace = () => {
     useEffect(() => {
         if (!mei || mei.length === 0) return
 
-        // update the staff notation MEI 
-        // everytime the tablature MEI changes
+        type Note = { pname: string, accid?: string, oct?: number }
 
-        const transform = async () => {
-            const resp = await fetch('tab2staff.xsl')
-            const text = await resp.text()
-            const xslDoc = new DOMParser().parseFromString(text, 'application/xml')
-            console.log(xslDoc)
-
-            try {
-                const xsltProcessor = new XSLTProcessor()
-                xsltProcessor.importStylesheet(xslDoc)
-                const meiDoc = new DOMParser().parseFromString(mei, 'application/xml')
-                const result = xsltProcessor.transformToDocument(meiDoc)
-                const serialized = new XMLSerializer().serializeToString(result)
-                console.log('serialized=', serialized)
-                setTransformedMEI(serialized)
-            } catch (e) {
-                console.log(e)
-            }
+        const pitchToNote = (p: number, keySig: number): Note => {
+            let q = (p + 120) % 12
+            const pitchNames: Note[] = [
+                { pname: 'c' },
+                keySig <= -3 ? { pname: 'd', accid: 'f' } : { pname: 'c', accid: 's' },
+                { pname: 'd' },
+                keySig >= 2 ? { pname: 'd', accid: 's'} : { pname: 'e', accid: 'f' },
+                { pname: 'e' },
+                { pname: 'f' },
+                { pname: 'f', accid: 's' },
+                { pname: 'g' },
+                keySig <= -2 ? { pname: 'a', accid: 'f' } : { pname: 'g', accid: 's' },
+                { pname: 'a' },
+                { pname: 'b', accid: 'f' },
+                { pname: 'b', accid: 'f' }]
+            const result = pitchNames[q]
+            result.oct = Math.trunc(p / 12 - 1)
+            return result
         }
 
-        transform()
+        const baroqueDMinorTuning = [ 65, 62, 57, 53, 50, 45, 43, 41, 40, 38, 36 ]
+
+        console.log('mei=', mei)
+
+        // update the staff notation MEI 
+        // everytime the tablature MEI changes
+        const meiDoc = new DOMParser().parseFromString(mei, 'application/xml')
+
+        const staffDef = meiDoc.querySelector('staffDef')
+        if (staffDef) {
+            staffDef.setAttribute('meter.count', '1')
+            staffDef.setAttribute('meter.unit', '8')
+            staffDef.setAttribute('clef.line', '4')
+            staffDef.setAttribute('clef.shape', 'F')
+            staffDef.removeAttribute('notationtype')
+            staffDef.setAttribute('lines', '5')
+            const tuning = staffDef.querySelector('tuning')
+            tuning && staffDef.removeChild(tuning)
+        }
+
+        meiDoc.querySelectorAll('note').forEach(note => {
+            const course = note.getAttribute('tab.course')
+            const fret = note.getAttribute('tab.fret')
+            if (!course || !fret) {
+                console.log('no @tab.course or @tab.fret attribute found')
+                return
+            }
+            const pitch = baroqueDMinorTuning[+course - 1] + (+fret)
+            const newNote = pitchToNote(pitch, -1)
+            note.setAttribute('pname', newNote.pname)
+            newNote.accid && note.setAttribute('accid', newNote.accid)
+            newNote.oct && note.setAttribute('oct', newNote.oct.toString())
+            note.removeAttribute('tab.course')
+            note.removeAttribute('tab.fret')
+        })
+        const transformed = new XMLSerializer().serializeToString(meiDoc).replaceAll('tabGrp', 'chord')
+        console.log(transformed)
+        setTransformedMEI(transformed)
     }, [mei])
 
     const saveToPod = () => {
@@ -111,7 +148,7 @@ export const Workspace = () => {
     }
 
     return (
-        <div>
+        <div style={{margin: '1rem'}}>
             <Stack direction='row'>
                 <IconButton onClick={() => setWorkPickerOpen(true)}>
                     <Menu />
