@@ -1,5 +1,6 @@
-import { asUrl, buildThing, createThing, getPropertyAll, getSolidDataset, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, saveSolidDatasetAt, setThing } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, getPropertyAll, getSolidDataset, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, removeAll, saveSolidDatasetAt, setThing, Thing, thingAsMarkdown } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
+import { updateDataset } from "@inrupt/solid-ui-react/dist/src/helpers"
 import { OWL, RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { Save } from "@mui/icons-material"
 import { Paper, FormControl, InputLabel, Select, MenuItem, IconButton } from "@mui/material"
@@ -22,11 +23,12 @@ interface ObjectEditorProps {
     ontologyUrl: string
     classUrl: string
 
-    // the ID the object is going to have once being stored
-    id: string
+    // the entity with the selected properties
+    object: Thing
+    setObject: (thing: Thing) => void
 }
 
-export const ObjectEditor = ({ ontologyUrl, classUrl, id }: ObjectEditorProps) => {
+export const ObjectEditor = ({ ontologyUrl, classUrl, object: thing, setObject }: ObjectEditorProps) => {
     const { dataset } = useDataset()
     const { session } = useSession()
 
@@ -36,12 +38,22 @@ export const ObjectEditor = ({ ontologyUrl, classUrl, id }: ObjectEditorProps) =
     const saveToPod = () => {
         if (!dataset) return
 
-        const thing = buildThing(createThing({
-            name: id
-        }))
-            .addUrl(RDF.type, crm('E28_Conceptual_Object'))
-        selectedProperties.forEach((o, p) => thing.addUrl(p, o))
-        const modifiedDataset = setThing(dataset, thing.build())
+        // remove existing properties
+        let modifiedThing = thing
+        const existingProperties = getPropertyAll(modifiedThing)
+        existingProperties.forEach(p => {
+            modifiedThing = removeAll(modifiedThing, p)
+        })
+
+        // add all the new properties
+        const thingBuilder = buildThing(modifiedThing)
+        //    .addUrl(RDF.type, crm('E28_Conceptual_Object'))
+        selectedProperties.forEach((o, p) => thingBuilder.addUrl(p, o))
+
+        const newThing = thingBuilder.build()
+        setObject(newThing)
+
+        const modifiedDataset = setThing(dataset, newThing)
         saveSolidDatasetAt('https://pfefferniels.inrupt.net/preludes/works.ttl', modifiedDataset, { fetch: session.fetch as any });
     }
 
@@ -50,18 +62,15 @@ export const ObjectEditor = ({ ontologyUrl, classUrl, id }: ObjectEditorProps) =
         // the selected properties accordingly
         if (!dataset) return
 
-        const thing = getThing(dataset, `https://pfefferniels.inrupt.net/preludes/works.ttl#${id}`)
-        if (thing) {
-            const properties = getPropertyAll(thing)
-            properties.forEach(property => {
-                const value = getUrl(thing, property)
-                console.log('setting', property, 'to', value)
-                value && selectedProperties.set(property, value)
-            })
-        }
+        const properties = getPropertyAll(thing)
+        properties.forEach(property => {
+            const value = getUrl(thing, property)
+            console.log('setting', property, 'to', value)
+            value && selectedProperties.set(property, value)
+        })
 
         setSelectedProperties(new Map(selectedProperties))
-    }, [id])
+    }, [thing])
 
     useEffect(() => {
         if (!ontologyUrl.length) return

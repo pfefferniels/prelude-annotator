@@ -8,18 +8,19 @@ import { WorkPicker } from "./WorkPicker"
 import Grid2 from '@mui/material/Unstable_Grid2'
 import { Menu } from "@mui/icons-material"
 import { Stack } from "@mui/system"
+import { Thing } from "@inrupt/solid-client"
 
 export interface E13 {
     id: string
     property: string
-    attributeId?: string
+    attribute: Thing
     comment: string
 }
 
 export interface Selection {
     id: string
     refs: string[]
-    attributes: E13[]
+    e13s: E13[]
 }
 
 type DisplayMode = 'staff-notation' | 'tablature'
@@ -108,7 +109,7 @@ export const Workspace = () => {
         setSelections(selections => [...selections, {
             id,
             refs: [ref],
-            attributes: []
+            e13s: []
         }])
         setActiveSelectionId(id)
     }

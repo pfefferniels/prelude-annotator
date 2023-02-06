@@ -1,4 +1,4 @@
-import { buildThing, createThing, saveSolidDatasetAt, setThing } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, saveSolidDatasetAt, setThing, Thing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, TextField } from "@mui/material"
@@ -40,13 +40,17 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
 
     const [treatise, setTreatise] = useState('nivers1667')
     const [property, setProperty] = useState(e13?.property || 'hasCadence')
-    const [attributeId, setAttributeId] = useState<string>(e13?.attributeId || v4())
+    const [attribute, setAttribute] = useState(e13?.attribute || createThing())
     const [comment, setComment] = useState(e13?.comment || '')
 
     useEffect(() => {
-        if (!open) return
+        if (!open) {
+            return
+        }
+
+        console.log('E13Editor opened. Setting properties to', e13)
         setProperty(e13?.property || 'hasCadence')
-        setAttributeId(e13?.attributeId || v4())
+        setAttribute(e13?.attribute || createThing())
         setComment(e13?.comment || '')
     }, [e13, open])
 
@@ -56,7 +60,7 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
         setE13({
             id,
             property,
-            attributeId,
+            attribute,
             comment
         })
 
@@ -69,7 +73,7 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
             .addStringNoLocale(crm('P33_used_specific_technique'), treatises.find(t => t.name === treatise)?.uri || 'http://unknown')
             .addUrl(crm('P14_carried_out_by'), session.info.webId || 'http://unknown')
             .addUrl(crm('P140_assigned_attribute_to'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + selectionURI)
-            .addUrl(crm('P141_assigned'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + attributeId)
+            .addUrl(crm('P141_assigned'), asUrl(attribute, 'https://pfefferniels.inrupt.net/preludes/works.ttl'))
             .addUrl(crm('P177_assigned_property_of_type'), properties.find(p => p.name === property)?.uri || 'http://unknown')
             .addStringNoLocale(crm('P3_has_note'), comment)
             .build();
@@ -79,7 +83,8 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
             return;
         }
 
-        const modifiedDataset = setThing(dataset, e13Thing);
+        let modifiedDataset = setThing(dataset, e13Thing);
+        modifiedDataset = setThing(dataset, attribute);
         saveSolidDatasetAt('https://pfefferniels.inrupt.net/preludes/works.ttl', modifiedDataset, { fetch: session.fetch as any });
     }
 
@@ -129,7 +134,8 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
                     <ObjectEditor
                         ontologyUrl={'/nivers1667.ttl'}
                         classUrl={'http://webprotege.stanford.edu/Cadence'}
-                        id={attributeId} />
+                        object={attribute}
+                        setObject={setAttribute} />
 
                     <TextField
                         label='Comment'

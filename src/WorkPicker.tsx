@@ -1,4 +1,4 @@
-import { asUrl, getFile, getStringNoLocale, getThingAll, getUrl, getUrlAll, Thing } from "@inrupt/solid-client"
+import { asUrl, createThing, getFile, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, Thing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { AddOutlined, Delete, Edit, OpenInNew } from "@mui/icons-material"
@@ -8,7 +8,7 @@ import { useEffect, useState } from "react"
 import { v4 } from "uuid"
 import { crm, frbroo } from "./namespaces"
 import { WorkDialog } from "./WorkDialog"
-import { Selection } from "./Workspace"
+import { E13, Selection } from "./Workspace"
 
 // avoid overlapping secondary actions in the list
 const StyledList = styled(List)(() => ({
@@ -102,17 +102,17 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }:
                     return {
                         id: selectionUrl.split('#').at(-1) || '',
                         refs: refs,
-                        attributes: things
+                        e13s: things
                             .filter(thing => {
                                 // get all E13s connected to this selection
                                 return getUrlAll(thing, RDF.type).includes(crm('E13_Attribute_Assignment')) &&
                                     getUrl(thing, crm('P140_assigned_attribute_to')) === selectionUrl
                             })
-                            .map(thing => {
+                            .map((thing): E13 => {
                                 return {
                                     id: asUrl(thing).split('#').at(-1) || v4(),
                                     property: getUrl(thing, crm('P177_assigned_property_of_type'))?.split('/').at(-1) || 'unknown',
-                                    attribute: undefined,
+                                    attribute: getThing(dataset, getUrl(thing, crm('P141_assigned')) || '') || createThing(),
                                     comment: getStringNoLocale(thing, crm('P3_has_note')) || ''
                                 }
                             })

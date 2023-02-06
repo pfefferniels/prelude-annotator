@@ -37,6 +37,10 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
             }`
     })
 
+    useEffect(() => {
+        setSelectedE13(undefined)
+    }, [selection])
+
     const saveToPod = () => {
         if (!selection) return
 
@@ -77,7 +81,10 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                     <Save />
                 </IconButton>
 
-                <IconButton onClick={() => setE13Open(true)}>
+                <IconButton onClick={() => {
+                    setSelectedE13(undefined)
+                    setE13Open(true)
+                }}>
                     <Add />
                 </IconButton>
 
@@ -85,31 +92,31 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                     <Grid2 xs={6}>
                         Contains the following E13 Attribute Assignments
                         <List>
-                            {selection.attributes.map((attribute, i) => {
+                            {selection.e13s.map((e13, i) => {
                                 return (
                                     <ListItem
                                         secondaryAction={
                                             <>
                                                 <IconButton onClick={() => {
-                                                    setSelectedE13(attribute.id)
+                                                    setSelectedE13(e13.id)
                                                     setE13Open(true)
                                                 }}>
                                                     <Edit />
                                                 </IconButton>
                                                 <IconButton onClick={() => {
-                                                    selection.attributes.splice(i, 1)
+                                                    selection.e13s.splice(i, 1)
                                                     setSelection({
                                                         id: selection.id,
                                                         refs: selection.refs,
-                                                        attributes: selection.attributes
+                                                        e13s: selection.e13s
                                                     })
                                                 }}>
                                                     <Delete />
                                                 </IconButton>
                                             </>
                                         }
-                                        key={`selection_editor_${attribute.id}`}>
-                                        <ListItemText primary={attribute.property} secondary={attribute.comment} />
+                                        key={`selection_editor_${e13.id}`}>
+                                        <ListItemText primary={e13.property} secondary={e13.comment} />
                                     </ListItem>
                                 )
                             })}
@@ -118,7 +125,7 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                     <Grid2 xs={4}>
                         <Paper>
                             <Typography>Affects the following MEI elements</Typography>
-                            <List>
+                            <List dense>
                                 {selection.refs.map(ref => {
                                     return (
                                         <ListItem
@@ -129,7 +136,7 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                                                     setSelection({
                                                         id: selection.id,
                                                         refs: selection.refs,
-                                                        attributes: selection.attributes
+                                                        e13s: selection.e13s
                                                     })
                                                 }}>
                                                     <Delete />
@@ -148,9 +155,9 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
 
             <E13Editor
                 selectionURI={selection.id}
-                e13={selection.attributes.find(attr => attr.id === selectedE13)}
+                e13={selection.e13s.find(attr => attr.id === selectedE13)}
                 setE13={(e13) => {
-                    const newAttributes = selection.attributes.slice()
+                    const newAttributes = selection.e13s.slice()
                     const index = newAttributes.findIndex(attr => attr.id === selectedE13)
                     if (index === -1) {
                         newAttributes.push(e13)
@@ -161,11 +168,14 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                     setSelection({
                         id: selection.id,
                         refs: selection.refs,
-                        attributes: newAttributes
+                        e13s: newAttributes
                     })
                 }}
                 open={e13Open}
-                onClose={() => setE13Open(false)} />
+                onClose={() => {
+                    setSelectedE13(undefined)
+                    setE13Open(false)
+                }} />
         </>
     )
 }

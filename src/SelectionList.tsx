@@ -39,7 +39,7 @@ export const SelectionList = ({ selections, setSelections, activeSelection, setA
                             }>
                             <ListItemText
                                 primary={selection.id}
-                                secondary={`affects ${selection.refs.length} elements, ${selection.attributes.map(attr => attr.property).join(' ')}`} />
+                                secondary={`affects ${selection.refs.length} elements, ${selection.e13s.map(attr => attr.property).join(' ')}`} />
                         </ListItem>
                     )
                 })}
