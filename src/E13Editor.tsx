@@ -6,7 +6,7 @@ import { Stack } from "@mui/system"
 import { useEffect, useState } from "react"
 import { v4 } from "uuid"
 import { crm, dcterms } from "./namespaces"
-import { Attr, ObjectEditor } from "./ObjectEditor"
+import { ObjectEditor } from "./OntologyBasedEditor"
 import { E13 } from "./Workspace"
 
 interface E13EditorProps {
@@ -40,13 +40,13 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
 
     const [treatise, setTreatise] = useState('nivers1667')
     const [property, setProperty] = useState(e13?.property || 'hasCadence')
-    const [attribute, setAttribute] = useState<Attr | undefined>(e13?.attribute)
+    const [attributeId, setattributeId] = useState<string>(e13?.attributeId || v4())
     const [comment, setComment] = useState(e13?.comment || '')
 
     useEffect(() => {
         if (!open) return
         setProperty(e13?.property || 'hasCadence')
-        setAttribute(e13?.attribute)
+        setattributeId(e13?.attributeId || v4())
         setComment(e13?.comment || '')
     }, [e13, open])
 
@@ -56,7 +56,7 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
         setE13({
             id,
             property,
-            attribute,
+            attributeId,
             comment
         })
 
@@ -69,7 +69,7 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
             .addStringNoLocale(crm('P33_used_specific_technique'), treatises.find(t => t.name === treatise)?.uri || 'http://unknown')
             .addUrl(crm('P14_carried_out_by'), session.info.webId || 'http://unknown')
             .addUrl(crm('P140_assigned_attribute_to'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + selectionURI)
-            .addUrl(crm('P141_assigned'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + attribute?.id || v4())
+            .addUrl(crm('P141_assigned'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + attributeId)
             .addUrl(crm('P177_assigned_property_of_type'), properties.find(p => p.name === property)?.uri || 'http://unknown')
             .addStringNoLocale(crm('P3_has_note'), comment)
             .build();
@@ -127,9 +127,9 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
                     </FormControl>
 
                     <ObjectEditor
-                        type={property === 'hasCadence' ? 'cadence' : 'figure'}
-                        object={attribute}
-                        setObject={setAttribute} />
+                        ontologyUrl={'/nivers1667.ttl'}
+                        classUrl={'http://webprotege.stanford.edu/Cadence'}
+                        id={attributeId} />
 
                     <TextField
                         label='Comment'

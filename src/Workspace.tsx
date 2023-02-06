@@ -1,4 +1,4 @@
-import { Button, IconButton, menuItemClasses, ToggleButton, ToggleButtonGroup } from "@mui/material"
+import { IconButton, ToggleButton, ToggleButtonGroup } from "@mui/material"
 import { useEffect, useState } from "react"
 import { v4 } from "uuid"
 import { SelectionEditor } from "./SelectionEditor"
@@ -6,14 +6,13 @@ import { SelectionList } from "./SelectionList"
 import Verovio from "./Verovio"
 import { WorkPicker } from "./WorkPicker"
 import Grid2 from '@mui/material/Unstable_Grid2'
-import { Attr } from "./ObjectEditor"
 import { Menu } from "@mui/icons-material"
 import { Stack } from "@mui/system"
 
 export interface E13 {
     id: string
     property: string
-    attribute?: Attr
+    attributeId?: string
     comment: string
 }
 
