@@ -48,16 +48,19 @@ export const ObjectEditor = ({ ontologyUrl, classUrl, id }: ObjectEditorProps) =
     useEffect(() => {
         // if the ID does exist already in the dataset, construct 
         // the selected properties accordingly
-        if (!dataset) return 
+        if (!dataset) return
 
         const thing = getThing(dataset, `https://pfefferniels.inrupt.net/preludes/works.ttl#${id}`)
         if (thing) {
             const properties = getPropertyAll(thing)
             properties.forEach(property => {
                 const value = getUrl(thing, property)
+                console.log('setting', property, 'to', value)
                 value && selectedProperties.set(property, value)
             })
         }
+
+        setSelectedProperties(new Map(selectedProperties))
     }, [id])
 
     useEffect(() => {
@@ -121,18 +124,20 @@ export const ObjectEditor = ({ ontologyUrl, classUrl, id }: ObjectEditorProps) =
 
                             <Select
                                 label={property.label}
-                                value={selectedProperties.get(property.uri)}
+                                value={selectedProperties.get(property.uri) || ''}
                                 onChange={(e) => {
                                     setSelectedProperties(new Map(
                                         selectedProperties.set(property.uri, e.target.value)
                                     ))
                                 }}>
                                 {property.ranges?.map(range => {
-                                    return <MenuItem
-                                        key={`item_${range.label}`}
-                                        value={range.uri}>
-                                        {range.label}
-                                    </MenuItem>
+                                    return (
+                                        <MenuItem
+                                            key={`item_${range.label}`}
+                                            value={range.uri}>
+                                            {range.label}
+                                        </MenuItem>
+                                    )
                                 })}
                             </Select>
                         </FormControl>

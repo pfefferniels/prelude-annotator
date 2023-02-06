@@ -40,13 +40,13 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
 
     const [treatise, setTreatise] = useState('nivers1667')
     const [property, setProperty] = useState(e13?.property || 'hasCadence')
-    const [attributeId, setattributeId] = useState<string>(e13?.attributeId || v4())
+    const [attributeId, setAttributeId] = useState<string>(e13?.attributeId || v4())
     const [comment, setComment] = useState(e13?.comment || '')
 
     useEffect(() => {
         if (!open) return
         setProperty(e13?.property || 'hasCadence')
-        setattributeId(e13?.attributeId || v4())
+        setAttributeId(e13?.attributeId || v4())
         setComment(e13?.comment || '')
     }, [e13, open])
 
