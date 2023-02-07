@@ -19,10 +19,16 @@ export interface E13 {
     comment: string
 }
 
+type Reference = string | Selection
+
 export interface Selection {
     id: string
-    refs: string[]
+    refs: (Reference)[]
     e13s: E13[]
+}
+
+export const isSelection = (ref: Reference): ref is Selection => {
+    return (ref as Selection).refs !== undefined
 }
 
 type DisplayMode = 'staff-notation' | 'tablature'

@@ -2,7 +2,7 @@ import { Add, Delete, Edit, Save } from "@mui/icons-material"
 import { IconButton, List, ListItem, ListItemText, Paper, Typography } from "@mui/material"
 import { useEffect, useState } from "react"
 import { E13Editor } from "./E13Editor"
-import { E13, Selection } from "./Workspace"
+import { E13, isSelection, Selection } from "./Workspace"
 import Grid2 from '@mui/material/Unstable_Grid2'
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { buildThing, createThing, setThing, saveSolidDatasetAt } from "@inrupt/solid-client"
@@ -143,7 +143,7 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                                                 </IconButton>
                                             }
                                             key={`selection_editor_${ref}`}>
-                                            <ListItemText primary={ref} />
+                                            <ListItemText primary={isSelection(ref) ? ref.id : ref} />
                                         </ListItem>
                                     )
                                 })}
