@@ -47,7 +47,7 @@ export const ObjectEditor = ({ ontologyUrl, classUrl, object: thing, setObject }
 
         // add all the new properties
         const thingBuilder = buildThing(modifiedThing)
-        //    .addUrl(RDF.type, crm('E28_Conceptual_Object'))
+        // TODO: the object should be instantiated
         selectedProperties.forEach((o, p) => thingBuilder.addUrl(p, o))
 
         const newThing = thingBuilder.build()

@@ -1,1 +1,10 @@
+.hull {
+    fill-opacity: 0.2;
+    fill: red;
+    stroke-width: 100;
+    stroke: none;
+}
 
+.hull:hover {
+    fill-opacity: 0.5;
+}

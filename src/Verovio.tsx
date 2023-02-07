@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { MutableRefObject, useCallback, useEffect, useState } from "react";
 import verovio from "verovio";
 import newVerovio from "./loadVerovio";
 
@@ -7,17 +7,27 @@ interface VerovioProps {
   startNewSelection: (ref: string) => void
   expandActiveSelection: (ref: string) => void
   removeFromActiveSelection: (ref: string) => void
+  onReady: () => void
 }
 
 export default function Verovio({
   mei,
   startNewSelection,
   expandActiveSelection,
-  removeFromActiveSelection
+  removeFromActiveSelection,
+  onReady
 }: VerovioProps) {
+
   const [vrvToolkit, setVrvToolkit] = useState(undefined as undefined | verovio.toolkit)
   const [svg, setSvg] = useState('')
   const [pageWidth, setPageWidth] = useState(undefined as undefined | number);
+
+  useEffect(() => {
+    console.log('svg changed')
+    if (svg.length) {
+      setTimeout(onReady, 1000)
+    }
+  }, [svg])
 
   const render = useCallback(() => {
     const pages = [];

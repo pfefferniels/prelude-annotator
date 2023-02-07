@@ -18,6 +18,8 @@
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "crypto-browserify": "^3.12.0",
+    "d3": "^7.8.2",
+    "d3-polygon": "^3.0.1",
     "path-browserify": "^1.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -52,6 +54,8 @@
     ]
   },
   "devDependencies": {
+    "@types/d3": "^7.4.0",
+    "@types/d3-polygon": "^3.0.0",
     "@types/verovio": "^3.13.0"
   }
 }
