@@ -18,7 +18,7 @@ interface E13SummaryProps {
  */
 export const E13Summary = ({ e13 }: E13SummaryProps) => {
     return (
-        <div>
+        <div style={{ minWidth: '200px' }}>
             {(e13.property || e13.attribute) &&
                 <span>{urlAsLabel(e13.property)} {urlAsLabel(e13.attribute)}</span>}
             {e13.comment && <div>Comment: {e13.comment}</div>}

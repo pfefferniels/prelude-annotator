@@ -1,0 +1,88 @@
+@prefix : <urn:webprotege:ontology:d7466237-bdf1-4ab3-954d-7f8fcdfe170c#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <urn:webprotege:ontology:d7466237-bdf1-4ab3-954d-7f8fcdfe170c> .
+
+<urn:webprotege:ontology:d7466237-bdf1-4ab3-954d-7f8fcdfe170c> rdf:type owl:Ontology .
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://historical-ontologies.edu/millet166/hasAvantSon
+<http://historical-ontologies.edu/millet166/hasAvantSon> rdf:type owl:ObjectProperty ;
+                                                         rdfs:subPropertyOf owl:topObjectProperty ;
+                                                         rdfs:domain <http://historical-ontologies.edu/millet166/Ornamentation> ;
+                                                         rdfs:range <http://historical-ontologies.edu/millet166/AvantSon> ;
+                                                         rdfs:label "has avant son" .
+
+
+###  http://historical-ontologies.edu/millet166/hasNotePrincipale
+<http://historical-ontologies.edu/millet166/hasNotePrincipale> rdf:type owl:ObjectProperty ;
+                                                               rdfs:subPropertyOf owl:topObjectProperty ;
+                                                               rdfs:domain <http://historical-ontologies.edu/millet166/Ornamentation> ;
+                                                               rdfs:range <http://historical-ontologies.edu/millet166/NotePrincipale> ;
+                                                               rdfs:label "has note principale" .
+
+
+###  http://historical-ontologies.edu/millet166/hasResteDuSon
+<http://historical-ontologies.edu/millet166/hasResteDuSon> rdf:type owl:ObjectProperty ;
+                                                           rdfs:subPropertyOf owl:topObjectProperty ;
+                                                           rdfs:domain <http://historical-ontologies.edu/millet166/Ornamentation> ;
+                                                           rdfs:range <http://historical-ontologies.edu/millet166/ResteDuSon> ;
+                                                           rdfs:label "has reste du son" .
+
+
+###  http://historical-ontologies.edu/millet166/hasSault
+<http://historical-ontologies.edu/millet166/hasSault> rdf:type owl:ObjectProperty ;
+                                                      rdfs:subPropertyOf owl:topObjectProperty ;
+                                                      rdfs:domain <http://historical-ontologies.edu/millet166/Elans> ;
+                                                      rdfs:range <http://historical-ontologies.edu/millet166/Sault> ;
+                                                      rdfs:label "has sault" .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://historical-ontologies.edu/millet166/AvantSon
+<http://historical-ontologies.edu/millet166/AvantSon> rdf:type owl:Class ;
+                                                      rdfs:label "Avant Son" .
+
+
+###  http://historical-ontologies.edu/millet166/Elans
+<http://historical-ontologies.edu/millet166/Elans> rdf:type owl:Class ;
+                                                   rdfs:subClassOf <http://historical-ontologies.edu/millet166/Roulade> ;
+                                                   rdfs:label "Elans" .
+
+
+###  http://historical-ontologies.edu/millet166/NotePrincipale
+<http://historical-ontologies.edu/millet166/NotePrincipale> rdf:type owl:Class ;
+                                                            rdfs:label "Note Principale" .
+
+
+###  http://historical-ontologies.edu/millet166/Ornamentation
+<http://historical-ontologies.edu/millet166/Ornamentation> rdf:type owl:Class ;
+                                                           rdfs:label "Ornamentation" .
+
+
+###  http://historical-ontologies.edu/millet166/ResteDuSon
+<http://historical-ontologies.edu/millet166/ResteDuSon> rdf:type owl:Class ;
+                                                        rdfs:label "Reste du Son" .
+
+
+###  http://historical-ontologies.edu/millet166/Roulade
+<http://historical-ontologies.edu/millet166/Roulade> rdf:type owl:Class ;
+                                                     rdfs:subClassOf owl:Thing ;
+                                                     rdfs:label "Roulade" .
+
+
+###  http://historical-ontologies.edu/millet166/Sault
+<http://historical-ontologies.edu/millet166/Sault> rdf:type owl:Class ;
+                                                   rdfs:label "Sault" .
+
+
+###  Generated by the OWL API (version 4.5.13) https://github.com/owlcs/owlapi

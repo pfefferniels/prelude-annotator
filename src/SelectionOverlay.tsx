@@ -42,7 +42,6 @@ export const SelectionOverlay = ({
                     ] as [number, number][]
                 }, [] as [number, number][])
 
-
         // build a hull around these points
         const hullPoints = d3.polygonHull(points)
         if (hullPoints) setHullPoints(hullPoints)

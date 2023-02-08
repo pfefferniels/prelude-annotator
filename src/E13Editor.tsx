@@ -1,13 +1,10 @@
 import { asUrl, buildThing, createThing, getSolidDataset, getStringNoLocale, getThingAll, getUrl, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { DCTERMS, OWL, RDF, RDFS } from "@inrupt/vocab-common-rdf"
-import { ExpandMore } from "@mui/icons-material"
-import { Accordion, AccordionDetails, AccordionSummary, Button, Dialog, DialogActions, DialogContent, DialogTitle, Drawer, FormControl, IconButton, InputLabel, List, ListItem, ListItemText, Menu, MenuItem, Paper, Select, TextField } from "@mui/material"
+import { Button, DialogActions, DialogContent, Drawer, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
 import { Stack } from "@mui/system"
 import { useEffect, useState } from "react"
-import { v4 } from "uuid"
 import { crm, dcterms } from "./namespaces"
-import { ObjectEditor } from "./OntologyBasedEditor"
 import { E13 } from "./Workspace"
 
 type ClassOrProperty = {
@@ -78,7 +75,12 @@ const availableTreatises = [
         url: '/nivers1667.ttl',
         name: 'nivers1667',
         label: 'Nivers, Traité de la composition, Paris 1667'
-    }
+    },
+    {
+        url: '/millet1666.ttl',
+        name: 'millet1666',
+        label: 'Millet, L\'art de Bien Chanter, Besançon 1666'
+    },
 ]
 
 export const E13Editor = ({
@@ -164,113 +166,111 @@ export const E13Editor = ({
     }
 
     return (
-        <Paper>
-            <DialogContent>
-                <Stack spacing={2}>
-                    <FormControl variant='standard'>
-                        <InputLabel>Treatise</InputLabel>
+        <Paper style={{ minWidth: '200px' }}>
+            <Stack spacing={2}>
+                <FormControl variant='standard'>
+                    <InputLabel>Treatise</InputLabel>
 
-                        <Select
-                            size='small'
-                            value={currentTreatise?.name || ''}
-                            onChange={async (e) => {
-                                const name = e.target.value
-                                const treatise = availableTreatises.find(treatise =>
-                                    treatise.name === name)!
-                                const dataset = await getSolidDataset(treatise.url)
-                                if (!dataset) return
-                                setCurrentTreatise(new Ontology(dataset, name))
-                            }}>
-                            {availableTreatises.map(treatise => {
-                                return (
-                                    <MenuItem
-                                        key={treatise.name}
-                                        value={treatise.name}>
-                                        {treatise.label}
-                                    </MenuItem>
-                                )
-                            })}
-                        </Select>
-                    </FormControl>
+                    <Select
+                        size='small'
+                        value={currentTreatise?.name || ''}
+                        onChange={async (e) => {
+                            const name = e.target.value
+                            const treatise = availableTreatises.find(treatise =>
+                                treatise.name === name)!
+                            const dataset = await getSolidDataset(treatise.url)
+                            if (!dataset) return
+                            setCurrentTreatise(new Ontology(dataset, name))
+                        }}>
+                        {availableTreatises.map(treatise => {
+                            return (
+                                <MenuItem
+                                    key={treatise.name}
+                                    value={treatise.name}>
+                                    {treatise.label}
+                                </MenuItem>
+                            )
+                        })}
+                    </Select>
+                </FormControl>
 
-                    {currentTreatise && (
-                        <>
+                {currentTreatise && (
+                    <>
+                        <FormControl variant='standard'>
+                            <InputLabel>Assigned Property</InputLabel>
+                            <Select
+                                size='small'
+                                value={property}
+                                onChange={(e) => setProperty(e.target.value)}>
+                                <MenuItem value={RDF.type}>is a</MenuItem>
+
+                                {assignedClasses?.length && (
+                                    currentTreatise.propertiesWithDomain(assignedClasses[0]).map(property => {
+                                        return (
+                                            <MenuItem
+                                                key={`property_${property.uri}`}
+                                                value={property.uri}>
+                                                {property.label}
+                                            </MenuItem>
+                                        )
+                                    })
+                                )}
+                            </Select>
+                        </FormControl>
+
+                        {property === RDF.type ? (
                             <FormControl variant='standard'>
-                                <InputLabel>Assigned Property</InputLabel>
+                                <InputLabel>Assigned Object</InputLabel>
+
                                 <Select
                                     size='small'
-                                    value={property}
-                                    onChange={(e) => setProperty(e.target.value)}>
-                                    <MenuItem value={RDF.type}>is a</MenuItem>
-
-                                    {assignedClasses?.length && (
-                                        currentTreatise.propertiesWithDomain(assignedClasses[0]).map(property => {
-                                            return (
-                                                <MenuItem
-                                                    key={`property_${property.uri}`}
-                                                    value={property.uri}>
-                                                    {property.label}
-                                                </MenuItem>
-                                            )
-                                        })
-                                    )}
+                                    value={attribute}
+                                    onChange={(e) => setAttribute(e.target.value)}>
+                                    {currentTreatise.allClasses().map(classObj => {
+                                        return (
+                                            <MenuItem
+                                                key={`property_${classObj.uri}`}
+                                                value={classObj.uri}>
+                                                {classObj.label}
+                                            </MenuItem>
+                                        )
+                                    })}
                                 </Select>
                             </FormControl>
-
-                            {property === RDF.type ? (
-                                <FormControl variant='standard'>
-                                    <InputLabel>Assigned Object</InputLabel>
-
-                                    <Select
-                                        size='small'
-                                        value={attribute}
-                                        onChange={(e) => setAttribute(e.target.value)}>
-                                        {currentTreatise.allClasses().map(classObj => {
+                        ) :
+                            <>
+                                <Button onClick={() => setAssignSelectionOpen(true)}>Assign Selection</Button>
+                                <div>{attribute}</div>
+                                <Drawer open={assignSelectionOpen}>
+                                    <List dense>
+                                        {selectionList.map((selectionId => {
                                             return (
-                                                <MenuItem
-                                                    key={`property_${classObj.uri}`}
-                                                    value={classObj.uri}>
-                                                    {classObj.label}
-                                                </MenuItem>
+                                                <ListItem
+                                                    onClick={() => {
+                                                        setAttribute(selectionId)
+                                                        setAssignSelectionOpen(false)
+                                                    }}
+                                                    onMouseOver={() => highlightSelection(selectionId)}
+                                                    key={`selection_picker_${selectionId}`}>
+                                                    <ListItemText primary={selectionId} />
+                                                </ListItem>
                                             )
-                                        })}
-                                    </Select>
-                                </FormControl>
-                            ) :
-                                <>
-                                    <Button onClick={() => setAssignSelectionOpen(true)}>Assign Selection</Button>
-                                    <div>{attribute}</div>
-                                    <Drawer open={assignSelectionOpen}>
-                                        <List dense>
-                                            {selectionList.map((selectionId => {
-                                                return (
-                                                    <ListItem
-                                                        onClick={() => {
-                                                            setAttribute(selectionId)
-                                                            setAssignSelectionOpen(false)
-                                                        }}
-                                                        onMouseOver={() => highlightSelection(selectionId)}
-                                                        key={`selection_picker_${selectionId}`}>
-                                                        <ListItemText primary={selectionId} />
-                                                    </ListItem>
-                                                )
-                                            }))}
-                                        </List>
-                                    </Drawer>
-                                </>
-                            }
-                        </>
-                    )}
+                                        }))}
+                                    </List>
+                                </Drawer>
+                            </>
+                        }
+                    </>
+                )}
 
 
-                    <TextField
-                        label='Comment'
-                        placeholder='Comment'
-                        size='small'
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)} />
-                </Stack>
-            </DialogContent>
+                <TextField
+                    label='Comment'
+                    placeholder='Comment'
+                    size='small'
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)} />
+            </Stack>
 
             <DialogActions>
                 <Button variant='contained' onClick={() => {
