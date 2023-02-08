@@ -1,7 +1,8 @@
-import { asUrl, buildThing, createThing, saveSolidDatasetAt, setThing, Thing } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, getSolidDataset, getStringNoLocale, getThingAll, getUrl, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
-import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, TextField } from "@mui/material"
+import { OWL, RDF, RDFS } from "@inrupt/vocab-common-rdf"
+import { ExpandMore } from "@mui/icons-material"
+import { Accordion, AccordionDetails, AccordionSummary, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, Menu, MenuItem, Paper, Select, TextField } from "@mui/material"
 import { Stack } from "@mui/system"
 import { useEffect, useState } from "react"
 import { v4 } from "uuid"
@@ -9,56 +10,110 @@ import { crm, dcterms } from "./namespaces"
 import { ObjectEditor } from "./OntologyBasedEditor"
 import { E13 } from "./Workspace"
 
-interface E13EditorProps {
-    selectionURI: string
-    e13?: E13
-    setE13: (e13: E13) => void
-
-    open: boolean
-    onClose: () => void
+type ClassOrProperty = {
+    uri: string,
+    label: string
 }
 
-const treatises = [{
-    uri: 'http://raw.github.com/nivers.ttl',
-    name: 'nivers1667',
-    label: 'Nivers, Traité de la composition, Paris 1667'
-}]
+class Ontology {
+    private things: Thing[]
+    url: string
+    name: string
 
-const properties = [{
-    uri: 'http://example.org/hasCadence',
-    name: 'hasCadence',
-    label: 'has cadence'
-}, {
-    uri: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
-    name: 'rdfType',
-    label: 'is a'
-}]
+    constructor(ontology: SolidDataset, name: string) {
+        this.things = getThingAll(ontology)
+        this.name = name
+        const owlOntology = this.things.find(thing => getUrl(thing, RDF.type) === OWL.Ontology)
+        if (!owlOntology) this.url = ''
+        else this.url = asUrl(owlOntology)
+    }
 
-export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13EditorProps) => {
+    title() {
+        return 'Nivers'
+    }
+
+    allClasses() {
+        return this.things
+            .filter(thing =>
+                getUrl(thing, RDF.type) === OWL.Class)
+            .map(thing => ({
+                uri: asUrl(thing),
+                label: getStringNoLocale(thing, RDFS.label)
+            }) as ClassOrProperty)
+    }
+
+    propertiesWithDomain(url: string) {
+        return this.things
+            .filter(thing =>
+                getUrl(thing, RDF.type) === OWL.ObjectProperty)
+            .map(thing => ({
+                uri: asUrl(thing),
+                label: getStringNoLocale(thing, RDFS.label)
+            }) as ClassOrProperty)
+    }
+}
+
+interface E13EditorProps {
+    selectionURI: string
+    e13: E13
+    setE13: (e13: E13) => void
+
+    assignedClasses: string[]
+    setAssignedClasses: (classes: string[]) => void
+}
+
+type Treatise = {
+    url: string,
+    name: string,
+    label: string
+}
+
+const availableTreatises = [
+    {
+        url: '/nivers1667.ttl',
+        name: 'nivers1667',
+        label: 'Nivers, Traité de la composition, Paris 1667'
+    }
+]
+
+export const E13Editor = ({ selectionURI, e13, setE13, assignedClasses, setAssignedClasses }: E13EditorProps) => {
     const { dataset } = useDataset()
     const { session } = useSession()
 
-    const [treatise, setTreatise] = useState('nivers1667')
-    const [property, setProperty] = useState(e13?.property || 'hasCadence')
-    const [attribute, setAttribute] = useState(e13?.attribute || createThing())
-    const [comment, setComment] = useState(e13?.comment || '')
+    const [currentTreatise, setCurrentTreatise] = useState<Ontology>()
+    const [property, setProperty] = useState(e13.property)
+    const [attribute, setAttribute] = useState<string>(e13.attribute)
+    const [comment, setComment] = useState(e13?.comment)
 
     useEffect(() => {
-        if (!open) {
-            return
+        if (!e13) return
+
+        setProperty(e13.property)
+        setAttribute(e13.attribute)
+        setComment(e13.comment)
+
+        const loadTreatise = async (url: string) => {
+            setCurrentTreatise(new Ontology(await getSolidDataset(url), e13.treatise))
         }
 
-        console.log('E13Editor opened. Setting properties to', e13)
-        setProperty(e13?.property || 'hasCadence')
-        setAttribute(e13?.attribute || createThing())
-        setComment(e13?.comment || '')
-    }, [e13, open])
+        const selectedTreatise = availableTreatises.find(t => t.name === e13.treatise)
+        if (selectedTreatise) loadTreatise(selectedTreatise.url)
+    }, [e13])
+
+    useEffect(() => {
+        if (!currentTreatise || !assignedClasses.length) return
+
+        console.log(currentTreatise.propertiesWithDomain(assignedClasses[0]))
+    }, [currentTreatise, assignedClasses])
 
     const saveToPod = () => {
-        const id = v4()
+        setAssignedClasses([...assignedClasses, attribute])
+
+        const id = e13.id
 
         setE13({
             id,
+            treatise: currentTreatise?.name || '',
             property,
             attribute,
             comment
@@ -70,28 +125,31 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
             .addUrl(RDF.type, crm('E13_Attribute_Assignment'))
             .addStringNoLocale(RDFS.label, id)
             .addDate(dcterms('created'), new Date(Date.now()))
-            .addStringNoLocale(crm('P33_used_specific_technique'), treatises.find(t => t.name === treatise)?.uri || 'http://unknown')
             .addUrl(crm('P14_carried_out_by'), session.info.webId || 'http://unknown')
             .addUrl(crm('P140_assigned_attribute_to'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + selectionURI)
-            .addUrl(crm('P141_assigned'), asUrl(attribute, 'https://pfefferniels.inrupt.net/preludes/works.ttl'))
-            .addUrl(crm('P177_assigned_property_of_type'), properties.find(p => p.name === property)?.uri || 'http://unknown')
+            .addUrl(crm('P141_assigned'), attribute)
             .addStringNoLocale(crm('P3_has_note'), comment)
-            .build();
+
+        if (currentTreatise) {
+            e13Thing.addUrl(crm('P33_used_specific_technique'), currentTreatise?.url || '')
+        }
+
+        if (property && property.length) {
+            e13Thing.addUrl(crm('P177_assigned_property_of_type'), property)
+        }
 
         if (!dataset) {
             console.warn('No dataset found to save the new work to.');
             return;
         }
 
-        let modifiedDataset = setThing(dataset, e13Thing);
-        modifiedDataset = setThing(dataset, attribute);
+        let modifiedDataset = setThing(dataset, e13Thing.build());
+        // modifiedDataset = setThing(dataset, attribute);
         saveSolidDatasetAt('https://pfefferniels.inrupt.net/preludes/works.ttl', modifiedDataset, { fetch: session.fetch as any });
     }
 
     return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>E13 Attribute Assignment</DialogTitle>
-
+        <Paper>
             <DialogContent>
                 <Stack spacing={2}>
                     <FormControl variant='standard'>
@@ -99,9 +157,16 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
 
                         <Select
                             size='small'
-                            value={treatise}
-                            onChange={(e) => setTreatise(e.target.value)}>
-                            {treatises.map(treatise => {
+                            value={currentTreatise?.name || ''}
+                            onChange={async (e) => {
+                                const name = e.target.value
+                                const treatise = availableTreatises.find(treatise =>
+                                    treatise.name === name)!
+                                const dataset = await getSolidDataset(treatise.url)
+                                if (!dataset) return
+                                setCurrentTreatise(new Ontology(dataset, name))
+                            }}>
+                            {availableTreatises.map(treatise => {
                                 return (
                                     <MenuItem
                                         key={treatise.name}
@@ -113,45 +178,79 @@ export const E13Editor = ({ selectionURI, e13, setE13, open, onClose }: E13Edito
                         </Select>
                     </FormControl>
 
-                    <FormControl variant='standard'>
-                        <InputLabel>Assigned Property</InputLabel>
-                        <Select
-                            size='small'
-                            value={property}
-                            onChange={(e) => setProperty(e.target.value)}>
-                            {properties.map(property => {
-                                return (
-                                    <MenuItem
-                                        key={`property_${property.name}`}
-                                        value={property.name}>
-                                        {property.label}
-                                    </MenuItem>
-                                )
-                            })}
-                        </Select>
-                    </FormControl>
+                    {currentTreatise && (
+                        <>
+                            <FormControl variant='standard'>
+                                <InputLabel>Assigned Property</InputLabel>
+                                <Select
+                                    size='small'
+                                    value={property}
+                                    onChange={(e) => setProperty(e.target.value)}>
+                                    <MenuItem value={RDF.type}>is a</MenuItem>
+                                    {assignedClasses?.length && (
+                                        currentTreatise.propertiesWithDomain(assignedClasses[0]).map(property => {
+                                            return (
+                                                <MenuItem
+                                                    key={`property_${property.uri}`}
+                                                    value={property.uri}>
+                                                    {property.label}
+                                                </MenuItem>
+                                            )
+                                        })
+                                    )}
+                                </Select>
+                            </FormControl>
 
-                    <ObjectEditor
-                        ontologyUrl={'/nivers1667.ttl'}
-                        classUrl={'http://webprotege.stanford.edu/Cadence'}
-                        object={attribute}
-                        setObject={setAttribute} />
+                            {property === RDF.type ? (
+                                <FormControl variant='standard'>
+                                    <InputLabel>Assigned Object</InputLabel>
+
+                                    <Select
+                                        size='small'
+                                        value={attribute}
+                                        onChange={(e) => setAttribute(e.target.value)}>
+                                        {currentTreatise.allClasses().map(classObj => {
+                                            return (
+                                                <MenuItem
+                                                    key={`property_${classObj.uri}`}
+                                                    value={classObj.uri}>
+                                                    {classObj.label}
+                                                </MenuItem>
+                                            )
+                                        })}
+                                    </Select>
+                                </FormControl>
+                            ) :
+                                <Accordion>
+                                    <AccordionSummary
+                                        expandIcon={<ExpandMore />}>
+                                        Assigned Selection or Single Note
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        {
+
+                                        }
+                                    </AccordionDetails>
+                                </Accordion>
+                            }
+                        </>
+                    )}
+
 
                     <TextField
                         label='Comment'
                         placeholder='Comment'
                         size='small'
-                        value={comment} onChange={(e) => setComment(e.target.value)} />
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)} />
                 </Stack>
             </DialogContent>
 
             <DialogActions>
                 <Button variant='contained' onClick={() => {
                     saveToPod()
-                    onClose()
                 }}>Save</Button>
-                <Button variant='outlined' onClick={onClose}>Cancel</Button>
             </DialogActions>
-        </Dialog>
+        </Paper>
     )
 }

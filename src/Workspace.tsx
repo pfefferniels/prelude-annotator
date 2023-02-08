@@ -12,8 +12,9 @@ import { tab2cmn } from "./tab2cmn"
 
 export interface E13 {
     id: string
+    treatise: string
     property: string
-    attribute: Thing
+    attribute: string
     comment: string
 }
 

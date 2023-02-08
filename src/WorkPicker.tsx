@@ -111,8 +111,9 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }:
                             .map((thing): E13 => {
                                 return {
                                     id: asUrl(thing).split('#').at(-1) || v4(),
+                                    treatise: '', // TODO
                                     property: getUrl(thing, crm('P177_assigned_property_of_type'))?.split('/').at(-1) || 'unknown',
-                                    attribute: getThing(dataset, getUrl(thing, crm('P141_assigned')) || '') || createThing(),
+                                    attribute: getUrl(thing, crm('P141_assigned')) || '',
                                     comment: getStringNoLocale(thing, crm('P3_has_note')) || ''
                                 }
                             })

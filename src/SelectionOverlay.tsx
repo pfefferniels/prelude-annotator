@@ -53,7 +53,10 @@ export const SelectionOverlay = ({
                 <path
                     className='hull'
                     d={`M${hullPoints.join(" L ")} Z`}
-                    onClick={() => setActiveSelection(selection.id)} />,
+                    onClick={(e) => {
+                        if (e.altKey) removeSelection(selection.id)
+                        else setActiveSelection(selection.id)
+                    }} />,
                 svgBackground
             )}
         </>

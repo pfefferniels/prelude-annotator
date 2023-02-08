@@ -5,9 +5,12 @@ import { E13Editor } from "./E13Editor"
 import { E13, isSelection, Selection } from "./Workspace"
 import Grid2 from '@mui/material/Unstable_Grid2'
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
-import { buildThing, createThing, setThing, saveSolidDatasetAt } from "@inrupt/solid-client"
+import { buildThing, createThing, setThing, saveSolidDatasetAt, thingAsMarkdown, getPropertyAll, getUrl } from "@inrupt/solid-client"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { crm, dcterms } from "./namespaces"
+import { Stack } from "@mui/system"
+import { E13Summary } from "./E13Summary"
+import { v4 } from "uuid"
 
 interface SelectionEditorProps {
     workURI: string
@@ -19,8 +22,8 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
     const { dataset } = useDataset()
     const { session } = useSession()
 
-    const [e13Open, setE13Open] = useState<boolean>(false)
     const [selectedE13, setSelectedE13] = useState<string>()
+    const [currentClasses, setCurrentClasses] = useState<string[]>([])
 
     useEffect(() => {
         // highlight the current selection in the score 
@@ -77,7 +80,7 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
             <Paper sx={{
                 paddingLeft: '1rem'
             }}>
-                <h3 style={{marginBottom: '0'}}>Selection {selection.id}</h3>
+                <h3 style={{ marginBottom: '0' }}>Selection {selection.id}</h3>
                 <div>
                     <small>affects {selection.refs.length} elements, has {selection.e13s.length} attribute assignments</small>
                 </div>
@@ -87,46 +90,25 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                 </IconButton>
 
                 <IconButton onClick={() => {
-                    setSelectedE13(undefined)
-                    setE13Open(true)
+                    const id = v4()
+                    setSelection({
+                        id: selection.id,
+                        refs: selection.refs,
+                        e13s: [...selection.e13s, {
+                            id,
+                            treatise: '',
+                            property: '',
+                            attribute: '',
+                            comment: ''
+                        }]
+                    })
+                    // setE13Open(true)
+                    setSelectedE13(id)
                 }}>
                     <Add />
                 </IconButton>
 
                 <Grid2 container spacing={1}>
-                    <Grid2 xs={6}>
-                        Contains the following E13 Attribute Assignments
-                        <List>
-                            {selection.e13s.map((e13, i) => {
-                                return (
-                                    <ListItem
-                                        secondaryAction={
-                                            <>
-                                                <IconButton onClick={() => {
-                                                    setSelectedE13(e13.id)
-                                                    setE13Open(true)
-                                                }}>
-                                                    <Edit />
-                                                </IconButton>
-                                                <IconButton onClick={() => {
-                                                    selection.e13s.splice(i, 1)
-                                                    setSelection({
-                                                        id: selection.id,
-                                                        refs: selection.refs,
-                                                        e13s: selection.e13s
-                                                    })
-                                                }}>
-                                                    <Delete />
-                                                </IconButton>
-                                            </>
-                                        }
-                                        key={`selection_editor_${e13.id}`}>
-                                        <ListItemText primary={e13.property} secondary={e13.comment} />
-                                    </ListItem>
-                                )
-                            })}
-                        </List>
-                    </Grid2>
                     <Grid2 xs={4}>
                         <Paper>
                             <Typography>Affects the following MEI elements</Typography>
@@ -155,32 +137,59 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                             </List>
                         </Paper>
                     </Grid2>
-                </Grid2>
-            </Paper>
+                    <Grid2 xs={2}>
+                        <Stack spacing={1} direction='row'>
+                            {selection.e13s.map((e13, i) => {
+                                return (
+                                    <Paper key={`selection_editor_${e13.id}`}>
+                                        <IconButton onClick={() => {
+                                            setSelectedE13(e13.id)
+                                            // setE13Open(true)
+                                        }}>
+                                            <Edit />
+                                        </IconButton>
+                                        <IconButton onClick={() => {
+                                            selection.e13s.splice(i, 1)
+                                            setSelection({
+                                                id: selection.id,
+                                                refs: selection.refs,
+                                                e13s: selection.e13s
+                                            })
+                                        }}>
+                                            <Delete />
+                                        </IconButton>
 
-            <E13Editor
-                selectionURI={selection.id}
-                e13={selection.e13s.find(attr => attr.id === selectedE13)}
-                setE13={(e13) => {
-                    const newAttributes = selection.e13s.slice()
-                    const index = newAttributes.findIndex(attr => attr.id === selectedE13)
-                    if (index === -1) {
-                        newAttributes.push(e13)
-                    }
-                    else {
-                        newAttributes[index] = e13
-                    }
-                    setSelection({
-                        id: selection.id,
-                        refs: selection.refs,
-                        e13s: newAttributes
-                    })
-                }}
-                open={e13Open}
-                onClose={() => {
-                    setSelectedE13(undefined)
-                    setE13Open(false)
-                }} />
+                                        {selectedE13 === e13.id ?
+                                            <E13Editor
+                                                assignedClasses={currentClasses}
+                                                setAssignedClasses={setCurrentClasses}
+                                                selectionURI={selection.id}
+                                                e13={e13}
+                                                setE13={(e13) => {
+                                                    const newAttributes = selection.e13s.slice()
+                                                    const index = newAttributes.findIndex(attr => attr.id === selectedE13)
+                                                    if (index === -1) {
+                                                        console.log('This is not supposed to happen.', selection.id, 'is unknown.')
+                                                        return
+                                                    }
+
+                                                    newAttributes[index] = e13
+                                                    setSelection({
+                                                        id: selection.id,
+                                                        refs: selection.refs,
+                                                        e13s: newAttributes
+                                                    })
+                                                }} />
+                                            :
+                                            <E13Summary e13={e13} />
+                                        }
+                                    </Paper>
+                                )
+                            })}
+                        </Stack>
+                    </Grid2>
+                </Grid2>
+            </Paper >
         </>
     )
 }
