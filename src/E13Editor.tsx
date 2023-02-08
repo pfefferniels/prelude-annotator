@@ -1,8 +1,8 @@
 import { asUrl, buildThing, createThing, getSolidDataset, getStringNoLocale, getThingAll, getUrl, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
-import { OWL, RDF, RDFS } from "@inrupt/vocab-common-rdf"
+import { DCTERMS, OWL, RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { ExpandMore } from "@mui/icons-material"
-import { Accordion, AccordionDetails, AccordionSummary, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, Menu, MenuItem, Paper, Select, TextField } from "@mui/material"
+import { Accordion, AccordionDetails, AccordionSummary, Button, Dialog, DialogActions, DialogContent, DialogTitle, Drawer, FormControl, IconButton, InputLabel, List, ListItem, ListItemText, Menu, MenuItem, Paper, Select, TextField } from "@mui/material"
 import { Stack } from "@mui/system"
 import { useEffect, useState } from "react"
 import { v4 } from "uuid"
@@ -29,7 +29,9 @@ class Ontology {
     }
 
     title() {
-        return 'Nivers'
+        const owlOntology = this.things.find(thing => getUrl(thing, RDF.type) === OWL.Ontology)
+        if (!owlOntology) return this.name
+        return getStringNoLocale(owlOntology, DCTERMS.title) || this.name
     }
 
     allClasses() {
@@ -60,6 +62,9 @@ interface E13EditorProps {
 
     assignedClasses: string[]
     setAssignedClasses: (classes: string[]) => void
+
+    selectionList: string[]
+    highlightSelection: (id: string) => void
 }
 
 type Treatise = {
@@ -76,7 +81,15 @@ const availableTreatises = [
     }
 ]
 
-export const E13Editor = ({ selectionURI, e13, setE13, assignedClasses, setAssignedClasses }: E13EditorProps) => {
+export const E13Editor = ({
+    selectionURI,
+    e13,
+    setE13,
+    assignedClasses,
+    setAssignedClasses,
+    selectionList,
+    highlightSelection
+}: E13EditorProps) => {
     const { dataset } = useDataset()
     const { session } = useSession()
 
@@ -84,6 +97,8 @@ export const E13Editor = ({ selectionURI, e13, setE13, assignedClasses, setAssig
     const [property, setProperty] = useState(e13.property)
     const [attribute, setAttribute] = useState<string>(e13.attribute)
     const [comment, setComment] = useState(e13?.comment)
+
+    const [assignSelectionOpen, setAssignSelectionOpen] = useState(false)
 
     useEffect(() => {
         if (!e13) return
@@ -127,7 +142,7 @@ export const E13Editor = ({ selectionURI, e13, setE13, assignedClasses, setAssig
             .addDate(dcterms('created'), new Date(Date.now()))
             .addUrl(crm('P14_carried_out_by'), session.info.webId || 'http://unknown')
             .addUrl(crm('P140_assigned_attribute_to'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + selectionURI)
-            .addUrl(crm('P141_assigned'), attribute)
+            .addUrl(crm('P141_assigned'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + attribute)
             .addStringNoLocale(crm('P3_has_note'), comment)
 
         if (currentTreatise) {
@@ -187,6 +202,7 @@ export const E13Editor = ({ selectionURI, e13, setE13, assignedClasses, setAssig
                                     value={property}
                                     onChange={(e) => setProperty(e.target.value)}>
                                     <MenuItem value={RDF.type}>is a</MenuItem>
+
                                     {assignedClasses?.length && (
                                         currentTreatise.propertiesWithDomain(assignedClasses[0]).map(property => {
                                             return (
@@ -221,17 +237,27 @@ export const E13Editor = ({ selectionURI, e13, setE13, assignedClasses, setAssig
                                     </Select>
                                 </FormControl>
                             ) :
-                                <Accordion>
-                                    <AccordionSummary
-                                        expandIcon={<ExpandMore />}>
-                                        Assigned Selection or Single Note
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        {
-
-                                        }
-                                    </AccordionDetails>
-                                </Accordion>
+                                <>
+                                    <Button onClick={() => setAssignSelectionOpen(true)}>Assign Selection</Button>
+                                    <div>{attribute}</div>
+                                    <Drawer open={assignSelectionOpen}>
+                                        <List dense>
+                                            {selectionList.map((selectionId => {
+                                                return (
+                                                    <ListItem
+                                                        onClick={() => {
+                                                            setAttribute(selectionId)
+                                                            setAssignSelectionOpen(false)
+                                                        }}
+                                                        onMouseOver={() => highlightSelection(selectionId)}
+                                                        key={`selection_picker_${selectionId}`}>
+                                                        <ListItemText primary={selectionId} />
+                                                    </ListItem>
+                                                )
+                                            }))}
+                                        </List>
+                                    </Drawer>
+                                </>
                             }
                         </>
                     )}

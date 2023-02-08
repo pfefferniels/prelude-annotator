@@ -5,9 +5,9 @@ import { createPortal } from 'react-dom';
 
 interface SelectionOverlayProps {
     selection: Selection
+    highlight: boolean
     removeSelection: (id: string) => void
     setActiveSelection: (id: string) => void
-
     svgBackground: Element
 }
 
@@ -17,6 +17,7 @@ interface SelectionOverlayProps {
  */
 export const SelectionOverlay = ({
     selection,
+    highlight,
     removeSelection,
     setActiveSelection,
     svgBackground }: SelectionOverlayProps) => {
@@ -51,7 +52,7 @@ export const SelectionOverlay = ({
         <>
             {hullPoints && createPortal(
                 <path
-                    className='hull'
+                    className={highlight ? 'hull-highlighted' : 'hull'}
                     d={`M${hullPoints.join(" L ")} Z`}
                     onClick={(e) => {
                         if (e.altKey) removeSelection(selection.id)

@@ -39,6 +39,7 @@ export const Workspace = () => {
     const [transformedMEI, setTransformedMEI] = useState('')
     const [selections, setSelections] = useState<Selection[]>([])
     const [activeSelectionId, setActiveSelectionId] = useState('')
+    const [secondaryActiveSelection, setSecondaryActiveSelection] = useState('')
     const [workPickerOpen, setWorkPickerOpen] = useState(true)
 
     const [verovioReady, setVerovioReady] = useState(0)
@@ -73,7 +74,6 @@ export const Workspace = () => {
     }, [mei])
 
     const saveToPod = () => {
-        // create Work entity, upload MEI document, 
         // somehow connect all the Attribute Assignments
     }
 
@@ -161,7 +161,9 @@ export const Workspace = () => {
                 <SelectionEditor
                     workURI={workURI}
                     setSelection={setSelection}
-                    selection={selections.find(selection => selection.id === activeSelectionId)} />
+                    selection={selections.find(selection => selection.id === activeSelectionId)}
+                    selectionList={selections.map(s => s.id)}
+                    highlightSelection={(id: string) => setSecondaryActiveSelection(id)} />
             </Drawer>
 
             {hullContainer && selections.map(selection => {
@@ -169,6 +171,7 @@ export const Workspace = () => {
                     <SelectionOverlay
                         key={selection.id}
                         selection={selection}
+                        highlight={selection.id === secondaryActiveSelection}
                         setActiveSelection={setActiveSelectionId}
                         removeSelection={removeSelection}
                         svgBackground={hullContainer} />

@@ -8,3 +8,8 @@
 .hull:hover {
     fill-opacity: 0.5;
 }
+
+.hull-highlighted {
+    fill: red;
+    fill-opacity: 1;
+}

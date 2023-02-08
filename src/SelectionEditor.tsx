@@ -16,9 +16,17 @@ interface SelectionEditorProps {
     workURI: string
     selection: Selection | undefined
     setSelection: (selection: Selection) => void
+
+    selectionList: string[]
+    highlightSelection: (selectionId: string) => void
 }
 
-export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionEditorProps) => {
+export const SelectionEditor = ({
+    workURI,
+    selection,
+    setSelection,
+    selectionList,
+    highlightSelection }: SelectionEditorProps) => {
     const { dataset } = useDataset()
     const { session } = useSession()
 
@@ -94,6 +102,8 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                     setSelection({
                         id: selection.id,
                         refs: selection.refs,
+
+                        // append a new E13
                         e13s: [...selection.e13s, {
                             id,
                             treatise: '',
@@ -102,7 +112,6 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                             comment: ''
                         }]
                     })
-                    // setE13Open(true)
                     setSelectedE13(id)
                 }}>
                     <Add />
@@ -179,7 +188,10 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
                                                         refs: selection.refs,
                                                         e13s: newAttributes
                                                     })
-                                                }} />
+                                                }}
+                                                selectionList={selectionList}
+                                                highlightSelection={highlightSelection}
+                                            />
                                             :
                                             <E13Summary e13={e13} />
                                         }
