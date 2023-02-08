@@ -1,11 +1,9 @@
-import { IconButton, ToggleButton, ToggleButtonGroup } from "@mui/material"
+import { Drawer, IconButton, ToggleButton, ToggleButtonGroup } from "@mui/material"
 import { useEffect, useState } from "react"
 import { v4 } from "uuid"
 import { SelectionEditor } from "./SelectionEditor"
-import { SelectionList } from "./SelectionList"
 import Verovio from "./Verovio"
 import { WorkPicker } from "./WorkPicker"
-import Grid2 from '@mui/material/Unstable_Grid2'
 import { Menu } from "@mui/icons-material"
 import { Stack } from "@mui/system"
 import { Thing } from "@inrupt/solid-client"
@@ -49,7 +47,7 @@ export const Workspace = () => {
     // which serves as a container for the overlays
     // that outline selections in the score
     useEffect(() => {
-        if (!verovioReady) return 
+        if (!verovioReady) return
 
         const svg = document.querySelector('.verovio svg')
         if (!svg) {
@@ -60,7 +58,7 @@ export const Workspace = () => {
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
         g.setAttribute('id', 'hulls')
         const firstSystem = svg.querySelector('.system')
-        if (!firstSystem) return 
+        if (!firstSystem) return
 
         firstSystem.parentElement?.insertBefore(g, firstSystem)
         setHullContainer(g)
@@ -102,6 +100,12 @@ export const Workspace = () => {
         setSelections(newSelections)
     }
 
+    const removeSelection = (id: string) => {
+        const newSelections = selections.slice()
+        newSelections.splice(selections.findIndex(selection => selection.id === id), 1)
+        setSelections(newSelections)
+    }
+
     const removeFromActiveSelection = (ref: string) => {
         const newSelections = selections.slice()
         const index = newSelections.findIndex(selection => selection.id === activeSelectionId)
@@ -122,7 +126,7 @@ export const Workspace = () => {
     }
 
     return (
-        <div style={{margin: '1rem'}}>
+        <div style={{ margin: '1rem' }}>
             <Stack direction='row'>
                 <IconButton onClick={() => setWorkPickerOpen(true)}>
                     <Menu />
@@ -149,22 +153,15 @@ export const Workspace = () => {
                 startNewSelection={startNewSelection}
                 onReady={() => setVerovioReady(verovioReady + 1)} />
 
-            <Grid2 container spacing={2}>
-                <Grid2 xs={4}>
-                    <SelectionList
-                        selections={selections}
-                        setSelections={setSelections}
-                        activeSelection={activeSelectionId}
-                        setActiveSelection={setActiveSelectionId} />
-                </Grid2>
-
-                <Grid2 xs={8}>
-                    <SelectionEditor
-                        workURI={workURI}
-                        setSelection={setSelection}
-                        selection={selections.find(selection => selection.id === activeSelectionId)} />
-                </Grid2>
-            </Grid2>
+            <Drawer
+                variant='persistent'
+                open={activeSelectionId !== ''}
+                anchor='bottom'>
+                <SelectionEditor
+                    workURI={workURI}
+                    setSelection={setSelection}
+                    selection={selections.find(selection => selection.id === activeSelectionId)} />
+            </Drawer>
 
             {hullContainer && selections.map(selection => {
                 return (
@@ -172,7 +169,7 @@ export const Workspace = () => {
                         key={selection.id}
                         selection={selection}
                         setActiveSelection={setActiveSelectionId}
-                        removeSelection={() => /*removeSelectionById */ null}
+                        removeSelection={removeSelection}
                         svgBackground={hullContainer} />
                 )
             })}

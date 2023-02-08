@@ -74,8 +74,13 @@ export const SelectionEditor = ({ workURI, selection, setSelection }: SelectionE
 
     return (
         <>
-            <Paper>
-                <h3>Selection {selection.id}</h3>
+            <Paper sx={{
+                paddingLeft: '1rem'
+            }}>
+                <h3 style={{marginBottom: '0'}}>Selection {selection.id}</h3>
+                <div>
+                    <small>affects {selection.refs.length} elements, has {selection.e13s.length} attribute assignments</small>
+                </div>
 
                 <IconButton onClick={saveToPod}>
                     <Save />
