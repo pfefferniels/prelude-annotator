@@ -9,6 +9,8 @@ import { LoginForm } from './Login';
 
 
 function App() {
+  const [datasetUrl, setDatasetUrl] = useState('https://pfefferniels.inrupt.net/preludes/works.ttl')
+
   return (
     <SessionProvider sessionId="prelude-annotator">
       <div className="App">
@@ -16,7 +18,7 @@ function App() {
           <LoginForm />
         </header>
 
-        <DatasetProvider datasetUrl={'https://pfefferniels.inrupt.net/preludes/works.ttl'}>
+        <DatasetProvider datasetUrl={datasetUrl}>
           <Workspace />
         </DatasetProvider>
       </div>

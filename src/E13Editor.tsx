@@ -1,4 +1,4 @@
-import { asUrl, buildThing, createThing, getSolidDataset, getStringNoLocale, getThing, getThingAll, getUrl, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { DCTERMS, OWL, RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { Button, DialogActions, DialogContent, Drawer, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
@@ -147,15 +147,20 @@ export const E13Editor = ({
             comment
         })
 
+        if (!dataset) return
+
+        const sourceUrl = getSourceUrl(dataset)
+        if (!sourceUrl) return
+
         const e13Thing = buildThing(createThing({
             name: id
         }))
             .addUrl(RDF.type, crm('E13_Attribute_Assignment'))
             .addStringNoLocale(RDFS.label, id)
             .addDate(dcterms('created'), new Date(Date.now()))
-            .addUrl(crm('P14_carried_out_by'), session.info.webId || 'http://unknown')
-            .addUrl(crm('P140_assigned_attribute_to'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + selectionURI)
-            .addUrl(crm('P141_assigned'), 'https://pfefferniels.inrupt.net/preludes/works.ttl#' + attribute)
+            .addUrl(crm('P14_carried_out_by'), session.info.webId!)
+            .addUrl(crm('P140_assigned_attribute_to'), sourceUrl + selectionURI)
+            .addUrl(crm('P141_assigned'), sourceUrl + attribute)
             .addStringNoLocale(crm('P3_has_note'), comment)
 
         if (currentTreatise) {
@@ -173,7 +178,7 @@ export const E13Editor = ({
 
         let modifiedDataset = setThing(dataset, e13Thing.build());
         // modifiedDataset = setThing(dataset, attribute);
-        saveSolidDatasetAt('https://pfefferniels.inrupt.net/preludes/works.ttl', modifiedDataset, { fetch: session.fetch as any });
+        saveSolidDatasetAt(getSourceUrl(dataset)!, modifiedDataset, { fetch: session.fetch as any });
     }
 
     return (

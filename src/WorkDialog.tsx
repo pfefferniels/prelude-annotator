@@ -54,7 +54,7 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
         const modifiedDataset = setThing(dataset, meiThing)
 
         return saveSolidDatasetAt(
-            'https://pfefferniels.inrupt.net/preludes/works.ttl',
+            getSourceUrl(dataset)!,
             modifiedDataset,
             { fetch: session.fetch as any })
     }
