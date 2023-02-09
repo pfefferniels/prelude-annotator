@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Selection } from "./Workspace";
 import * as d3 from 'd3'
 import { createPortal } from 'react-dom';
+import { roundedHull } from "./roundedHull";
 
 interface SelectionOverlayProps {
     selection: Selection
@@ -35,16 +36,12 @@ export const SelectionOverlay = ({
                     const bbox = el.getBBox()
                     return [
                         ...result,
-                        [bbox.x + 50, bbox.y + 50],
-                        [bbox.x + 100, bbox.y + 50],
-                        [bbox.x + 50, bbox.y + 100],
                         [bbox.x + 100, bbox.y + 100]
                     ] as [number, number][]
                 }, [] as [number, number][])
 
         // build a hull around these points
-        const hullPoints = d3.polygonHull(points)
-        if (hullPoints) setHullPoints(hullPoints)
+        setHullPoints(points)
     }, [selection, removeSelection, setActiveSelection, svgBackground])
 
     return (
@@ -52,7 +49,7 @@ export const SelectionOverlay = ({
             {hullPoints && createPortal(
                 <path
                     className={highlight ? 'hull-highlighted' : 'hull'}
-                    d={`M${hullPoints.join(" L ")} Z`}
+                    d={roundedHull(hullPoints)}
                     onClick={(e) => {
                         if (e.altKey) removeSelection(selection.id)
                         else setActiveSelection(selection.id)

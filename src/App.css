@@ -1,8 +1,8 @@
 .hull {
     fill-opacity: 0.2;
     fill: red;
-    stroke-width: 100;
-    stroke: none;
+    stroke-width: 10;
+    stroke: black;
 }
 
 .hull:hover {
