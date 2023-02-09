@@ -6,9 +6,10 @@ import Verovio from "./Verovio"
 import { WorkPicker } from "./WorkPicker"
 import { Menu } from "@mui/icons-material"
 import { Stack } from "@mui/system"
-import { Thing } from "@inrupt/solid-client"
+import { removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
 import { SelectionOverlay } from "./SelectionOverlay"
 import { tab2cmn } from "./tab2cmn"
+import { useDataset, useSession } from "@inrupt/solid-ui-react"
 
 export interface E13 {
     id: string
@@ -33,6 +34,9 @@ export const isSelection = (ref: Reference): ref is Selection => {
 type DisplayMode = 'staff-notation' | 'tablature'
 
 export const Workspace = () => {
+    const { dataset } = useDataset()
+    const { session } = useSession()
+
     const [workURI, setWorkURI] = useState('')
     const [displayMode, setDispayMode] = useState<DisplayMode>('tablature')
     const [mei, setMEI] = useState('')
@@ -102,6 +106,14 @@ export const Workspace = () => {
     }
 
     const removeSelection = (id: string) => {
+        const selectionToRemove = selections.find(selection => selection.id === id)
+        if (dataset && selectionToRemove) {
+            let modifiedDataset = removeThing(dataset, 'https://pfefferniels.inrupt.net/preludes/works.ttl' + selectionToRemove.id)
+            selectionToRemove?.e13s.forEach(e13 => {
+                modifiedDataset = removeThing(dataset, 'https://pfefferniels.inrupt.net/preludes/works.ttl' + e13.id)
+            })
+            saveSolidDatasetAt('https://pfefferniels.inrupt.net/preludes/works.ttl', modifiedDataset, { fetch: session.fetch as any })
+        }
         const newSelections = selections.slice()
         newSelections.splice(selections.findIndex(selection => selection.id === id), 1)
         setSelections(newSelections)

@@ -1,7 +1,7 @@
 import { RDF } from "@inrupt/vocab-common-rdf";
 import { E13 } from "./Workspace";
 
-const urlAsLabel = (url: string) => {
+export const urlAsLabel = (url: string) => {
     if (!url.length) return ''
     if (url === RDF.type) return 'a'
 

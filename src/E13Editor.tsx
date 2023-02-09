@@ -1,4 +1,4 @@
-import { asUrl, buildThing, createThing, getSolidDataset, getStringNoLocale, getThingAll, getUrl, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, getSolidDataset, getStringNoLocale, getThing, getThingAll, getUrl, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { DCTERMS, OWL, RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { Button, DialogActions, DialogContent, Drawer, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
@@ -7,9 +7,14 @@ import { useEffect, useState } from "react"
 import { crm, dcterms } from "./namespaces"
 import { E13 } from "./Workspace"
 
-type ClassOrProperty = {
+type LabeledURI = {
     uri: string,
     label: string
+}
+
+type Property = LabeledURI & {
+    domain: string
+    range: string
 }
 
 class Ontology {
@@ -38,17 +43,28 @@ class Ontology {
             .map(thing => ({
                 uri: asUrl(thing),
                 label: getStringNoLocale(thing, RDFS.label)
-            }) as ClassOrProperty)
+            }) as LabeledURI)
     }
 
     propertiesWithDomain(url: string) {
+        console.log('looking for', url, 'in')
+        console.log(this.things.filter(thing =>
+                getUrl(thing, RDF.type) === OWL.ObjectProperty).map(thing => getUrl(thing, RDFS.domain)))
+
         return this.things
             .filter(thing =>
-                getUrl(thing, RDF.type) === OWL.ObjectProperty)
+                getUrl(thing, RDF.type) === OWL.ObjectProperty &&
+                getUrl(thing, RDFS.domain) === url)
             .map(thing => ({
                 uri: asUrl(thing),
                 label: getStringNoLocale(thing, RDFS.label)
-            }) as ClassOrProperty)
+            }) as LabeledURI)
+    }
+
+    rangeOfProperty(propertyUrl: string): string | null {
+        const obj = this.things.find(thing => asUrl(thing) === propertyUrl)
+        if (!obj) return null
+        return getUrl(obj, RDFS.range)
     }
 }
 
@@ -62,12 +78,6 @@ interface E13EditorProps {
 
     selectionList: string[]
     highlightSelection: (id: string) => void
-}
-
-type Treatise = {
-    url: string,
-    name: string,
-    label: string
 }
 
 const availableTreatises = [
@@ -97,6 +107,7 @@ export const E13Editor = ({
 
     const [currentTreatise, setCurrentTreatise] = useState<Ontology>()
     const [property, setProperty] = useState(e13.property)
+    const [expectedRange, setExpectedRange] = useState<string | null>(null)
     const [attribute, setAttribute] = useState<string>(e13.attribute)
     const [comment, setComment] = useState(e13?.comment)
 
@@ -201,7 +212,10 @@ export const E13Editor = ({
                             <Select
                                 size='small'
                                 value={property}
-                                onChange={(e) => setProperty(e.target.value)}>
+                                onChange={(e) => {
+                                    setProperty(e.target.value)
+                                    setExpectedRange(currentTreatise.rangeOfProperty(e.target.value))
+                                }}>
                                 <MenuItem value={RDF.type}>is a</MenuItem>
 
                                 {assignedClasses?.length && (
@@ -229,7 +243,7 @@ export const E13Editor = ({
                                     {currentTreatise.allClasses().map(classObj => {
                                         return (
                                             <MenuItem
-                                                key={`property_${classObj.uri}`}
+                                                key={`class_${classObj.uri}`}
                                                 value={classObj.uri}>
                                                 {classObj.label}
                                             </MenuItem>
@@ -239,6 +253,8 @@ export const E13Editor = ({
                             </FormControl>
                         ) :
                             <>
+                                <small>expects {expectedRange || 'anything'}</small>
+
                                 <Button onClick={() => setAssignSelectionOpen(true)}>Assign Selection</Button>
                                 <div>{attribute}</div>
                                 <Drawer open={assignSelectionOpen}>

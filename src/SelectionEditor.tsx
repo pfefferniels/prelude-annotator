@@ -5,7 +5,7 @@ import { E13Editor } from "./E13Editor"
 import { E13, isSelection, Selection } from "./Workspace"
 import Grid2 from '@mui/material/Unstable_Grid2'
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
-import { buildThing, createThing, setThing, saveSolidDatasetAt, thingAsMarkdown, getPropertyAll, getUrl } from "@inrupt/solid-client"
+import { buildThing, createThing, setThing, saveSolidDatasetAt, thingAsMarkdown, getPropertyAll, getUrl, removeThing } from "@inrupt/solid-client"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { crm, dcterms } from "./namespaces"
 import { Stack } from "@mui/system"
@@ -76,8 +76,9 @@ export const SelectionEditor = ({
 
         const modifiedDataset = setThing(dataset, selectionThing.build());
         saveSolidDatasetAt('https://pfefferniels.inrupt.net/preludes/works.ttl', modifiedDataset, { fetch: session.fetch as any });
-
     }
+
+    useEffect(saveToPod, [selection])
 
     if (!selection) {
         return <div>no selection specified</div>
@@ -158,12 +159,25 @@ export const SelectionEditor = ({
                                             <Edit />
                                         </IconButton>
                                         <IconButton onClick={() => {
+                                            if (dataset) {
+                                                const modifiedDataset = removeThing(dataset, 'https://pfefferniels.inrupt.net/preludes/works.ttl' + e13.id)
+                                                saveSolidDatasetAt('https://pfefferniels.inrupt.net/preludes/works.ttl', modifiedDataset, { fetch: session.fetch as any })
+                                            }
+
                                             selection.e13s.splice(i, 1)
                                             setSelection({
                                                 id: selection.id,
                                                 refs: selection.refs,
                                                 e13s: selection.e13s
                                             })
+                                            const index = currentClasses.findIndex(className => 
+                                                e13.attribute === className
+                                            )
+                                            if (index != -1) {
+                                                const newClasses = currentClasses.slice()
+                                                currentClasses.splice(index, 1)
+                                                setCurrentClasses(newClasses)
+                                            }
                                         }}>
                                             <Delete />
                                         </IconButton>

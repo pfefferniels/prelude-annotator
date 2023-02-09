@@ -1,4 +1,4 @@
-import { asUrl, createThing, getFile, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, Thing } from "@inrupt/solid-client"
+import { asUrl, createThing, getFile, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { AddOutlined, Delete, Edit, OpenInNew } from "@mui/icons-material"
@@ -138,7 +138,12 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }:
                                         }}>
                                             <Edit />
                                         </IconButton>
-                                        <IconButton>
+                                        <IconButton onClick={() => {
+                                            if (dataset) {
+                                                const modifiedDataset = removeThing(dataset, work.thing)
+                                                saveSolidDatasetAt('https://pfefferniels.inrupt.net/preludes/works.ttl', modifiedDataset, { fetch: session.fetch as any})
+                                            }
+                                        }}>
                                             <Delete />
                                         </IconButton>
                                         <IconButton onClick={() => {
