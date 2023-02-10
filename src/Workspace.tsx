@@ -172,7 +172,7 @@ export const Workspace = () => {
             <Drawer
                 variant='persistent'
                 open={activeSelectionId !== ''}
-                anchor='bottom'>
+                anchor='right'>
                 <SelectionEditor
                     workURI={workURI}
                     setSelection={setSelection}
