@@ -13,3 +13,7 @@
     fill: red;
     fill-opacity: 1;
 }
+
+.mNum {
+    display: none;
+}
