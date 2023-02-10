@@ -1,5 +1,5 @@
-import { Add, Delete, Edit, Save } from "@mui/icons-material"
-import { IconButton, List, ListItem, ListItemText, Paper, Typography } from "@mui/material"
+import { Add, Delete, Edit, ExpandMore, Save } from "@mui/icons-material"
+import { Accordion, AccordionActions, AccordionDetails, AccordionSummary, IconButton, List, ListItem, ListItemText, Paper, Typography } from "@mui/material"
 import { useEffect, useState } from "react"
 import { E13Editor } from "./E13Editor"
 import { E13, isSelection, Selection } from "./Workspace"
@@ -9,7 +9,7 @@ import { buildThing, createThing, setThing, saveSolidDatasetAt, thingAsMarkdown,
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { crm, dcterms } from "./namespaces"
 import { Stack } from "@mui/system"
-import { E13Summary } from "./E13Summary"
+import { E13Summary, urlAsLabel } from "./E13Summary"
 import { v4 } from "uuid"
 
 interface SelectionEditorProps {
@@ -32,6 +32,10 @@ export const SelectionEditor = ({
 
     const [selectedE13, setSelectedE13] = useState<string>()
     const [currentClasses, setCurrentClasses] = useState<string[]>([])
+
+    useEffect(() => {
+        console.log(currentClasses)
+    }, [currentClasses])
 
     useEffect(() => {
         // highlight the current selection in the score 
@@ -118,74 +122,51 @@ export const SelectionEditor = ({
                     <Add />
                 </IconButton>
 
-                <Grid2 container spacing={1}>
-                    <Grid2 xs={4}>
-                        <Paper>
-                            <Typography>Affects the following MEI elements</Typography>
-                            <List dense>
-                                {selection.refs.map(ref => {
-                                    return (
-                                        <ListItem
-                                            secondaryAction={
-                                                <IconButton onClick={() => {
-                                                    const refs = selection.refs
-                                                    refs.splice(refs.findIndex(r => r === ref), 1)
-                                                    setSelection({
-                                                        id: selection.id,
-                                                        refs: selection.refs,
-                                                        e13s: selection.e13s
-                                                    })
-                                                }}>
-                                                    <Delete />
-                                                </IconButton>
-                                            }
-                                            key={`selection_editor_${ref}`}>
-                                            <ListItemText primary={isSelection(ref) ? ref.id : ref} />
-                                        </ListItem>
-                                    )
-                                })}
-                            </List>
-                        </Paper>
-                    </Grid2>
-                    <Grid2 xs={2}>
-                        <Stack spacing={1} direction='row'>
-                            {selection.e13s.map((e13, i) => {
+                <Stack spacing={1}>
+                    <Paper>
+                        <Typography>Affects the following MEI elements</Typography>
+                        <List dense>
+                            {selection.refs.map(ref => {
                                 return (
-                                    <Paper key={`selection_editor_${e13.id}`}>
-                                        <IconButton onClick={() => {
-                                            setSelectedE13(e13.id)
-                                            // setE13Open(true)
-                                        }}>
-                                            <Edit />
-                                        </IconButton>
-                                        <IconButton onClick={() => {
-                                            if (dataset) {
-                                                const sourceUrl = getSourceUrl(dataset)
-                                                if (sourceUrl) {
-                                                    const modifiedDataset = removeThing(dataset, sourceUrl + e13.id)
-                                                    saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any })
-                                                }
-                                            }
-
-                                            selection.e13s.splice(i, 1)
-                                            setSelection({
-                                                id: selection.id,
-                                                refs: selection.refs,
-                                                e13s: selection.e13s
-                                            })
-                                            const index = currentClasses.findIndex(className =>
-                                                e13.attribute === className
-                                            )
-                                            if (index != -1) {
-                                                const newClasses = currentClasses.slice()
-                                                currentClasses.splice(index, 1)
-                                                setCurrentClasses(newClasses)
-                                            }
-                                        }}>
-                                            <Delete />
-                                        </IconButton>
-
-                                        {selectedE13 === e13.id ?
+                                    <ListItem
+                                        secondaryAction={
+                                            <IconButton onClick={() => {
+                                                const refs = selection.refs
+                                                refs.splice(refs.findIndex(r => r === ref), 1)
+                                                setSelection({
+                                                    id: selection.id,
+                                                    refs: selection.refs,
+                                                    e13s: selection.e13s
+                                                })
+                                            }}>
+                                                <Delete />
+                                            </IconButton>
+                                        }
+                                        key={`selection_editor_${ref}`}>
+                                        <ListItemText primary={isSelection(ref) ? ref.id : ref} />
+                                    </ListItem>
+                                )
+                            })}
+                        </List>
+                    </Paper>
+                    {selection.e13s.map((e13, i) => {
+                        return (
+                            <Accordion
+                                expanded={e13.id === selectedE13}
+                                onChange={(_: React.SyntheticEvent, isExpanded: boolean) => {
+                                    if (isExpanded) {
+                                        setSelectedE13(e13.id)
+                                    }
+                                }}
+                                key={`selection_editor_${e13.id}`}>
+                                <AccordionSummary
+                                    expandIcon={<ExpandMore />}>
+                                    <Typography>{urlAsLabel(e13.property) || 'unedited'} </Typography>
+                                    {e13.attribute && <Typography> {urlAsLabel(e13.attribute)}</Typography>}
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    {selectedE13 === e13.id &&
+                                        <>
                                             <E13Editor
                                                 assignedClasses={currentClasses}
                                                 setAssignedClasses={setCurrentClasses}
@@ -209,15 +190,40 @@ export const SelectionEditor = ({
                                                 selectionList={selectionList}
                                                 highlightSelection={highlightSelection}
                                             />
-                                            :
-                                            <E13Summary e13={e13} />
-                                        }
-                                    </Paper>
-                                )
-                            })}
-                        </Stack>
-                    </Grid2>
-                </Grid2>
+                                            <IconButton onClick={() => {
+                                                if (dataset) {
+                                                    const sourceUrl = getSourceUrl(dataset)
+                                                    if (sourceUrl) {
+                                                        const modifiedDataset = removeThing(dataset, sourceUrl + e13.id)
+                                                        saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any })
+                                                    }
+                                                }
+
+                                                selection.e13s.splice(i, 1)
+                                                setSelection({
+                                                    id: selection.id,
+                                                    refs: selection.refs,
+                                                    e13s: selection.e13s
+                                                })
+                                                const index = currentClasses.findIndex(className =>
+                                                    e13.attribute === className
+                                                )
+                                                if (index != -1) {
+                                                    const newClasses = currentClasses.slice()
+                                                    currentClasses.splice(index, 1)
+                                                    setCurrentClasses(newClasses)
+                                                }
+                                            }}>
+                                                <Delete />
+                                            </IconButton>
+
+                                        </>
+                                    }
+                                </AccordionDetails>
+                            </Accordion>
+                        )
+                    })}
+                </Stack>
             </Paper >
         </>
     )
