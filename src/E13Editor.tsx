@@ -1,4 +1,4 @@
-import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { DCTERMS, OWL, RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { Button, DialogActions, DialogContent, Drawer, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
@@ -48,13 +48,14 @@ class Ontology {
 
     propertiesWithDomain(url: string) {
         console.log('looking for', url, 'in')
-        console.log(this.things.filter(thing =>
-                getUrl(thing, RDF.type) === OWL.ObjectProperty).map(thing => getUrl(thing, RDFS.domain)))
+        const classObj = this.things.find(thing => asUrl(thing) === url)
+        if (!classObj) return []
+        const parents = getUrlAll(classObj, RDFS.subClassOf)
 
         return this.things
             .filter(thing =>
                 getUrl(thing, RDF.type) === OWL.ObjectProperty &&
-                getUrl(thing, RDFS.domain) === url)
+                [...parents, url].includes(getUrl(thing, RDFS.domain) || ''))
             .map(thing => ({
                 uri: asUrl(thing),
                 label: getStringNoLocale(thing, RDFS.label)
@@ -223,8 +224,14 @@ export const E13Editor = ({
                                 }}>
                                 <MenuItem value={RDF.type}>is a</MenuItem>
 
-                                {assignedClasses?.length && (
-                                    currentTreatise.propertiesWithDomain(assignedClasses[0]).map(property => {
+                                {assignedClasses
+                                    .map(assignedClass => currentTreatise.propertiesWithDomain(assignedClass))
+                                    .flat()
+                                    .filter((item, i, arr) => {
+                                        // filter out duplicates
+                                        return arr.findIndex(other => other.uri === item.uri) === i
+                                    })
+                                    .map(property => {
                                         return (
                                             <MenuItem
                                                 key={`property_${property.uri}`}
@@ -233,7 +240,7 @@ export const E13Editor = ({
                                             </MenuItem>
                                         )
                                     })
-                                )}
+                                }
                             </Select>
                         </FormControl>
 
