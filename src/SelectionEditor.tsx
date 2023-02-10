@@ -53,6 +53,7 @@ export const SelectionEditor = ({
     })
 
     useEffect(() => {
+        setCurrentClasses([])
         setSelectedE13(undefined)
     }, [selection])
 
@@ -156,6 +157,9 @@ export const SelectionEditor = ({
                                 onChange={(_: React.SyntheticEvent, isExpanded: boolean) => {
                                     if (isExpanded) {
                                         setSelectedE13(e13.id)
+                                    }
+                                    else {
+                                        setSelectedE13('')
                                     }
                                 }}
                                 key={`selection_editor_${e13.id}`}>

@@ -42,8 +42,9 @@ export const SelectionOverlay = ({
             refs
                 .reduce((result, ref) => {
                     const el = document.querySelector(`[data-id='${ref}']`) as SVGGElement
-                    const systemId = el.closest('.system')?.getAttribute('data-id') || ''
                     if (!el) return result
+
+                    const systemId = el.closest('.system')?.getAttribute('data-id') || ''
 
                     // start a new hull right in the beginning or
                     // once we change the system
@@ -73,7 +74,7 @@ export const SelectionOverlay = ({
                 return (
                     createPortal(
                         <path
-                            className={highlight ? 'hull-highlighted' : 'hull'}
+                            className={`hull ${highlight ? 'hull-highlighted' : ''}`}
                             d={roundedHull(hull.points)}
                             onClick={(e) => {
                                 if (e.altKey) removeSelection(selection.id)

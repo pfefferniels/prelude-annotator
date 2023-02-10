@@ -110,9 +110,9 @@ export const Workspace = () => {
         if (dataset && selectionToRemove) {
             const sourceUrl = getSourceUrl(dataset)
             if (sourceUrl) {
-                let modifiedDataset = removeThing(dataset, sourceUrl + selectionToRemove.id)
+                let modifiedDataset = removeThing(dataset, `${sourceUrl}#${selectionToRemove.id}`)
                 selectionToRemove?.e13s.forEach(e13 => {
-                    modifiedDataset = removeThing(dataset, sourceUrl + e13.id)
+                    modifiedDataset = removeThing(dataset, `${sourceUrl}#${e13.id}`)
                 })
                 saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any })
             }

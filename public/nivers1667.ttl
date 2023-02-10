@@ -26,7 +26,7 @@
                                                     rdfs:subPropertyOf owl:topObjectProperty ;
                                                     rdfs:domain <http://webprotege.stanford.edu/Cadence> ;
                                                     rdfs:range <http://webprotege.stanford.edu/Degrez> ;
-                                                    rdfs:label "hasBassProgression" .
+                                                    rdfs:label "has bass progression" .
 
 
 ###  http://webprotege.stanford.edu/hasFirstInterval

@@ -1,9 +1,9 @@
-import { asUrl, buildThing, createThing, getSourceUrl, getStringNoLocale, getUrl, overwriteFile, saveSolidDatasetAt, setStringNoLocale, setThing, setUrl, Thing } from "@inrupt/solid-client";
-import { useDataset, useSession } from "@inrupt/solid-ui-react";
+import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getStringNoLocale, getUrl, hasResourceInfo, overwriteFile, saveSolidDatasetAt, setStringNoLocale, setThing, setUrl, Thing } from "@inrupt/solid-client";
+import { DatasetContext, useDataset, useSession } from "@inrupt/solid-ui-react";
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { v4 } from "uuid";
 import { crm, crmdig, frbroo } from "./namespaces";
 
@@ -19,12 +19,14 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
     // allows editing it - otherwise a new work is being 
     // created
 
-    const { dataset } = useDataset()
+    const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
     const { session } = useSession()
 
     const [id, setId] = useState(v4())
     const [title, setTitle] = useState('')
     const [meiUri, setMeiUri] = useState('')
+
+    const [saving, setSaving] = useState(false)
 
     useEffect(() => {
         if (!thing) return
@@ -34,11 +36,13 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
         setMeiUri(getUrl(thing, RDFS.label) || '')
     }, [thing])
 
-    const saveToPod = () => {
+    const saveToPod = async () => {
         if (!dataset) {
             console.warn('No dataset found')
             return
         }
+
+        setSaving(true)
 
         // Create or update the corresponding Work
         const meiThing = buildThing(createThing({
@@ -53,10 +57,20 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
 
         const modifiedDataset = setThing(dataset, meiThing)
 
-        return saveSolidDatasetAt(
-            getSourceUrl(dataset)!,
-            modifiedDataset,
-            { fetch: session.fetch as any })
+        if (hasResourceInfo(dataset)) {
+            const savedDataset = await saveSolidDatasetAt(
+                getSourceUrl(dataset),
+                modifiedDataset,
+                { fetch: session.fetch as any })
+
+            const updatedDataset = await getSolidDataset(
+                getSourceUrl(savedDataset),
+                { fetch: session.fetch as any })
+
+            setDataset(updatedDataset)
+            setSaving(false)
+            onClose()
+        }
     }
 
     const saveMeiFile = async (meiSource: HTMLInputElement) => {
@@ -105,10 +119,9 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
                 </Stack>
             </DialogContent>
             <DialogActions>
-                <Button variant='contained' onClick={async () => {
-                    await saveToPod()
-                    onClose()
-                }}>Save</Button>
+                <Button variant='contained' onClick={() => {
+                    saveToPod()
+                }}>{saving ? '…' : 'Save'}</Button>
                 <Button variant='outlined' onClick={onClose}>Cancel</Button>
             </DialogActions>
         </Dialog>

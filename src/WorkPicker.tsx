@@ -1,10 +1,11 @@
-import { asUrl, createThing, getFile, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
-import { useDataset, useSession } from "@inrupt/solid-ui-react"
+import { asUrl, createThing, getFile, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
+import { DatasetContext, useDataset, useSession } from "@inrupt/solid-ui-react"
+import { updateDataset } from "@inrupt/solid-ui-react/dist/src/helpers"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { AddOutlined, Delete, Edit, OpenInNew } from "@mui/icons-material"
 import { Drawer, IconButton, List, ListItem, ListItemText, makeStyles, withStyles } from "@mui/material"
 import { styled } from "@mui/system"
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { v4 } from "uuid"
 import { crm, frbroo } from "./namespaces"
 import { WorkDialog } from "./WorkDialog"
@@ -26,7 +27,7 @@ interface WorkPickerProps {
 }
 
 export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }: WorkPickerProps) => {
-    const { dataset } = useDataset()
+    const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
     const { session } = useSession()
 
     const [works, setWorks] = useState<{ thing: Thing, title: string }[]>([])
@@ -34,8 +35,6 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }:
     const [workDialogOpen, setWorkDialogOpen] = useState(false)
 
     const loadWorks = () => {
-        console.log('loading works')
-
         if (!dataset) {
             console.warn('No dataset found')
             return
@@ -59,7 +58,7 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }:
     useEffect(() => {
         if (!open) return
         loadWorks()
-    }, [open, onClose, setMEI, setSelections])
+    }, [dataset, open, onClose, setMEI, setSelections])
 
     const openWork = async (work: Thing) => {
         setWorkURI(asUrl(work))
@@ -138,10 +137,11 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }:
                                         }}>
                                             <Edit />
                                         </IconButton>
-                                        <IconButton onClick={() => {
-                                            if (dataset) {
+                                        <IconButton onClick={async () => {
+                                            if (dataset && hasResourceInfo(dataset)) {
                                                 const modifiedDataset = removeThing(dataset, work.thing)
-                                                saveSolidDatasetAt(getSourceUrl(dataset)!, modifiedDataset, { fetch: session.fetch as any})
+                                                const savedDataset = await saveSolidDatasetAt(getSourceUrl(dataset)!, modifiedDataset, { fetch: session.fetch as any})
+                                                setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
                                             }
                                         }}>
                                             <Delete />

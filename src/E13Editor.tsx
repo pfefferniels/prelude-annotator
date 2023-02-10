@@ -1,73 +1,15 @@
-import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
-import { useDataset, useSession } from "@inrupt/solid-ui-react"
-import { DCTERMS, OWL, RDF, RDFS } from "@inrupt/vocab-common-rdf"
-import { Button, DialogActions, DialogContent, Drawer, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
+import { buildThing, createThing, getPropertyAll, getSolidDataset, getSourceUrl, getThing, hasResourceInfo, saveSolidDatasetAt, setThing } from "@inrupt/solid-client"
+import { DatasetContext, useDataset, useSession } from "@inrupt/solid-ui-react"
+import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
+import { Save } from "@mui/icons-material"
+import LoadingButton from "@mui/lab/LoadingButton"
+import { Button, DialogActions, DialogContent, Drawer, FormControl, IconButton, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
 import { Stack } from "@mui/system"
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
+import availableTreatises from "./availableTreatises.json"
 import { crm, dcterms } from "./namespaces"
+import { Ontology } from "./Ontology"
 import { E13 } from "./Workspace"
-
-type LabeledURI = {
-    uri: string,
-    label: string
-}
-
-type Property = LabeledURI & {
-    domain: string
-    range: string
-}
-
-class Ontology {
-    private things: Thing[]
-    url: string
-    name: string
-
-    constructor(ontology: SolidDataset, name: string) {
-        this.things = getThingAll(ontology)
-        this.name = name
-        const owlOntology = this.things.find(thing => getUrl(thing, RDF.type) === OWL.Ontology)
-        if (!owlOntology) this.url = ''
-        else this.url = asUrl(owlOntology)
-    }
-
-    title() {
-        const owlOntology = this.things.find(thing => getUrl(thing, RDF.type) === OWL.Ontology)
-        if (!owlOntology) return this.name
-        return getStringNoLocale(owlOntology, DCTERMS.title) || this.name
-    }
-
-    allClasses() {
-        return this.things
-            .filter(thing =>
-                getUrl(thing, RDF.type) === OWL.Class)
-            .map(thing => ({
-                uri: asUrl(thing),
-                label: getStringNoLocale(thing, RDFS.label)
-            }) as LabeledURI)
-    }
-
-    propertiesWithDomain(url: string) {
-        console.log('looking for', url, 'in')
-        const classObj = this.things.find(thing => asUrl(thing) === url)
-        if (!classObj) return []
-        const parents = getUrlAll(classObj, RDFS.subClassOf)
-
-        return this.things
-            .filter(thing =>
-                getUrl(thing, RDF.type) === OWL.ObjectProperty &&
-                [...parents, url].includes(getUrl(thing, RDFS.domain) || ''))
-            .map(thing => ({
-                uri: asUrl(thing),
-                label: getStringNoLocale(thing, RDFS.label)
-            }) as LabeledURI)
-    }
-
-    rangeOfProperty(propertyUrl: string): string | null {
-        const obj = this.things.find(thing => asUrl(thing) === propertyUrl)
-        if (!obj) return null
-        return getUrl(obj, RDFS.range)
-    }
-}
 
 interface E13EditorProps {
     selectionURI: string
@@ -81,19 +23,6 @@ interface E13EditorProps {
     highlightSelection: (id: string) => void
 }
 
-const availableTreatises = [
-    {
-        url: '/nivers1667.ttl',
-        name: 'nivers1667',
-        label: 'Nivers, Traité de la composition, Paris 1667'
-    },
-    {
-        url: '/millet1666.ttl',
-        name: 'millet1666',
-        label: 'Millet, L\'art de Bien Chanter, Besançon 1666'
-    },
-]
-
 export const E13Editor = ({
     selectionURI,
     e13,
@@ -103,7 +32,7 @@ export const E13Editor = ({
     selectionList,
     highlightSelection
 }: E13EditorProps) => {
-    const { dataset } = useDataset()
+    const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
     const { session } = useSession()
 
     const [currentTreatise, setCurrentTreatise] = useState<Ontology>()
@@ -113,6 +42,7 @@ export const E13Editor = ({
     const [comment, setComment] = useState(e13?.comment)
 
     const [assignSelectionOpen, setAssignSelectionOpen] = useState(false)
+    const [saving, setSaving] = useState(false)
 
     useEffect(() => {
         if (!e13) return
@@ -135,7 +65,7 @@ export const E13Editor = ({
         console.log(currentTreatise.propertiesWithDomain(assignedClasses[0]))
     }, [currentTreatise, assignedClasses])
 
-    const saveToPod = () => {
+    const saveToPod = async () => {
         setAssignedClasses([...assignedClasses, attribute])
 
         const id = e13.id
@@ -148,10 +78,11 @@ export const E13Editor = ({
             comment
         })
 
-        if (!dataset) return
+        if (!dataset || !hasResourceInfo(dataset)) return
 
         const sourceUrl = getSourceUrl(dataset)
-        if (!sourceUrl) return
+
+        console.log('test=', `${sourceUrl}#${attribute}`)
 
         const e13Thing = buildThing(createThing({
             name: id
@@ -160,8 +91,8 @@ export const E13Editor = ({
             .addStringNoLocale(RDFS.label, id)
             .addDate(dcterms('created'), new Date(Date.now()))
             .addUrl(crm('P14_carried_out_by'), session.info.webId!)
-            .addUrl(crm('P140_assigned_attribute_to'), sourceUrl + selectionURI)
-            .addUrl(crm('P141_assigned'), sourceUrl + attribute)
+            .addUrl(crm('P140_assigned_attribute_to'), `${sourceUrl}#${selectionURI}`)
+            .addUrl(crm('P141_assigned'), attribute.startsWith('http') ? attribute : `${sourceUrl}/#${attribute}`)
             .addStringNoLocale(crm('P3_has_note'), comment)
 
         if (currentTreatise) {
@@ -172,14 +103,12 @@ export const E13Editor = ({
             e13Thing.addUrl(crm('P177_assigned_property_of_type'), property)
         }
 
-        if (!dataset) {
-            console.warn('No dataset found to save the new work to.');
-            return;
-        }
+        const modifiedDataset = setThing(dataset, e13Thing.build());
 
-        let modifiedDataset = setThing(dataset, e13Thing.build());
-        // modifiedDataset = setThing(dataset, attribute);
-        saveSolidDatasetAt(getSourceUrl(dataset)!, modifiedDataset, { fetch: session.fetch as any });
+        setSaving(true)
+        const savedDataset = await saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any })
+        setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
+        setSaving(false)
     }
 
     return (
@@ -301,9 +230,13 @@ export const E13Editor = ({
             </Stack>
 
             <DialogActions>
-                <Button variant='contained' onClick={() => {
-                    saveToPod()
-                }}>Save</Button>
+                <LoadingButton
+                    startIcon={<Save />}
+                    loading={saving}
+                    variant='contained'
+                    onClick={saveToPod}>
+                    Save
+                </LoadingButton>
             </DialogActions>
         </Paper>
     )
