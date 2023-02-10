@@ -20,7 +20,7 @@ export default function Verovio({
 
   const [vrvToolkit, setVrvToolkit] = useState(undefined as undefined | verovio.toolkit)
   const [svg, setSvg] = useState('')
-  const [pageWidth, setPageWidth] = useState(undefined as undefined | number);
+  const [pageWidth, setPageWidth] = useState(800);
 
   useEffect(() => {
     console.log('svg changed')
@@ -82,6 +82,7 @@ export default function Verovio({
     <>
       <style id="verovioHighlightStyle" />
       <div
+        style={{ width: '65vw'}}
         className="verovio"
         dangerouslySetInnerHTML={{ __html: svg }}
         onClick={onClick} />
