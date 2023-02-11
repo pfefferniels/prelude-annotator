@@ -1,15 +1,13 @@
-import { asUrl, createThing, getFile, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
-import { DatasetContext, useDataset, useSession } from "@inrupt/solid-ui-react"
-import { updateDataset } from "@inrupt/solid-ui-react/dist/src/helpers"
+import { asUrl, getFile, getSolidDataset, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
+import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { AddOutlined, Delete, Edit, OpenInNew } from "@mui/icons-material"
-import { Drawer, IconButton, List, ListItem, ListItemText, makeStyles, withStyles } from "@mui/material"
+import { Drawer, IconButton, List, ListItem, ListItemText } from "@mui/material"
 import { styled } from "@mui/system"
 import { useContext, useEffect, useState } from "react"
-import { v4 } from "uuid"
-import { crm, frbroo } from "./namespaces"
+import { crm, frbroo } from "../helpers/namespaces"
 import { WorkDialog } from "./WorkDialog"
-import { E13, Selection } from "./Workspace"
+import { Selection } from "./Workspace"
 
 // avoid overlapping secondary actions in the list
 const StyledList = styled(List)(() => ({

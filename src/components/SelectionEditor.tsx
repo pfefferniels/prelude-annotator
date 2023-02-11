@@ -1,17 +1,15 @@
 import { Add, Delete, Edit, Save } from "@mui/icons-material"
 import { IconButton, List, ListItem, ListItemText, Paper, Typography } from "@mui/material"
 import { useContext, useEffect } from "react"
-import { E13, isSelection, Selection } from "./Workspace"
-import Grid2 from '@mui/material/Unstable_Grid2'
+import { isSelection, Selection } from "./Workspace"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
-import { buildThing, createThing, setThing, saveSolidDatasetAt, thingAsMarkdown, getPropertyAll, getUrl, getSourceUrl } from "@inrupt/solid-client"
-import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
-import { crm, dcterms } from "./namespaces"
+import { buildThing, createThing, setThing, saveSolidDatasetAt, getSourceUrl } from "@inrupt/solid-client"
+import { RDF } from "@inrupt/vocab-common-rdf"
+import { crm, dcterms } from "../helpers/namespaces"
 import { Stack } from "@mui/system"
-import { E13Summary } from "./E13Summary"
 import { v4 } from "uuid"
 import { E13List } from "./E13List"
-import { SelectionContext } from "./SelectionContext"
+import { SelectionContext } from "../context/SelectionContext"
 
 interface SelectionEditorProps {
     workURI: string

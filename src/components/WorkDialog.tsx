@@ -1,11 +1,11 @@
 import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getStringNoLocale, getUrl, hasResourceInfo, overwriteFile, saveSolidDatasetAt, setStringNoLocale, setThing, setUrl, Thing } from "@inrupt/solid-client";
-import { DatasetContext, useDataset, useSession } from "@inrupt/solid-ui-react";
+import { DatasetContext, useSession } from "@inrupt/solid-ui-react";
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { useContext, useEffect, useState } from "react";
 import { v4 } from "uuid";
-import { crm, crmdig, frbroo } from "./namespaces";
+import { crm, crmdig, frbroo } from "../helpers/namespaces";
 
 interface WorkDialogProps {
     open: boolean
@@ -50,7 +50,7 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
         }))
             .addUrl(RDF.type, crmdig('D1_Digital_Object'))
             .addUrl(RDF.type, crm('E31_Document'))
-            .addUrl(RDF.type, frbroo('F15_Complex_Work'))
+            .addUrl(RDF.type, frbroo('F1_Work'))
             .addUrl(RDFS.label, meiUri)
             .addStringNoLocale(crm('P102_has_title'), title)
             .build()

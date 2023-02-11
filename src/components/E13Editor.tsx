@@ -3,14 +3,14 @@ import { DatasetContext, useDataset, useSession } from "@inrupt/solid-ui-react"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { Save } from "@mui/icons-material"
 import LoadingButton from "@mui/lab/LoadingButton"
-import { Button, DialogActions, DialogContent, Drawer, FormControl, IconButton, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
+import { Button, DialogActions, Drawer, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
 import { Stack } from "@mui/system"
 import { useContext, useEffect, useState } from "react"
 import availableTreatises from "./availableTreatises.json"
-import { crm, dcterms } from "./namespaces"
-import { Ontology } from "./Ontology"
+import { crm, dcterms } from "../helpers/namespaces"
+import { Ontology } from "../helpers/Ontology"
 import { E13 } from "./Workspace"
-import { SelectionContext } from "./SelectionContext"
+import { SelectionContext } from "../context/SelectionContext"
 
 interface E13EditorProps {
     selectionId: string

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Selection } from "./Workspace";
 import * as d3 from 'd3'
 import { createPortal } from 'react-dom';
-import { roundedHull } from "./roundedHull";
+import { roundedHull } from "../helpers/roundedHull";
 
 interface SelectionOverlayProps {
     selection: Selection

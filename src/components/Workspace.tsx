@@ -8,11 +8,11 @@ import { Menu } from "@mui/icons-material"
 import { Stack } from "@mui/system"
 import { asUrl, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
 import { SelectionOverlay } from "./SelectionOverlay"
-import { tab2cmn } from "./tab2cmn"
+import { tab2cmn } from "../helpers/tab2cmn"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
 import { RDF } from "@inrupt/vocab-common-rdf"
-import { crm } from "./namespaces"
-import { SelectionContext } from "./SelectionContext"
+import { crm } from "../helpers/namespaces"
+import { SelectionContext } from "../context/SelectionContext"
 
 export interface E13 {
     id: string

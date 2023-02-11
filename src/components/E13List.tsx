@@ -7,7 +7,7 @@ import { saveSolidDatasetAt, removeThing, getSourceUrl, getSolidDataset, hasReso
 import { RDF } from "@inrupt/vocab-common-rdf";
 import { urlAsLabel } from "./E13Summary";
 import { E13 } from "./Workspace";
-import { SelectionContext } from "./SelectionContext";
+import { SelectionContext } from "../context/SelectionContext";
 
 export interface E13ListProps {
     e13s: E13[]

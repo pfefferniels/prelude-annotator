@@ -1,6 +1,6 @@
 import { MutableRefObject, useCallback, useEffect, useState } from "react";
 import verovio from "verovio";
-import newVerovio from "./loadVerovio";
+import newVerovio from "../helpers/loadVerovio";
 
 interface VerovioProps {
   mei: string,
