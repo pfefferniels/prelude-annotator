@@ -12,25 +12,24 @@ import { Ontology } from "./Ontology"
 import { E13 } from "./Workspace"
 
 interface E13EditorProps {
-    selectionURI: string
+    selectionId: string
     e13: E13
-    setE13: (e13: E13) => void
 
-    assignedClasses: string[]
-    setAssignedClasses: (classes: string[]) => void
+    availableDomains: string[]
 
-    selectionList: string[]
+    availableSelections: string[]
     highlightSelection: (id: string) => void
+
+    onClose: () => void
 }
 
 export const E13Editor = ({
-    selectionURI,
+    selectionId,
     e13,
-    setE13,
-    assignedClasses,
-    setAssignedClasses,
-    selectionList,
-    highlightSelection
+    availableDomains,
+    availableSelections: selectionList,
+    highlightSelection,
+    onClose
 }: E13EditorProps) => {
     const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
     const { session } = useSession()
@@ -60,29 +59,17 @@ export const E13Editor = ({
     }, [e13])
 
     useEffect(() => {
-        if (!currentTreatise || !assignedClasses.length) return
+        if (!currentTreatise || !availableDomains.length) return
 
-        console.log(currentTreatise.propertiesWithDomain(assignedClasses[0]))
-    }, [currentTreatise, assignedClasses])
+        console.log(currentTreatise.propertiesWithDomain(availableDomains[0]))
+    }, [currentTreatise, availableDomains])
 
     const saveToPod = async () => {
-        setAssignedClasses([...assignedClasses, attribute])
-
         const id = e13.id
-
-        setE13({
-            id,
-            treatise: currentTreatise?.name || '',
-            property,
-            attribute,
-            comment
-        })
 
         if (!dataset || !hasResourceInfo(dataset)) return
 
         const sourceUrl = getSourceUrl(dataset)
-
-        console.log('test=', `${sourceUrl}#${attribute}`)
 
         const e13Thing = buildThing(createThing({
             name: id
@@ -91,7 +78,7 @@ export const E13Editor = ({
             .addStringNoLocale(RDFS.label, id)
             .addDate(dcterms('created'), new Date(Date.now()))
             .addUrl(crm('P14_carried_out_by'), session.info.webId!)
-            .addUrl(crm('P140_assigned_attribute_to'), `${sourceUrl}#${selectionURI}`)
+            .addUrl(crm('P140_assigned_attribute_to'), `${sourceUrl}#${selectionId}`)
             .addUrl(crm('P141_assigned'), attribute.startsWith('http') ? attribute : `${sourceUrl}/#${attribute}`)
             .addStringNoLocale(crm('P3_has_note'), comment)
 
@@ -109,6 +96,7 @@ export const E13Editor = ({
         const savedDataset = await saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any })
         setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
         setSaving(false)
+        onClose()
     }
 
     return (
@@ -153,7 +141,7 @@ export const E13Editor = ({
                                 }}>
                                 <MenuItem value={RDF.type}>is a</MenuItem>
 
-                                {assignedClasses
+                                {availableDomains
                                     .map(assignedClass => currentTreatise.propertiesWithDomain(assignedClass))
                                     .flat()
                                     .filter((item, i, arr) => {

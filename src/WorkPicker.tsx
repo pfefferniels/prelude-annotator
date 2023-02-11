@@ -85,40 +85,6 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }:
             setSelections([])
             return
         }
-
-        const things = getThingAll(dataset)
-        setSelections(
-            things
-                .filter(thing => {
-                    // TODO: should use has_type instead
-                    return getUrlAll(thing, RDF.type).includes(crm('E90_Symbolic_Object')) &&
-                        getUrl(thing, crm('P106i_forms_part_of')) === asUrl(work)
-                })
-                .map(thing => {
-                    const selectionUrl = asUrl(thing)
-                    const refs = getUrlAll(thing, crm('P106_is_composed_of')).map(url => url.split('#').at(-1) || '')
-
-                    return {
-                        id: selectionUrl.split('#').at(-1) || '',
-                        refs: refs,
-                        e13s: things
-                            .filter(thing => {
-                                // get all E13s connected to this selection
-                                return getUrlAll(thing, RDF.type).includes(crm('E13_Attribute_Assignment')) &&
-                                    getUrl(thing, crm('P140_assigned_attribute_to')) === selectionUrl
-                            })
-                            .map((thing): E13 => {
-                                return {
-                                    id: asUrl(thing).split('#').at(-1) || v4(),
-                                    treatise: '', // TODO
-                                    property: getUrl(thing, crm('P177_assigned_property_of_type'))?.split('/').at(-1) || 'unknown',
-                                    attribute: getUrl(thing, crm('P141_assigned')) || '',
-                                    comment: getStringNoLocale(thing, crm('P3_has_note')) || ''
-                                }
-                            })
-                    }
-                })
-        )
     }
 
     return (

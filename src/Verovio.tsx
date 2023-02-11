@@ -69,7 +69,13 @@ export default function Verovio({
   }, [render, mei, vrvToolkit]);
 
   const onClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    let clickedElement = (e.target as Element).closest('[data-id]')
+    const noteEl = (e.target as Element).closest('.note')
+    if (!noteEl) {
+      console.log('clicked element is not a note')
+      return
+    }
+
+    const clickedElement = (e.target as Element).closest('[data-id]')
     const dataId = clickedElement?.getAttribute('data-id')
     if (!dataId) return
 
@@ -80,10 +86,9 @@ export default function Verovio({
 
   return (
     <>
-      <style id="verovioHighlightStyle" />
       <div
-        style={{ width: '65vw'}}
-        className="verovio"
+        style={{ width: '65vw' }}
+        className='verovio'
         dangerouslySetInnerHTML={{ __html: svg }}
         onClick={onClick} />
     </>

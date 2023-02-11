@@ -6,10 +6,13 @@ import Verovio from "./Verovio"
 import { WorkPicker } from "./WorkPicker"
 import { Menu } from "@mui/icons-material"
 import { Stack } from "@mui/system"
-import { getSourceUrl, removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
+import { asUrl, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
 import { SelectionOverlay } from "./SelectionOverlay"
 import { tab2cmn } from "./tab2cmn"
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
+import { RDF } from "@inrupt/vocab-common-rdf"
+import { crm } from "./namespaces"
+import { SelectionContext } from "./SelectionContext"
 
 export interface E13 {
     id: string
@@ -80,6 +83,48 @@ export const Workspace = () => {
     const saveToPod = () => {
         // somehow connect all the Attribute Assignments
     }
+
+    const updateSelections = () => {
+        if (!dataset) return
+
+        console.log('update selections')
+
+        const things = getThingAll(dataset)
+        setSelections(
+            things
+                .filter(thing => {
+                    // TODO: should use has_type instead
+                    return getUrlAll(thing, RDF.type).includes(crm('E90_Symbolic_Object')) &&
+                        getUrl(thing, crm('P106i_forms_part_of')) === workURI
+                })
+                .map(thing => {
+                    const selectionUrl = asUrl(thing)
+                    const refs = getUrlAll(thing, crm('P106_is_composed_of')).map(url => url.split('#').at(-1) || '')
+
+                    return {
+                        id: selectionUrl.split('#').at(-1) || '',
+                        refs: refs,
+                        e13s: things
+                            .filter(thing => {
+                                // get all E13s connected to this selection
+                                return getUrlAll(thing, RDF.type).includes(crm('E13_Attribute_Assignment')) &&
+                                    getUrl(thing, crm('P140_assigned_attribute_to')) === selectionUrl
+                            })
+                            .map((thing): E13 => {
+                                return {
+                                    id: asUrl(thing).split('#').at(-1) || v4(),
+                                    treatise: '', // TODO
+                                    property: getUrl(thing, crm('P177_assigned_property_of_type')) || '',
+                                    attribute: getUrl(thing, crm('P141_assigned')) || '',
+                                    comment: getStringNoLocale(thing, crm('P3_has_note')) || ''
+                                }
+                            })
+                    }
+                })
+        )
+    }
+
+    useEffect(updateSelections, [workURI, dataset])
 
     const startNewSelection = (ref: string) => {
         const id = v4()
@@ -169,17 +214,23 @@ export const Workspace = () => {
                 startNewSelection={startNewSelection}
                 onReady={() => setVerovioReady(verovioReady + 1)} />
 
-            <Drawer
-                variant='persistent'
-                open={activeSelectionId !== ''}
-                anchor='right'>
-                <SelectionEditor
-                    workURI={workURI}
-                    setSelection={setSelection}
-                    selection={selections.find(selection => selection.id === activeSelectionId)}
-                    selectionList={selections.map(s => s.id)}
-                    highlightSelection={(id: string) => setSecondaryActiveSelection(id)} />
-            </Drawer>
+            <SelectionContext.Provider
+                value={{
+                    availableSelections: selections.map(s => s.id),
+                    highlightSelection: setSecondaryActiveSelection
+                }}>
+                <Drawer
+                    variant='persistent'
+                    open={activeSelectionId !== ''}
+                    anchor='right'>
+                    <SelectionEditor
+                        workURI={workURI}
+                        setSelection={setSelection}
+                        selection={selections.find(selection => selection.id === activeSelectionId)} />
+                </Drawer>
+
+            </SelectionContext.Provider>
+
 
             {hullContainer && selections.map(selection => {
                 return (

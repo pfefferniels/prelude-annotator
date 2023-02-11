@@ -1,60 +1,34 @@
-import { Add, Delete, Edit, ExpandMore, Save } from "@mui/icons-material"
-import { Accordion, AccordionActions, AccordionDetails, AccordionSummary, IconButton, List, ListItem, ListItemText, Paper, Typography } from "@mui/material"
-import { useEffect, useState } from "react"
-import { E13Editor } from "./E13Editor"
+import { Add, Delete, Edit, Save } from "@mui/icons-material"
+import { IconButton, List, ListItem, ListItemText, Paper, Typography } from "@mui/material"
+import { useContext, useEffect } from "react"
 import { E13, isSelection, Selection } from "./Workspace"
 import Grid2 from '@mui/material/Unstable_Grid2'
 import { useDataset, useSession } from "@inrupt/solid-ui-react"
-import { buildThing, createThing, setThing, saveSolidDatasetAt, thingAsMarkdown, getPropertyAll, getUrl, removeThing, getSourceUrl } from "@inrupt/solid-client"
+import { buildThing, createThing, setThing, saveSolidDatasetAt, thingAsMarkdown, getPropertyAll, getUrl, getSourceUrl } from "@inrupt/solid-client"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { crm, dcterms } from "./namespaces"
 import { Stack } from "@mui/system"
-import { E13Summary, urlAsLabel } from "./E13Summary"
+import { E13Summary } from "./E13Summary"
 import { v4 } from "uuid"
+import { E13List } from "./E13List"
+import { SelectionContext } from "./SelectionContext"
 
 interface SelectionEditorProps {
     workURI: string
     selection: Selection | undefined
     setSelection: (selection: Selection) => void
-
-    selectionList: string[]
-    highlightSelection: (selectionId: string) => void
 }
 
 export const SelectionEditor = ({
     workURI,
     selection,
-    setSelection,
-    selectionList,
-    highlightSelection }: SelectionEditorProps) => {
+    setSelection }: SelectionEditorProps) => {
+        const { highlightSelection } = useContext(SelectionContext)
     const { dataset } = useDataset()
     const { session } = useSession()
 
-    const [selectedE13, setSelectedE13] = useState<string>()
-    const [currentClasses, setCurrentClasses] = useState<string[]>([])
-
     useEffect(() => {
-        console.log(currentClasses)
-    }, [currentClasses])
-
-    useEffect(() => {
-        // highlight the current selection in the score 
-
-        const verovioHighlightStyle = document.querySelector('#verovioHighlightStyle') as Element
-        if (!selection || selection.refs.length === 0) {
-            verovioHighlightStyle.textContent = ''
-            return
-        }
-        verovioHighlightStyle.textContent = selection.refs.map(ref => `[data-id='${ref}']`).join(',') + `
-            {
-                stroke: red;
-                fill: red;
-            }`
-    })
-
-    useEffect(() => {
-        setCurrentClasses([])
-        setSelectedE13(undefined)
+        selection && highlightSelection(selection.id)
     }, [selection])
 
     const saveToPod = () => {
@@ -77,13 +51,11 @@ export const SelectionEditor = ({
             selectionThing.addUrl(crm('P106_is_composed_of'), `${workURI}#${ref}`)
         })
 
-        // TODO move E13 Builder here
-
         const modifiedDataset = setThing(dataset, selectionThing.build());
         saveSolidDatasetAt(getSourceUrl(dataset)!, modifiedDataset, { fetch: session.fetch as any });
     }
 
-    useEffect(saveToPod, [selection])
+    // useEffect(saveToPod, [selection])
 
     if (!selection) {
         return <div>no selection specified</div>
@@ -118,7 +90,6 @@ export const SelectionEditor = ({
                             comment: ''
                         }]
                     })
-                    setSelectedE13(id)
                 }}>
                     <Add />
                 </IconButton>
@@ -150,85 +121,12 @@ export const SelectionEditor = ({
                             })}
                         </List>
                     </Paper>
-                    {selection.e13s.map((e13, i) => {
-                        return (
-                            <Accordion
-                                expanded={e13.id === selectedE13}
-                                onChange={(_: React.SyntheticEvent, isExpanded: boolean) => {
-                                    if (isExpanded) {
-                                        setSelectedE13(e13.id)
-                                    }
-                                    else {
-                                        setSelectedE13('')
-                                    }
-                                }}
-                                key={`selection_editor_${e13.id}`}>
-                                <AccordionSummary
-                                    expandIcon={<ExpandMore />}>
-                                    <Typography>{urlAsLabel(e13.property) || 'unedited'} </Typography>
-                                    {e13.attribute && <Typography> {urlAsLabel(e13.attribute)}</Typography>}
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    {selectedE13 === e13.id &&
-                                        <>
-                                            <E13Editor
-                                                assignedClasses={currentClasses}
-                                                setAssignedClasses={setCurrentClasses}
-                                                selectionURI={selection.id}
-                                                e13={e13}
-                                                setE13={(e13) => {
-                                                    const newAttributes = selection.e13s.slice()
-                                                    const index = newAttributes.findIndex(attr => attr.id === selectedE13)
-                                                    if (index === -1) {
-                                                        console.log('This is not supposed to happen.', selection.id, 'is unknown.')
-                                                        return
-                                                    }
-
-                                                    newAttributes[index] = e13
-                                                    setSelection({
-                                                        id: selection.id,
-                                                        refs: selection.refs,
-                                                        e13s: newAttributes
-                                                    })
-                                                }}
-                                                selectionList={selectionList}
-                                                highlightSelection={highlightSelection}
-                                            />
-                                            <IconButton onClick={() => {
-                                                if (dataset) {
-                                                    const sourceUrl = getSourceUrl(dataset)
-                                                    if (sourceUrl) {
-                                                        const modifiedDataset = removeThing(dataset, sourceUrl + e13.id)
-                                                        saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any })
-                                                    }
-                                                }
-
-                                                selection.e13s.splice(i, 1)
-                                                setSelection({
-                                                    id: selection.id,
-                                                    refs: selection.refs,
-                                                    e13s: selection.e13s
-                                                })
-                                                const index = currentClasses.findIndex(className =>
-                                                    e13.attribute === className
-                                                )
-                                                if (index != -1) {
-                                                    const newClasses = currentClasses.slice()
-                                                    currentClasses.splice(index, 1)
-                                                    setCurrentClasses(newClasses)
-                                                }
-                                            }}>
-                                                <Delete />
-                                            </IconButton>
-
-                                        </>
-                                    }
-                                </AccordionDetails>
-                            </Accordion>
-                        )
-                    })}
+                    <E13List
+                        e13s={selection.e13s}
+                        selectionId={selection.id}/>
                 </Stack>
             </Paper >
         </>
     )
 }
+
