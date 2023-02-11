@@ -70,12 +70,11 @@ export const E13List = ({ e13s, selectionId }: E13ListProps) => {
                         <AccordionDetails>
                             {selectedId === e13.id &&
                                 <E13Editor
-                                    availableDomains={domainRestrictions}
                                     selectionId={selectionId}
                                     e13={e13}
-                                    availableSelections={availableSelections}
-                                    highlightSelection={highlightSelection}
-                                    onClose={() => setSelectedId('')} />}
+                                    onClose={() => setSelectedId('')}
+                                    availableDomains={domainRestrictions}
+                                />}
                         </AccordionDetails>
                     </Accordion>
                 );

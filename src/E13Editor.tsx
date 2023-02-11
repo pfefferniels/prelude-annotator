@@ -10,16 +10,12 @@ import availableTreatises from "./availableTreatises.json"
 import { crm, dcterms } from "./namespaces"
 import { Ontology } from "./Ontology"
 import { E13 } from "./Workspace"
+import { SelectionContext } from "./SelectionContext"
 
 interface E13EditorProps {
     selectionId: string
     e13: E13
-
     availableDomains: string[]
-
-    availableSelections: string[]
-    highlightSelection: (id: string) => void
-
     onClose: () => void
 }
 
@@ -27,10 +23,9 @@ export const E13Editor = ({
     selectionId,
     e13,
     availableDomains,
-    availableSelections: selectionList,
-    highlightSelection,
     onClose
 }: E13EditorProps) => {
+    const { availableSelections, highlightSelection } = useContext(SelectionContext)
     const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
     const { session } = useSession()
 
@@ -188,7 +183,7 @@ export const E13Editor = ({
                                 <div>{attribute}</div>
                                 <Drawer open={assignSelectionOpen}>
                                     <List dense>
-                                        {selectionList.map((selectionId => {
+                                        {availableSelections.map((selectionId => {
                                             return (
                                                 <ListItem
                                                     onClick={() => {
