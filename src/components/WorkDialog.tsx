@@ -1,4 +1,4 @@
-import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getStringNoLocale, getUrl, hasResourceInfo, overwriteFile, saveSolidDatasetAt, setStringNoLocale, setThing, setUrl, Thing } from "@inrupt/solid-client";
+import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getUrl, hasResourceInfo, overwriteFile, saveSolidDatasetAt, setStringNoLocale, setThing, setUrl, Thing } from "@inrupt/solid-client";
 import { DatasetContext, useSession } from "@inrupt/solid-ui-react";
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, TextField } from "@mui/material";
@@ -46,7 +46,7 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
 
         // Create or update the corresponding Work
         const meiThing = buildThing(createThing({
-            name: id
+            url: meiUri
         }))
             .addUrl(RDF.type, crmdig('D1_Digital_Object'))
             .addUrl(RDF.type, crm('E31_Document'))
@@ -78,9 +78,14 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
             return
         }
         const meiFile = meiSource.files[0]
+
         // Upload the MEI file
+        if (!dataset || !hasResourceInfo(dataset)) return
+        let location = getSourceUrl(dataset)
+        location = location.slice(0, location.lastIndexOf('/'))
+
         const savedMEI = await overwriteFile(
-            `https://pfefferniels.inrupt.net/preludes/${v4()}.mei`,
+            `${location}/${v4()}.mei`,
             meiFile,
             { contentType: 'text/xml', fetch: session.fetch as any }
         )
