@@ -1,15 +1,15 @@
 import { Drawer, IconButton, ToggleButton, ToggleButtonGroup } from "@mui/material"
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { v4 } from "uuid"
 import { SelectionEditor } from "./SelectionEditor"
 import Verovio from "./Verovio"
 import { WorkPicker } from "./WorkPicker"
 import { Menu } from "@mui/icons-material"
 import { Stack } from "@mui/system"
-import { asUrl, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
+import { asUrl, getSolidDataset, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, SolidDataset, Thing } from "@inrupt/solid-client"
 import { SelectionOverlay } from "./SelectionOverlay"
 import { tab2cmn } from "../helpers/tab2cmn"
-import { useDataset, useSession } from "@inrupt/solid-ui-react"
+import { DatasetContext, useDataset, useSession } from "@inrupt/solid-ui-react"
 import { RDF } from "@inrupt/vocab-common-rdf"
 import { crm } from "../helpers/namespaces"
 import { SelectionContext } from "../context/SelectionContext"
@@ -27,6 +27,7 @@ type Reference = string | Selection
 export interface Selection {
     id: string
     refs: (Reference)[]
+    provenience: string
     e13s: E13[]
 }
 
@@ -37,10 +38,11 @@ export const isSelection = (ref: Reference): ref is Selection => {
 type DisplayMode = 'staff-notation' | 'tablature'
 
 export const Workspace = () => {
-    const { dataset } = useDataset()
+    const { solidDataset: personalDataset, setDataset: setPersonalDataset } = useContext(DatasetContext)
     const { session } = useSession()
 
-    const [workURI, setWorkURI] = useState('')
+    const [sourceDataset, setSourceDataset] = useState<SolidDataset>()
+    const [work, setWork] = useState<Thing>()
     const [displayMode, setDispayMode] = useState<DisplayMode>('tablature')
     const [mei, setMEI] = useState('')
     const [transformedMEI, setTransformedMEI] = useState('')
@@ -85,38 +87,65 @@ export const Workspace = () => {
     }
 
     const updateSelections = () => {
-        if (!dataset) return
+        if (!sourceDataset) return
 
-        const things = getThingAll(dataset)
-        console.log('update selections from a dataset with', things.length, 'items')
+        // collect the annotations from both datasets, 
+        // the personal as well as the source dataset.
+        let things: { provenience: string | null, thing: Thing }[] = []
+        if (!session.info.isLoggedIn) {
+            things = getThingAll(sourceDataset).map(thing => ({
+                provenience: getSourceUrl(sourceDataset),
+                thing
+            }))
+        }
+        else if (personalDataset && getSourceUrl(sourceDataset) === getSourceUrl(personalDataset)) {
+            things = getThingAll(personalDataset).map(thing => ({
+                provenience: getSourceUrl(personalDataset),
+                thing
+            }))
+        }
+        else {
+            things = [
+                ...getThingAll(sourceDataset).map(thing => ({
+                    provenience: getSourceUrl(sourceDataset),
+                    thing
+                })),
+                ...(personalDataset ? getThingAll(personalDataset).map(thing => ({
+                    provenience: getSourceUrl(personalDataset),
+                    thing
+                })) : [])
+            ]
+        }
+        console.log('update selections from a dataset with', things, 'items')
 
         setSelections(
             things
                 .filter(thing => {
                     // TODO: should use has_type instead
-                    return getUrlAll(thing, RDF.type).includes(crm('E90_Symbolic_Object')) &&
-                        getUrl(thing, crm('P106i_forms_part_of')) === workURI
+                    return getUrlAll(thing.thing, RDF.type).includes(crm('E90_Symbolic_Object')) &&
+                        getUrl(thing.thing, crm('P106i_forms_part_of')) === asUrl(work!)
                 })
                 .map(thing => {
-                    const selectionUrl = asUrl(thing)
-                    const refs = getUrlAll(thing, crm('P106_is_composed_of')).map(url => url.split('#').at(-1) || '')
+                    const selectionUrl = asUrl(thing.thing)
+                    const refs = getUrlAll(thing.thing, crm('P106_is_composed_of')).map(url => url.split('#').at(-1) || '')
 
                     return {
                         id: selectionUrl.split('#').at(-1) || '',
+                        provenience: thing.provenience || '',
                         refs: refs,
                         e13s: things
                             .filter(thing => {
                                 // get all E13s connected to this selection
-                                return getUrlAll(thing, RDF.type).includes(crm('E13_Attribute_Assignment')) &&
-                                    getUrl(thing, crm('P140_assigned_attribute_to')) === selectionUrl
+                                return getUrlAll(thing.thing, RDF.type).includes(crm('E13_Attribute_Assignment')) &&
+                                    getUrl(thing.thing, crm('P140_assigned_attribute_to')) === selectionUrl
                             })
                             .map((thing): E13 => {
                                 return {
-                                    id: asUrl(thing).split('#').at(-1) || v4(),
+                                    id: asUrl(thing.thing).split('#').at(-1) || v4(),
                                     treatise: '', // TODO
-                                    property: getUrl(thing, crm('P177_assigned_property_of_type')) || '',
-                                    attribute: getUrl(thing, crm('P141_assigned')) || '',
-                                    comment: getStringNoLocale(thing, crm('P3_has_note')) || ''
+                                    property: getUrl(thing.thing, crm('P177_assigned_property_of_type')) || '',
+                                    attribute: getUrl(thing.thing, crm('P141_assigned')) || '',
+                                    comment: getStringNoLocale(thing.thing, crm('P3_has_note')) || ''
                                 }
                             })
                     }
@@ -124,12 +153,25 @@ export const Workspace = () => {
         )
     }
 
-    useEffect(updateSelections, [workURI, dataset])
+    // Whenever the work itself, the source dataset or the   
+    // personal dataset changes, update all the selections.
+    useEffect(updateSelections, [work, sourceDataset, personalDataset])
 
     const startNewSelection = (ref: string) => {
+        if (!session.info.isLoggedIn) {
+            console.log('Cannot create a new selection without being logged in')
+            return
+        }
+
+        if (!personalDataset || !hasResourceInfo(personalDataset)) {
+            console.log('Cannot create selection without having a dataset defined.')
+            return
+        }
+
         const id = v4()
         setSelections(selections => [...selections, {
             id,
+            provenience: getSourceUrl(personalDataset),
             refs: [ref],
             e13s: []
         }])
@@ -150,21 +192,41 @@ export const Workspace = () => {
         setSelections(newSelections)
     }
 
-    const removeSelection = (id: string) => {
-        const selectionToRemove = selections.find(selection => selection.id === id)
-        if (dataset && selectionToRemove) {
-            const sourceUrl = getSourceUrl(dataset)
-            if (sourceUrl) {
-                let modifiedDataset = removeThing(dataset, `${sourceUrl}#${selectionToRemove.id}`)
-                selectionToRemove?.e13s.forEach(e13 => {
-                    modifiedDataset = removeThing(dataset, `${sourceUrl}#${e13.id}`)
-                })
-                saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any })
-            }
+    const removeSelection = async (id: string) => {
+        if (!session.info.isLoggedIn) {
+            console.log('Cannot remove a selection without being logged in.')
+            return
         }
-        const newSelections = selections.slice()
-        newSelections.splice(selections.findIndex(selection => selection.id === id), 1)
-        setSelections(newSelections)
+
+        if (!personalDataset || !hasResourceInfo(personalDataset)) {
+            console.log('No personal dataset to remove from.')
+            return
+        }
+
+        const selectionToRemove = selections.find(selection => selection.id === id)
+        if (!selectionToRemove) {
+            console.log('No selection to remove.')
+            return
+        }
+
+        if (selectionToRemove?.provenience !== getSourceUrl(personalDataset)) {
+            console.log('Cannot remove a selection which is not your own.')
+            return
+        }
+
+        if (activeSelectionId === id) setActiveSelectionId('')
+
+        const sourceUrl = getSourceUrl(personalDataset)
+        let modifiedDataset = removeThing(personalDataset, `${sourceUrl}#${selectionToRemove.id}`)
+
+        // Also remove all the E13s that were associated with this selection
+        selectionToRemove?.e13s.forEach(e13 => {
+            modifiedDataset = removeThing(personalDataset, `${sourceUrl}#${e13.id}`)
+        })
+
+        const savedDataset = await saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any })
+        setPersonalDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
+        console.log('Selection succesfully removed from your personal dataset')
     }
 
     const removeFromActiveSelection = (ref: string) => {
@@ -175,74 +237,79 @@ export const Workspace = () => {
         setSelections(newSelections)
     }
 
-    if (workPickerOpen) {
-        return (
-            <WorkPicker
-                open={true}
-                onClose={() => setWorkPickerOpen(false)}
-                setWorkURI={setWorkURI}
-                setMEI={setMEI}
-                setSelections={setSelections} />
-        )
-    }
-
     return (
-        <div style={{ margin: '1rem' }}>
-            <Stack direction='row'>
-                <IconButton onClick={() => setWorkPickerOpen(true)}>
-                    <Menu />
-                </IconButton>
+        <>
+            <div style={{ margin: '1rem' }}>
+                <Stack direction='row'>
+                    <IconButton onClick={() => setWorkPickerOpen(true)}>
+                        <Menu />
+                    </IconButton>
 
-                <ToggleButtonGroup
-                    exclusive
-                    size='small'
-                    value={displayMode}
-                    onChange={(e, newMode) => setDispayMode(newMode as DisplayMode)}>
-                    <ToggleButton value='tablature' key='tablature'>
-                        Tablature
-                    </ToggleButton>
-                    <ToggleButton value='staff-notation' key='staff-notation'>
-                        Staff notation
-                    </ToggleButton>
-                </ToggleButtonGroup>
-            </Stack>
+                    <ToggleButtonGroup
+                        exclusive
+                        size='small'
+                        value={displayMode}
+                        onChange={(e, newMode) => setDispayMode(newMode as DisplayMode)}>
+                        <ToggleButton value='tablature' key='tablature'>
+                            Tablature
+                        </ToggleButton>
+                        <ToggleButton value='staff-notation' key='staff-notation'>
+                            Staff notation
+                        </ToggleButton>
+                    </ToggleButtonGroup>
+                </Stack>
 
-            <Verovio
-                mei={displayMode === 'tablature' ? mei : transformedMEI}
-                expandActiveSelection={expandActiveSelection}
-                removeFromActiveSelection={removeFromActiveSelection}
-                startNewSelection={startNewSelection}
-                onReady={() => setVerovioReady(verovioReady + 1)} />
+                <Verovio
+                    mei={displayMode === 'tablature' ? mei : transformedMEI}
+                    expandActiveSelection={expandActiveSelection}
+                    removeFromActiveSelection={removeFromActiveSelection}
+                    startNewSelection={startNewSelection}
+                    onReady={() => setVerovioReady(verovioReady + 1)} />
 
-            <SelectionContext.Provider
-                value={{
-                    availableSelections: selections.map(s => s.id),
-                    highlightSelection: setSecondaryActiveSelection
-                }}>
-                <Drawer
-                    variant='persistent'
-                    open={activeSelectionId !== ''}
-                    anchor='right'>
-                    <SelectionEditor
-                        workURI={workURI}
-                        setSelection={setSelection}
-                        selection={selections.find(selection => selection.id === activeSelectionId)} />
-                </Drawer>
+                {work && (
+                    <SelectionContext.Provider
+                        value={{
+                            availableSelections: selections.map(s => s.id),
+                            highlightSelection: setSecondaryActiveSelection
+                        }}>
+                        {session.info.isLoggedIn ? (
+                            <Drawer
+                                variant='persistent'
+                                open={activeSelectionId !== ''}
+                                anchor='right'>
+                                <SelectionEditor
+                                    workURI={asUrl(work)}
+                                    setSelection={setSelection}
+                                    selection={selections.find(selection => selection.id === activeSelectionId)} />
+                            </Drawer>
+                        ) : null /* otherwise just show popups containing the information */}
 
-            </SelectionContext.Provider>
+                    </SelectionContext.Provider>
+                )}
 
 
-            {hullContainer && selections.map(selection => {
-                return (
-                    <SelectionOverlay
-                        key={selection.id}
-                        selection={selection}
-                        highlight={selection.id === secondaryActiveSelection}
-                        setActiveSelection={setActiveSelectionId}
-                        removeSelection={removeSelection}
-                        svgBackground={hullContainer} />
-                )
-            })}
-        </div>
+                {hullContainer && selections.map(selection => {
+                    return (
+                        <SelectionOverlay
+                            key={`${displayMode}_${selection.id}`}
+                            selection={selection}
+                            highlight={selection.id === secondaryActiveSelection}
+                            setActiveSelection={setActiveSelectionId}
+                            removeSelection={removeSelection}
+                            svgBackground={hullContainer} />
+                    )
+                })}
+            </div>
+
+            {workPickerOpen && (
+                <WorkPicker
+                    open={true}
+                    onClose={() => setWorkPickerOpen(false)}
+                    setSourceDataset={setSourceDataset}
+                    setWork={setWork}
+                    setMEI={setMEI}
+                    setSelections={setSelections} />
+            )}
+        </>
     )
 }

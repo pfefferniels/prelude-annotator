@@ -20,7 +20,7 @@ interface WorkAccordionProps {
     sourceDataset: SolidDataset
     setSourceDataset?: (dataset: SolidDataset) => void
     label: string
-    openWork: (work: Thing) => void
+    openWork: (work: Thing, sourceDataset: SolidDataset) => void
 }
 
 const WorkAccordion = ({ sourceDataset, setSourceDataset, label, openWork }: WorkAccordionProps) => {
@@ -92,7 +92,7 @@ const WorkAccordion = ({ sourceDataset, setSourceDataset, label, openWork }: Wor
                                                 )
                                             }
                                             <IconButton onClick={() => {
-                                                openWork(work.thing)
+                                                openWork(work.thing, sourceDataset)
                                             }}>
                                                 <OpenInNew />
                                             </IconButton>
@@ -131,12 +131,13 @@ interface WorkPickerProps {
     open: boolean
     onClose: () => void
 
-    setWorkURI: (uri: string) => void
+    setSourceDataset: (sourceDataset: SolidDataset) => void
+    setWork: (work: Thing) => void
     setMEI: (mei: string) => void
     setSelections: (selections: Selection[]) => void
 }
 
-export const WorkPicker = ({ open, onClose, setWorkURI, setMEI }: WorkPickerProps) => {
+export const WorkPicker = ({ open, onClose, setWork, setSourceDataset, setMEI }: WorkPickerProps) => {
     const { solidDataset: personalDataset, setDataset: setPersonalDataset } = useContext(DatasetContext)
     const { session } = useSession()
 
@@ -161,8 +162,9 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI }: WorkPickerProp
         }
     } 
 
-    const openWork = async (work: Thing) => {
-        setWorkURI(asUrl(work))
+    const openWork = async (work: Thing, sourceDataset: SolidDataset) => {
+        setSourceDataset(sourceDataset)
+        setWork(work)
 
         // load MEI
         const fileUrl = getUrl(work, RDFS.label)

@@ -21,7 +21,7 @@ export const SelectionEditor = ({
     workURI,
     selection,
     setSelection }: SelectionEditorProps) => {
-        const { highlightSelection } = useContext(SelectionContext)
+    const { highlightSelection } = useContext(SelectionContext)
     const { dataset } = useDataset()
     const { session } = useSession()
 
@@ -53,7 +53,7 @@ export const SelectionEditor = ({
         saveSolidDatasetAt(getSourceUrl(dataset)!, modifiedDataset, { fetch: session.fetch as any });
     }
 
-    // useEffect(saveToPod, [selection])
+    const isPersonalSelection = dataset && selection?.provenience === getSourceUrl(dataset)
 
     if (!selection) {
         return <div>no selection specified</div>
@@ -73,24 +73,27 @@ export const SelectionEditor = ({
                     <Save />
                 </IconButton>
 
-                <IconButton onClick={() => {
-                    const id = v4()
-                    setSelection({
-                        id: selection.id,
-                        refs: selection.refs,
+                {session.info.isLoggedIn && isPersonalSelection && (
+                    <IconButton onClick={() => {
+                        const id = v4()
+                        setSelection({
+                            id: selection.id,
+                            refs: selection.refs,
+                            provenience: selection.provenience,
 
-                        // append a new E13
-                        e13s: [...selection.e13s, {
-                            id,
-                            treatise: '',
-                            property: '',
-                            attribute: '',
-                            comment: ''
-                        }]
-                    })
-                }}>
-                    <Add />
-                </IconButton>
+                            // append a new E13
+                            e13s: [...selection.e13s, {
+                                id,
+                                treatise: '',
+                                property: '',
+                                attribute: '',
+                                comment: ''
+                            }]
+                        })
+                    }}>
+                        <Add />
+                    </IconButton>
+                )}
 
                 <Stack spacing={1}>
                     <Paper>
@@ -100,17 +103,20 @@ export const SelectionEditor = ({
                                 return (
                                     <ListItem
                                         secondaryAction={
-                                            <IconButton onClick={() => {
-                                                const refs = selection.refs
-                                                refs.splice(refs.findIndex(r => r === ref), 1)
-                                                setSelection({
-                                                    id: selection.id,
-                                                    refs: selection.refs,
-                                                    e13s: selection.e13s
-                                                })
-                                            }}>
-                                                <Delete />
-                                            </IconButton>
+                                            session.info.isLoggedIn && isPersonalSelection && (
+                                                <IconButton onClick={() => {
+                                                    const refs = selection.refs
+                                                    refs.splice(refs.findIndex(r => r === ref), 1)
+                                                    setSelection({
+                                                        id: selection.id,
+                                                        provenience: selection.provenience,
+                                                        refs: selection.refs,
+                                                        e13s: selection.e13s
+                                                    })
+                                                }}>
+                                                    <Delete />
+                                                </IconButton>
+                                            )
                                         }
                                         key={`selection_editor_${ref}`}>
                                         <ListItemText primary={isSelection(ref) ? ref.id : ref} />
@@ -121,7 +127,7 @@ export const SelectionEditor = ({
                     </Paper>
                     <E13List
                         e13s={selection.e13s}
-                        selectionId={selection.id}/>
+                        selectionId={selection.id} />
                 </Stack>
             </Paper >
         </>

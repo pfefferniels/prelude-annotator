@@ -33,7 +33,7 @@ export function LoginForm() {
                     <LoginButton
                         oidcIssuer='https://inrupt.net'
                         redirectUrl={window.location.href}
-                        authOptions={{ clientName: 'Linked Early Records' }}>
+                        authOptions={{ clientName: 'Preludes Annotator' }}>
                         <Button disabled={sessionRequestInProgress}>
                             {sessionRequestInProgress ? <CircularProgress /> : "Log In"}
                         </Button>

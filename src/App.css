@@ -15,6 +15,12 @@
     stroke: black;
 }
 
+.hull-removing {
+    fill: lightgray;
+    stroke: gray;
+    stroke-width: 5;
+}
+
 .mNum {
     display: none;
 }
