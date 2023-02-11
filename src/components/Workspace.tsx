@@ -87,9 +87,9 @@ export const Workspace = () => {
     const updateSelections = () => {
         if (!dataset) return
 
-        console.log('update selections')
-
         const things = getThingAll(dataset)
+        console.log('update selections from a dataset with', things.length, 'items')
+
         setSelections(
             things
                 .filter(thing => {

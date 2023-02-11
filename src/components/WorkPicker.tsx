@@ -1,8 +1,9 @@
-import { asUrl, getFile, getSolidDataset, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, Thing } from "@inrupt/solid-client"
+import { asUrl, getFile, getSolidDataset, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, SolidDataset, Thing } from "@inrupt/solid-client"
 import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
-import { AddOutlined, Delete, Edit, OpenInNew } from "@mui/icons-material"
-import { Drawer, IconButton, List, ListItem, ListItemText } from "@mui/material"
+import { AddOutlined, Delete, Edit, Expand, ExpandCircleDown, OpenInNew } from "@mui/icons-material"
+import { LoadingButton } from "@mui/lab"
+import { Accordion, AccordionDetails, AccordionSummary, Button, Dialog, DialogActions, DialogContent, DialogTitle, Drawer, IconButton, List, ListItem, ListItemText, TextField, Typography } from "@mui/material"
 import { styled } from "@mui/system"
 import { useContext, useEffect, useState } from "react"
 import { crm, frbroo } from "../helpers/namespaces"
@@ -15,34 +16,33 @@ const StyledList = styled(List)(() => ({
     minWidth: 500
 }));
 
-interface WorkPickerProps {
-    open: boolean
-    onClose: () => void
-
-    setWorkURI: (uri: string) => void
-    setMEI: (mei: string) => void
-    setSelections: (selections: Selection[]) => void
+interface WorkAccordionProps {
+    sourceDataset: SolidDataset
+    setSourceDataset?: (dataset: SolidDataset) => void
+    label: string
+    openWork: (work: Thing) => void
 }
 
-export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }: WorkPickerProps) => {
-    const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
+const WorkAccordion = ({ sourceDataset, setSourceDataset, label, openWork }: WorkAccordionProps) => {
     const { session } = useSession()
 
     const [works, setWorks] = useState<{ thing: Thing, title: string }[]>([])
     const [selectedWork, setSelectedWork] = useState<Thing>()
     const [workDialogOpen, setWorkDialogOpen] = useState(false)
 
-    const loadWorks = () => {
-        if (!dataset) {
+    const loadFromSource = () => {
+        if (!sourceDataset) {
             console.warn('No dataset found')
             return
         }
+
         // get a list of the works found in the dataset
-        const things = getThingAll(dataset)
+        const things = getThingAll(sourceDataset)
+        console.log('things found:', things.length)
         setWorks(
             things
                 .filter(thing => {
-                    return getUrlAll(thing, RDF.type).includes(frbroo('F15_Complex_Work'))
+                    return getUrlAll(thing, RDF.type).includes(frbroo('F1_Work'))
                 })
                 .map(thing => {
                     return {
@@ -53,10 +53,113 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }:
         )
     }
 
-    useEffect(() => {
-        if (!open) return
-        loadWorks()
-    }, [dataset, open, onClose, setMEI, setSelections])
+    useEffect(loadFromSource, [sourceDataset])
+
+    return (
+        <>
+
+            <Accordion>
+                <AccordionSummary expandIcon={<ExpandCircleDown />}>
+                    {label}
+                </AccordionSummary>
+                <AccordionDetails>
+                    <StyledList>
+                        {works.map((work, i) => {
+                            return (
+                                <ListItem
+                                    key={`work_${i}`}
+                                    secondaryAction={
+                                        <>
+                                            {
+                                                setSourceDataset && (
+                                                    <>
+                                                        <IconButton onClick={() => {
+                                                            setSelectedWork(work.thing)
+                                                            setWorkDialogOpen(true)
+                                                        }}>
+                                                            <Edit />
+                                                        </IconButton>
+                                                        <IconButton onClick={async () => {
+                                                            if (sourceDataset && hasResourceInfo(sourceDataset)) {
+                                                                const modifiedDataset = removeThing(sourceDataset, work.thing)
+                                                                const savedDataset = await saveSolidDatasetAt(getSourceUrl(sourceDataset), modifiedDataset, { fetch: session.fetch as any })
+                                                                setSourceDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
+                                                            }
+                                                        }}>
+                                                            <Delete />
+                                                        </IconButton>
+                                                    </>
+                                                )
+                                            }
+                                            <IconButton onClick={() => {
+                                                openWork(work.thing)
+                                            }}>
+                                                <OpenInNew />
+                                            </IconButton>
+                                        </>
+                                    }>
+                                    <ListItemText
+                                        primary={work.title}
+                                        secondary={asUrl(work.thing).split('#').at(-1) || ''} />
+                                </ListItem>
+                            )
+                        })}
+                    </StyledList>
+
+                    {setSourceDataset && (
+                        <IconButton onClick={() => setWorkDialogOpen(true)}>
+                            <AddOutlined />
+                        </IconButton>
+                    )}
+                </AccordionDetails>
+            </Accordion>
+
+            {setSourceDataset && (
+                <WorkDialog
+                    thing={selectedWork}
+                    open={workDialogOpen}
+                    onClose={() => {
+                        setWorkDialogOpen(false)
+                        loadFromSource()
+                    }} />
+            )}
+        </>
+    )
+}
+
+interface WorkPickerProps {
+    open: boolean
+    onClose: () => void
+
+    setWorkURI: (uri: string) => void
+    setMEI: (mei: string) => void
+    setSelections: (selections: Selection[]) => void
+}
+
+export const WorkPicker = ({ open, onClose, setWorkURI, setMEI }: WorkPickerProps) => {
+    const { solidDataset: personalDataset, setDataset: setPersonalDataset } = useContext(DatasetContext)
+    const { session } = useSession()
+
+    const [foreignDatasets, setForeignDatasets] = useState<SolidDataset[]>([])
+    const [addSourceDialogOpen, setAddSourceDialogOpen] = useState(false)
+    const [loadingDataset, setLoadingDataset] = useState(false)
+    const [sourceUrl, setSourceUrl] = useState('')
+    const [errorMessage, setErrorMessage] = useState('')
+
+    const addSource = async (sourceUrl: string) => {
+        setErrorMessage('')
+        setLoadingDataset(true)
+        try {
+            const solidDataset = await getSolidDataset(sourceUrl)
+            setForeignDatasets(datasets => [...datasets, solidDataset])
+            setLoadingDataset(false)
+            setAddSourceDialogOpen(false)
+        }
+        catch (e) {
+            setErrorMessage((e as Error).message)
+            setLoadingDataset(false)
+        }
+    } 
 
     const openWork = async (work: Thing) => {
         setWorkURI(asUrl(work))
@@ -77,66 +180,57 @@ export const WorkPicker = ({ open, onClose, setWorkURI, setMEI, setSelections }:
 
         setMEI(new XMLSerializer().serializeToString(result))
 
-        // load selections
-        if (!dataset) {
-            console.warn('Cannot load any selections, no dataset given.')
-            setSelections([])
-            return
-        }
+        onClose()
     }
 
     return (
         <>
             <Drawer open={open} onClose={onClose}>
-                <StyledList>
-                    {works.map((work, i) => {
-                        return (
-                            <ListItem
-                                key={`work_${i}`}
-                                secondaryAction={
-                                    <>
-                                        <IconButton onClick={() => {
-                                            setSelectedWork(work.thing)
-                                            setWorkDialogOpen(true)
-                                        }}>
-                                            <Edit />
-                                        </IconButton>
-                                        <IconButton onClick={async () => {
-                                            if (dataset && hasResourceInfo(dataset)) {
-                                                const modifiedDataset = removeThing(dataset, work.thing)
-                                                const savedDataset = await saveSolidDatasetAt(getSourceUrl(dataset)!, modifiedDataset, { fetch: session.fetch as any})
-                                                setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
-                                            }
-                                        }}>
-                                            <Delete />
-                                        </IconButton>
-                                        <IconButton onClick={() => {
-                                            openWork(work.thing)
-                                            onClose()
-                                        }}>
-                                            <OpenInNew />
-                                        </IconButton>
-                                    </>
-                                }>
-                                <ListItemText
-                                    primary={work.title}
-                                    secondary={asUrl(work.thing).split('#').at(-1) || ''} />
-                            </ListItem>
-                        )
-                    })}
-                </StyledList>
+                {foreignDatasets.map((dataset, i) => (
+                    <WorkAccordion
+                        key={`dataset_accordion_${i}`}
+                        sourceDataset={dataset}
+                        openWork={openWork}
+                        label={`Analyses from ${getSourceUrl(dataset)}`} />
+                ))}
 
-                <IconButton onClick={() => setWorkDialogOpen(true)}>
-                    <AddOutlined />
-                </IconButton>
+                {session.info.isLoggedIn && personalDataset && (
+                    <WorkAccordion
+                        openWork={openWork}
+                        sourceDataset={personalDataset}
+                        setSourceDataset={setPersonalDataset}
+                        label='My Personal Analyses' />
+                )}
+
+                <Button onClick={() => setAddSourceDialogOpen(true)}>
+                    Add Shared Source
+                </Button>
             </Drawer>
-            <WorkDialog
-                thing={selectedWork}
-                open={workDialogOpen}
-                onClose={() => {
-                    setWorkDialogOpen(false)
-                    loadWorks()
-                }} />
+
+            <Dialog open={addSourceDialogOpen} onClose={() => setAddSourceDialogOpen(false)}>
+                <DialogTitle>
+                    Add Source URL
+                </DialogTitle>
+                <DialogContent>
+                    <TextField
+                        value={sourceUrl}
+                        onChange={(e) => {
+                            setSourceUrl(e.target.value)
+                        }}
+                        placeholder='Your source URL (typically ending on .ttl)'
+                        label='Source URL' />
+                    {errorMessage && (<Typography>{errorMessage}</Typography>)}
+                </DialogContent>
+                <DialogActions>
+                    <LoadingButton
+                        onClick={() => {
+                            addSource(sourceUrl)
+                        }}
+                        loading={loadingDataset}>
+                        Add
+                    </LoadingButton>
+                </DialogActions>
+            </Dialog>
         </>
     )
 }
