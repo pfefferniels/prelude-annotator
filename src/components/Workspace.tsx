@@ -6,12 +6,12 @@ import Verovio from "./Verovio"
 import { WorkPicker } from "./WorkPicker"
 import { Menu } from "@mui/icons-material"
 import { Stack } from "@mui/system"
-import { asUrl, getDate, getSolidDataset, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, SolidDataset, Thing } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, getDate, getSolidDataset, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client"
 import { SelectionOverlay } from "./SelectionOverlay"
 import { tab2cmn } from "../helpers/tab2cmn"
 import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
 import { DCTERMS, RDF } from "@inrupt/vocab-common-rdf"
-import { crm, crminf } from "../helpers/namespaces"
+import { crm, crminf, dcterms } from "../helpers/namespaces"
 import { SelectionContext } from "../context/SelectionContext"
 import { Argumentation, Belief, BeliefValue } from "../types/Belief"
 import { ArgumentationContext } from "../context/ArgumentationContext"
@@ -38,6 +38,7 @@ export const Workspace = () => {
     const [displayMode, setDispayMode] = useState<DisplayMode>('tablature')
     const [mei, setMEI] = useState('')
     const [transformedMEI, setTransformedMEI] = useState('')
+
     const [activeSelectionId, setActiveSelectionId] = useState('')
     const [secondaryActiveSelection, setSecondaryActiveSelection] = useState('')
     const [workPickerOpen, setWorkPickerOpen] = useState(true)
@@ -198,17 +199,44 @@ export const Workspace = () => {
     }, [work, sourceDataset, personalDataset])
 
     useEffect(() => {
+        if (ontologies.length !== 0) return
+
         // load all the existing ontologies when mounting
         // the component. In future it might make sense to
         // predefine a selection of ontologies
-
-        const fetchOntology = async (url: string, name: string, label: string) => {
-            const dataset = await getSolidDataset(url)
-            setOntologies(ontologies => [...ontologies, new Ontology(dataset, name, label)])
+        const fetchOntologies = (treatises: any[]) => {
+            return treatises.map(async treatise => {
+                return new Ontology(await getSolidDataset(treatise.url), treatise.name, treatise.label)
+            })
         }
 
-        availableTreatises.forEach(treatise => fetchOntology(treatise.url, treatise.name, treatise.label))
+        Promise.all(fetchOntologies(availableTreatises)).then(setOntologies)
     }, [])
+
+    const saveSelection = async (selection: Selection) => {
+        if (!selection || !work) return
+
+        if (!personalDataset || !hasResourceInfo(personalDataset)) {
+            console.warn('No dataset found to save the new work to.')
+            return
+        }
+
+        // saves the given selection in the POD
+        const selectionThing = buildThing(createThing({
+            name: selection.id
+        }))
+            .addUrl(RDF.type, crm('E90_Symbolic_Object'))
+            .addDate(DCTERMS.created, new Date(Date.now()))
+            .addUrl(crm('P106i_forms_part_of'), asUrl(work))
+
+        selection.refs.forEach(ref => {
+            selectionThing.addUrl(crm('P106_is_composed_of'), `${asUrl(work)}#${ref}`)
+        })
+
+        const modifiedDataset = setThing(personalDataset, selectionThing.build());
+        const savedDataset = await saveSolidDatasetAt(getSourceUrl(modifiedDataset), modifiedDataset, { fetch: session.fetch as any });
+        setPersonalDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
+    }
 
     const startNewSelection = (ref: string) => {
         if (!session.info.isLoggedIn) {
@@ -222,19 +250,24 @@ export const Workspace = () => {
         }
 
         const id = v4()
-        setSelections(selections => [...selections, {
+        const newSelection = {
             id,
             provenience: getSourceUrl(personalDataset),
             refs: [ref],
             e13s: []
-        }])
+        }
+        // setSelections(selections => [...selections, newSelection])
+        saveSelection(newSelection)
         setActiveSelectionId(id)
     }
 
     const expandActiveSelection = (ref: string) => {
         const newSelections = selections.slice()
-        newSelections.find(selection => selection.id === activeSelectionId)?.refs.push(ref)
-        setSelections(newSelections)
+        const toChange = selections.find(selection => selection.id === activeSelectionId)
+        if (!toChange) return 
+        toChange.refs.push(ref)
+        saveSelection(toChange)
+        // setSelections(newSelections)
     }
 
     const setSelection = (newSelection: Selection) => {
@@ -344,7 +377,6 @@ export const Workspace = () => {
                                             open={activeSelectionId !== ''}
                                             anchor='right'>
                                             <SelectionEditor
-                                                workURI={asUrl(work)}
                                                 setSelection={setSelection}
                                                 selection={selections.find(selection => selection.id === activeSelectionId)} />
                                         </Drawer>

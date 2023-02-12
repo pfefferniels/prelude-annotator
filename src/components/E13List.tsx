@@ -37,7 +37,7 @@ export const E13List = ({ forSelection }: E13ListProps) => {
             availableE13s
                 .filter(e13 => e13.target.split('#').at(-1) === forSelection.id)
         )
-    }, [availableE13s])
+    }, [availableE13s, forSelection])
 
     useEffect(() => {
         // depending on the types that were associated 
@@ -130,9 +130,12 @@ export const E13List = ({ forSelection }: E13ListProps) => {
 
     return (
         <Stack>
-            {referredE13s.map(e13 => {
+            {referredE13s
+                .sort((a, b) => (urlAsLabel(a.property)?.charCodeAt(0) || 0) - (urlAsLabel(b.property)?.charCodeAt(0) || 0))
+                .map(e13 => {
                 return (
                     <Accordion
+                        elevation={5}
                         expanded={e13.id === selectedId}
                         onChange={(_: React.SyntheticEvent, isExpanded: boolean) => {
                             if (isExpanded) {
@@ -145,7 +148,12 @@ export const E13List = ({ forSelection }: E13ListProps) => {
                         key={`selection_editor_${e13.id}`}>
                         <AccordionSummary
                             expandIcon={<ExpandMore />}>
-                            <Typography>{urlAsLabel(e13.property) || 'unedited'} </Typography>
+                            <Typography>
+                                <b>
+                                    {urlAsLabel(e13.property) || <span style={{ color: 'red' }}>[New Attribute Assignment]</span>}
+                                </b>
+                            </Typography>
+
                             {e13.attribute && <Typography> {urlAsLabel(e13.attribute)}</Typography>}
                         </AccordionSummary>
 
@@ -166,7 +174,7 @@ export const E13List = ({ forSelection }: E13ListProps) => {
             })}
 
             {session.info.isLoggedIn && isPersonalSelection && (
-                <Button onClick={createE13}>Add E13</Button>
+                <Button onClick={createE13}>Assign Attribute</Button>
             )}
         </Stack>
     );

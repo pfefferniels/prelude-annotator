@@ -97,16 +97,9 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation }: Argume
                     <Button onClick={createBelief}>Add Belief</Button>
 
                     <FormControl required={false}>
-                        <FormLabel>based on</FormLabel>
-                        <Select size='small'>
-                            <MenuItem>Belief Adoption</MenuItem>
-                            <MenuItem>Method or Reasoning</MenuItem>
-                        </Select>
-                    </FormControl>
-
-                    <FormControl required={false}>
-                        <FormLabel>Description of adopted belief or the applied method</FormLabel>
+                        <FormLabel>Note on argumentation (reasons, assumptions etc.)</FormLabel>
                         <TextField
+                            size='small'
                             required={false}
                             placeholder="Argument ..." />
                     </FormControl>

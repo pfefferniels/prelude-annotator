@@ -90,7 +90,7 @@ export const E13Editor = ({
             } : undefined))
                 .addUrl(RDF.type, crminf('I1_Argumentation'))
                 .addUrl(crm('P14_carried_out_by'), argumentation.carriedOutBy)
-        
+
         let modifiedDataset = dataset
         argumentation.concluded.map(belief => {
             return buildThing(createThing(belief.url !== '' ? {
@@ -134,7 +134,7 @@ export const E13Editor = ({
         <Paper style={{ minWidth: '200px' }}>
             <Stack spacing={2}>
                 <FormControl variant='standard'>
-                    <InputLabel>Treatise</InputLabel>
+                    <InputLabel>According to …</InputLabel>
 
                     <Select
                         size='small'
@@ -156,90 +156,86 @@ export const E13Editor = ({
 
                 {currentTreatise && (
                     <>
-                        <FormControl variant='standard'>
-                            <InputLabel>Assigned Property</InputLabel>
-                            <Select
-                                size='small'
-                                value={property}
-                                onChange={(e) => {
-                                    setProperty(e.target.value)
-                                    setExpectedRange(currentTreatise.rangeOfProperty(e.target.value))
-                                }}>
-                                <MenuItem value={RDF.type}>is a</MenuItem>
+                        <Stack direction='row'>
 
-                                {availableDomains
-                                    .map(assignedClass => currentTreatise.propertiesWithDomain(assignedClass))
-                                    .flat()
-                                    .filter((item, i, arr) => {
-                                        // filter out duplicates
-                                        return arr.findIndex(other => other.uri === item.uri) === i
-                                    })
-                                    .map(property => {
-                                        return (
-                                            <MenuItem
-                                                key={`property_${property.uri}`}
-                                                value={property.uri}>
-                                                {property.label}
-                                            </MenuItem>
-                                        )
-                                    })
-                                }
-                            </Select>
-                        </FormControl>
-
-                        {property === RDF.type ? (
                             <FormControl variant='standard'>
-                                <InputLabel>Assigned Object</InputLabel>
-
+                                <InputLabel>the selection …</InputLabel>
                                 <Select
+                                    style={{ minWidth: '200px' }}
                                     size='small'
-                                    value={attribute}
-                                    onChange={(e) => setAttribute(e.target.value)}>
-                                    {currentTreatise.allClasses().map(classObj => {
-                                        return (
-                                            <MenuItem
-                                                key={`class_${classObj.uri}`}
-                                                value={classObj.uri}>
-                                                {classObj.label}
-                                            </MenuItem>
-                                        )
-                                    })}
+                                    value={property}
+                                    onChange={(e) => {
+                                        setProperty(e.target.value)
+                                        setExpectedRange(currentTreatise.rangeOfProperty(e.target.value))
+                                    }}>
+                                    <MenuItem value={RDF.type}>is a</MenuItem>
+
+                                    {availableDomains
+                                        .map(assignedClass => currentTreatise.propertiesWithDomain(assignedClass))
+                                        .flat()
+                                        .filter((item, i, arr) => {
+                                            // filter out duplicates
+                                            return arr.findIndex(other => other.uri === item.uri) === i
+                                        })
+                                        .map(property => {
+                                            return (
+                                                <MenuItem
+                                                    key={`property_${property.uri}`}
+                                                    value={property.uri}>
+                                                    {property.label}
+                                                </MenuItem>
+                                            )
+                                        })
+                                    }
                                 </Select>
                             </FormControl>
-                        ) :
-                            <>
-                                <small>expects {expectedRange || 'anything'}</small>
 
-                                <Button onClick={() => setAssignSelectionOpen(true)}>Assign Selection</Button>
-                                <div>{attribute}</div>
-                                <Drawer open={assignSelectionOpen}>
-                                    <List dense>
-                                        {availableSelections.map((selectionId => {
+                            {property === RDF.type ? (
+                                <FormControl variant='standard'>
+                                    <InputLabel>Assigned Object</InputLabel>
+
+                                    <Select
+                                        sx={{ minWidth: 200 }}
+                                        size='small'
+                                        value={attribute}
+                                        onChange={(e) => setAttribute(e.target.value)}>
+                                        {currentTreatise.allClasses().map(classObj => {
                                             return (
-                                                <ListItem
-                                                    onClick={() => {
-                                                        setAttribute(selectionId)
-                                                        setAssignSelectionOpen(false)
-                                                    }}
-                                                    onMouseOver={() => highlightSelection(selectionId)}
-                                                    key={`selection_picker_${selectionId}`}>
-                                                    <ListItemText primary={selectionId} />
-                                                </ListItem>
+                                                <MenuItem
+                                                    key={`class_${classObj.uri}`}
+                                                    value={classObj.uri}>
+                                                    {classObj.label}
+                                                </MenuItem>
                                             )
-                                        }))}
-                                    </List>
-                                </Drawer>
-                            </>
-                        }
+                                        })}
+                                    </Select>
+                                </FormControl>
+                            ) :
+                                <Stack>
+                                    <Button onClick={() => setAssignSelectionOpen(true)}>assign {expectedRange?.split('/').at(-1) || 'selection'}</Button>
+                                    <div>{attribute.split('#').at(-1)}</div>
+                                    <Drawer open={assignSelectionOpen}>
+                                        <List dense>
+                                            {availableSelections.map((selectionId => {
+                                                return (
+                                                    <ListItem
+                                                        onClick={() => {
+                                                            setAttribute(selectionId)
+                                                            setAssignSelectionOpen(false)
+                                                        }}
+                                                        onMouseOver={() => highlightSelection(selectionId)}
+                                                        key={`selection_picker_${selectionId}`}>
+                                                        <ListItemText primary={selectionId} />
+                                                    </ListItem>
+                                                )
+                                            }))}
+                                        </List>
+                                    </Drawer>
+                                </Stack>
+                            }
+                        </Stack>
                     </>
                 )}
-
-                <TextField
-                    label='Comment'
-                    placeholder='Comment'
-                    size='small'
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)} />
 
                 {referredArgumentations?.map(arg => (
                     <ArgumentationEditor
@@ -248,7 +244,25 @@ export const E13Editor = ({
                         saveArgumentation={saveArgumentation} />
                 ))}
 
-                <Button onClick={createArgumentation}>Add Argumentation</Button>
+                <Button onClick={async () => {
+                    await saveE13({
+                        // ID and provenience are immutable
+                        provenience: e13.provenience,
+                        id: e13.id,
+
+                        // all other properties have been changed
+                        // and are read from the respective states
+                        property,
+                        attribute,
+                        treatise: currentTreatise?.url || '',
+                        comment,
+
+                        // the target will be ignored by the saveE13 
+                        // routine and replaced by the current selection
+                        target: ''
+                    })
+                    createArgumentation()
+                }}>Add Argumentation</Button>
             </Stack>
 
             <DialogActions>
