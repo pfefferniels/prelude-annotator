@@ -5,7 +5,6 @@ import LoadingButton from "@mui/lab/LoadingButton"
 import { Button, DialogActions, Drawer, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
 import { Stack } from "@mui/system"
 import { useContext, useEffect, useState } from "react"
-import availableTreatises from "./availableTreatises.json"
 import { Ontology } from "../helpers/Ontology"
 import { E13 } from "../types/E13"
 import { SelectionContext } from "../context/SelectionContext"
@@ -14,6 +13,7 @@ import { ArgumentationContext } from "../context/ArgumentationContext"
 import { crm, crminf } from "../helpers/namespaces"
 import { ArgumentationEditor } from "./ArgumentationEditor"
 import { DatasetContext, SessionContext, useSession } from "@inrupt/solid-ui-react"
+import { OntologyContext } from "../context/OntologyContext"
 
 interface E13EditorProps {
     selectionUrl: string
@@ -37,6 +37,7 @@ export const E13Editor = ({
     const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
     const { availableSelections, highlightSelection } = useContext(SelectionContext)
     const { availableArgumentations } = useContext(ArgumentationContext)
+    const { availableOntologies } = useContext(OntologyContext)
 
     const [referredArgumentations, setReferredArgumentations] = useState<Argumentation[]>()
 
@@ -54,13 +55,7 @@ export const E13Editor = ({
         setProperty(e13.property)
         setAttribute(e13.attribute)
         setComment(e13.comment)
-
-        const loadTreatise = async (url: string) => {
-            setCurrentTreatise(new Ontology(await getSolidDataset(url), e13.treatise))
-        }
-
-        const selectedTreatise = availableTreatises.find(t => t.name === e13.treatise)
-        if (selectedTreatise) loadTreatise(selectedTreatise.url)
+        setCurrentTreatise(availableOntologies.find(ontology => ontology.url === e13.treatise))
     }, [e13])
 
     useEffect(() => {
@@ -77,8 +72,8 @@ export const E13Editor = ({
                     // TODO: on the long term premises would have to
                     // be considered as well, not only conclusions
                     const referredBelief = argumentation.concluded.find(belief => {
-                        console.log('belief that', belief.that, '===', e13.id, '?')
-                        return belief.that.split('#').at(-1) === e13.id
+                        // console.log('belief that', belief.that, '===', e13.id, '?')
+                        return belief.that === e13.id
                     })
                     return referredBelief !== undefined
                 })
@@ -102,7 +97,7 @@ export const E13Editor = ({
                 url: belief.url
             } : undefined))
                 .addUrl(RDF.type, crminf('I2_Belief'))
-                .addDate(DCTERMS.created, belief.time)
+                //.addDate(DCTERMS.created, belief.time)
                 .addDate(DCTERMS.modified, new Date(Date.now()))
                 .addUrl(crminf('J4_that'), `${getSourceUrl(dataset)}#${belief.that}`)
                 .addStringNoLocale(crminf('J5_holds_to_be'), belief.holdsToBe)
@@ -128,7 +123,7 @@ export const E13Editor = ({
             carriedOutBy: session.info.webId || '',
             concluded: [{
                 url: '',
-                time: new Date(),
+                time: new Date(Date.now()),
                 that: e13.id,
                 holdsToBe: 'true'
             }]
@@ -145,19 +140,14 @@ export const E13Editor = ({
                         size='small'
                         value={currentTreatise?.name || ''}
                         onChange={async (e) => {
-                            const name = e.target.value
-                            const treatise = availableTreatises.find(treatise =>
-                                treatise.name === name)!
-                            const dataset = await getSolidDataset(treatise.url)
-                            if (!dataset) return
-                            setCurrentTreatise(new Ontology(dataset, name))
+                            setCurrentTreatise(availableOntologies.find(ontology => ontology.name === e.target.value))
                         }}>
-                        {availableTreatises.map(treatise => {
+                        {availableOntologies.map(ontology => {
                             return (
                                 <MenuItem
-                                    key={treatise.name}
-                                    value={treatise.name}>
-                                    {treatise.label}
+                                    key={ontology.name}
+                                    value={ontology.name}>
+                                    {ontology.label}
                                 </MenuItem>
                             )
                         })}

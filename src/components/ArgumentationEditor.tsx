@@ -1,9 +1,9 @@
 import { LoadingButton } from "@mui/lab";
-import { Accordion, AccordionDetails, AccordionSummary, Button, FormControl, FormLabel, MenuItem, Select, TextField } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Button, FormControl, FormLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
 import { Stack } from "@mui/system";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { E13Context } from "../context/E13Context";
-import { Argumentation, beliefValues } from "../types/Belief";
+import { Argumentation, Belief, BeliefValue, beliefValues } from "../types/Belief";
 import { E13 } from "../types/E13";
 
 interface ArgumentationProps {
@@ -14,35 +14,53 @@ interface ArgumentationProps {
 export const ArgumentationEditor = ({ argumentation, saveArgumentation }: ArgumentationProps) => {
     const { availableE13s } = useContext(E13Context)
 
+    const [beliefs, setBeliefs] = useState<Belief[]>(argumentation.concluded)
+    const [expanded, setExpanded] = useState(false)
+
+    const createBelief = () => {
+        setBeliefs(beliefs => [...beliefs, {
+            url: '',
+            that: '',
+            holdsToBe: 'questionable',
+            time: new Date(Date.now())
+        }])
+    }
+
+    useEffect(() => {
+        // make sure that the component state is always up-to-date 
+        // with the given argumentation prop
+        setBeliefs(argumentation.concluded)
+    }, [argumentation])
+
     return (
-        <Accordion>
+        <Accordion
+            onChange={(_, isExpanded) => setExpanded(isExpanded)}
+            expanded={expanded}>
             <AccordionSummary>Argumentation</AccordionSummary>
 
             <AccordionDetails>
                 <Stack>
-                    <FormControl>
-                        <FormLabel>Argue that this proposition holds to be …</FormLabel>
-                        <Select size='small'>
-                            {beliefValues.map(beliefValue => {
-                                return (
-                                    <MenuItem
-                                        value={beliefValue}
-                                        key={`${beliefValue}`}>{beliefValue}</MenuItem>
-                                );
-                            })}
-                        </Select>
-                    </FormControl>
+                    <Typography>Belief …</Typography>
 
-                    {['belief1'].map(belief => {
+                    {beliefs.map((belief, i) => {
                         return (
-                            <Stack direction='column'>
+                            <Stack key={`belief_${i}`} direction='column'>
                                 <FormControl>
-                                    <FormLabel required={false}>and that …</FormLabel>
-                                    <Select size='small'>
-                                        {['1', '2', '3'].map(otherProposition => {
+                                    <FormLabel required={false}>that …</FormLabel>
+                                    <Select
+                                        value={belief.that}
+                                        onChange={(e) => {
+                                            const newBeliefs = beliefs.slice()
+                                            newBeliefs[i].that = e.target.value
+                                            setBeliefs(newBeliefs)
+                                        }}
+                                        size='small'>
+                                        {availableE13s.map(proposition => {
                                             return (
-                                                <MenuItem key={`${belief}_${otherProposition}`}>
-                                                    {otherProposition}
+                                                <MenuItem
+                                                    value={proposition.id}
+                                                    key={`${belief.url}_${proposition.id}`}>
+                                                    {proposition.id}
                                                 </MenuItem>
                                             );
                                         })}
@@ -50,8 +68,15 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation }: Argume
                                 </FormControl>
 
                                 <FormControl>
-                                    <FormLabel required={false}>is</FormLabel>
-                                    <Select size='small'>
+                                    <FormLabel required={false}>holds to be</FormLabel>
+                                    <Select
+                                        value={belief.holdsToBe}
+                                        onChange={(e) => {
+                                            const newBeliefs = beliefs.slice()
+                                            newBeliefs[i].holdsToBe = e.target.value as BeliefValue
+                                            setBeliefs(newBeliefs)
+                                        }}
+                                        size='small'>
                                         {beliefValues.map(beliefValue => {
                                             return (
                                                 <MenuItem
@@ -69,7 +94,7 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation }: Argume
                             </Stack>
                         );
                     })}
-                    <Button>Add Belief</Button>
+                    <Button onClick={createBelief}>Add Belief</Button>
 
                     <FormControl required={false}>
                         <FormLabel>based on</FormLabel>
@@ -86,7 +111,18 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation }: Argume
                             placeholder="Argument ..." />
                     </FormControl>
 
-                    <LoadingButton onClick={() => saveArgumentation(argumentation)}>
+                    <LoadingButton onClick={
+                        () => {
+                            saveArgumentation({
+                                // this information cannot be modified in this editor
+                                url: argumentation.url,
+                                carriedOutBy: argumentation.carriedOutBy,
+
+                                // update the conclusions to the new beliefs
+                                concluded: beliefs
+                            })
+                            setExpanded(false)
+                        }}>
                         Save
                     </LoadingButton>
                 </Stack>

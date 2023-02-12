@@ -16,13 +16,15 @@ type Property = LabeledURI & {
  * and provides useful methods for working with it.
  */
 export class Ontology {
-    private things: Thing[];
-    url: string;
-    name: string;
+    private things: Thing[]
+    url: string
+    name: string
+    label: string
 
-    constructor(ontology: SolidDataset, name: string) {
+    constructor(ontology: SolidDataset, name: string, label: string) {
         this.things = getThingAll(ontology);
         this.name = name;
+        this.label = label
         const owlOntology = this.things.find(thing => getUrl(thing, RDF.type) === OWL.Ontology);
         if (!owlOntology)
             this.url = '';

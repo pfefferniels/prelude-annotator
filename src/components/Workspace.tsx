@@ -6,11 +6,11 @@ import Verovio from "./Verovio"
 import { WorkPicker } from "./WorkPicker"
 import { Menu } from "@mui/icons-material"
 import { Stack } from "@mui/system"
-import { asUrl, getSolidDataset, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, SolidDataset, Thing } from "@inrupt/solid-client"
+import { asUrl, getDate, getSolidDataset, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, SolidDataset, Thing } from "@inrupt/solid-client"
 import { SelectionOverlay } from "./SelectionOverlay"
 import { tab2cmn } from "../helpers/tab2cmn"
 import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
-import { RDF } from "@inrupt/vocab-common-rdf"
+import { DCTERMS, RDF } from "@inrupt/vocab-common-rdf"
 import { crm, crminf } from "../helpers/namespaces"
 import { SelectionContext } from "../context/SelectionContext"
 import { Argumentation, Belief, BeliefValue } from "../types/Belief"
@@ -19,6 +19,9 @@ import { E13Context } from "../context/E13Context"
 import { Selection } from "../types/Selection"
 import { Provenience } from "../types/Provenience"
 import { E13 } from "../types/E13"
+import { Ontology } from "../helpers/Ontology"
+import { OntologyContext } from "../context/OntologyContext"
+import availableTreatises from "./availableTreatises.json"
 
 type DisplayMode = 'staff-notation' | 'tablature'
 
@@ -42,6 +45,7 @@ export const Workspace = () => {
     const [verovioReady, setVerovioReady] = useState(0)
     const [hullContainer, setHullContainer] = useState<SVGGElement>()
 
+    const [ontologies, setOntologies] = useState<Ontology[]>([])
     const [selections, setSelections] = useState<Selection[]>([])
     const [e13s, setE13s] = useState<E13[]>([])
     const [argumentations, setArgumentations] = useState<Argumentation[]>([])
@@ -102,8 +106,8 @@ export const Workspace = () => {
                                 .map((thing): Belief => {
                                     return {
                                         url: asUrl(thing.thing),
-                                        time: new Date(''),
-                                        that: getUrl(thing.thing, crminf('J4_that')) || '',
+                                        time: getDate(thing.thing, DCTERMS.created) || new Date(),
+                                        that: getUrl(thing.thing, crminf('J4_that'))?.split('#').at(-1) || '',
                                         holdsToBe: getStringNoLocale(thing.thing, crminf('J5_holds_to_be')) as BeliefValue
                                     }
                                 })
@@ -194,8 +198,17 @@ export const Workspace = () => {
     }, [work, sourceDataset, personalDataset])
 
     useEffect(() => {
-        console.log('argumentations=', argumentations)
-    }, [selections, argumentations, e13s])
+        // load all the existing ontologies when mounting
+        // the component. In future it might make sense to
+        // predefine a selection of ontologies
+
+        const fetchOntology = async (url: string, name: string, label: string) => {
+            const dataset = await getSolidDataset(url)
+            setOntologies(ontologies => [...ontologies, new Ontology(dataset, name, label)])
+        }
+
+        availableTreatises.forEach(treatise => fetchOntology(treatise.url, treatise.name, treatise.label))
+    }, [])
 
     const startNewSelection = (ref: string) => {
         if (!session.info.isLoggedIn) {
@@ -309,34 +322,38 @@ export const Workspace = () => {
                     onReady={() => setVerovioReady(verovioReady + 1)} />
 
                 {work && (
-                    <ArgumentationContext.Provider
-                        value={{
-                            availableArgumentations: argumentations
-                        }}>
-                        <E13Context.Provider
+                    <OntologyContext.Provider value={{
+                        availableOntologies: ontologies
+                    }}>
+                        <ArgumentationContext.Provider
                             value={{
-                                availableE13s: e13s
+                                availableArgumentations: argumentations
                             }}>
-                            <SelectionContext.Provider
+                            <E13Context.Provider
                                 value={{
-                                    availableSelections: selections.map(s => s.id),
-                                    highlightSelection: setSecondaryActiveSelection
+                                    availableE13s: e13s
                                 }}>
-                                {session.info.isLoggedIn ? (
-                                    <Drawer
-                                        variant='persistent'
-                                        open={activeSelectionId !== ''}
-                                        anchor='right'>
-                                        <SelectionEditor
-                                            workURI={asUrl(work)}
-                                            setSelection={setSelection}
-                                            selection={selections.find(selection => selection.id === activeSelectionId)} />
-                                    </Drawer>
-                                ) : null /* otherwise just show popups containing the information */}
+                                <SelectionContext.Provider
+                                    value={{
+                                        availableSelections: selections.map(s => s.id),
+                                        highlightSelection: setSecondaryActiveSelection
+                                    }}>
+                                    {session.info.isLoggedIn ? (
+                                        <Drawer
+                                            variant='persistent'
+                                            open={activeSelectionId !== ''}
+                                            anchor='right'>
+                                            <SelectionEditor
+                                                workURI={asUrl(work)}
+                                                setSelection={setSelection}
+                                                selection={selections.find(selection => selection.id === activeSelectionId)} />
+                                        </Drawer>
+                                    ) : null /* otherwise just show popups containing the information */}
 
-                            </SelectionContext.Provider>
-                        </E13Context.Provider>
-                    </ArgumentationContext.Provider>
+                                </SelectionContext.Provider>
+                            </E13Context.Provider>
+                        </ArgumentationContext.Provider>
+                    </OntologyContext.Provider>
                 )}
 
 
