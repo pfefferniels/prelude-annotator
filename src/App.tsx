@@ -12,14 +12,16 @@ const WorkspaceWithDataset = () => {
   const { session } = useSession()
 
   useEffect(() => {
+    if (!session.info.isLoggedIn || !session.info.webId) return
+
     const fetchDataset = async () => {
-      if (session.info.isLoggedIn && session.info.webId) {
-        const podUrl = await getPodUrlAll(session.info.webId, { fetch: session.fetch as any })
-        setDataset(await getSolidDataset(podUrl + 'preludes/works.ttl', { fetch: session.fetch as any }))
-      }
-  
+      const podUrl = await getPodUrlAll(session.info.webId!, { fetch: session.fetch as any })
+      setDataset(await getSolidDataset(podUrl + 'preludes/works.ttl', { fetch: session.fetch as any }))
     }
-  }, [session])
+    fetchDataset()
+  }, [session.info.isLoggedIn])
+
+  useEffect(() => console.log(solidDataset), [solidDataset])
 
   return (
     <DatasetContext.Provider value={{
