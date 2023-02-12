@@ -109,7 +109,8 @@ export const Workspace = () => {
                                         url: asUrl(thing.thing),
                                         time: getDate(thing.thing, DCTERMS.created) || new Date(),
                                         that: getUrl(thing.thing, crminf('J4_that'))?.split('#').at(-1) || '',
-                                        holdsToBe: getStringNoLocale(thing.thing, crminf('J5_holds_to_be')) as BeliefValue
+                                        holdsToBe: getStringNoLocale(thing.thing, crminf('J5_holds_to_be')) as BeliefValue,
+                                        note: getStringNoLocale(thing.thing, crm('P3_has_note')) || ''
                                     }
                                 })
                     }

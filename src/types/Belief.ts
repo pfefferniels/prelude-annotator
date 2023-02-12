@@ -8,6 +8,7 @@ export interface Belief {
     time: Date
     that: string
     holdsToBe: BeliefValue
+    note: string
 }
 
 export interface Argumentation {

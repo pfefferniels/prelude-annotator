@@ -97,10 +97,11 @@ export const E13Editor = ({
                 url: belief.url
             } : undefined))
                 .addUrl(RDF.type, crminf('I2_Belief'))
-                //.addDate(DCTERMS.created, belief.time)
+                .addDate(DCTERMS.created, belief.time)
                 .addDate(DCTERMS.modified, new Date(Date.now()))
                 .addUrl(crminf('J4_that'), `${getSourceUrl(dataset)}#${belief.that}`)
                 .addStringNoLocale(crminf('J5_holds_to_be'), belief.holdsToBe)
+                .addStringNoLocale(crm('P3_has_note'), belief.note)
                 .build()
         }).forEach(concludingBelief => {
             modifiedDataset = setThing(modifiedDataset, concludingBelief)
@@ -125,7 +126,8 @@ export const E13Editor = ({
                 url: '',
                 time: new Date(Date.now()),
                 that: e13.id,
-                holdsToBe: 'true'
+                holdsToBe: 'true',
+                note: ''
             }]
         })
     }

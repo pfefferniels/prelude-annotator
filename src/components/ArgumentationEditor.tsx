@@ -21,8 +21,9 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation }: Argume
         setBeliefs(beliefs => [...beliefs, {
             url: '',
             that: '',
-            holdsToBe: 'questionable',
-            time: new Date(Date.now())
+            holdsToBe: 'true',
+            time: new Date(Date.now()),
+            note: ''
         }])
     }
 
@@ -40,7 +41,7 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation }: Argume
 
             <AccordionDetails>
                 <Stack>
-                    <Typography>Belief …</Typography>
+                    <Typography>Belief</Typography>
 
                     {beliefs.map((belief, i) => {
                         return (
@@ -86,10 +87,19 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation }: Argume
                                         })}
                                     </Select>
                                 </FormControl>
+                                <br/>
 
                                 <TextField
-                                    disabled
+                                    value={belief.note}
+                                    onChange={(e) => {
+                                        setBeliefs(beliefs => {
+                                            const newBeliefs = beliefs.slice()
+                                            newBeliefs[i].note = e.target.value
+                                            return newBeliefs
+                                        })
+                                    }}
                                     size='small'
+                                    placeholder='explanatory note on this belief'
                                     label='Note' />
                             </Stack>
                         );
