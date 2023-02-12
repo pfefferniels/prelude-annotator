@@ -97,7 +97,7 @@ export const SelectionEditor = ({
 
                 <Stack spacing={1}>
                     <Paper>
-                        <Typography>Affects the following MEI elements</Typography>
+                        <Typography>Affects the following notes</Typography>
                         <List dense>
                             {selection.refs.map(ref => {
                                 return (

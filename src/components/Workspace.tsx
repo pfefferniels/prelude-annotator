@@ -142,7 +142,7 @@ export const Workspace = () => {
                             .map((thing): E13 => {
                                 return {
                                     id: asUrl(thing.thing).split('#').at(-1) || v4(),
-                                    treatise: '', // TODO
+                                    treatise: getUrl(thing.thing, crm('P33_used_specific_technique')) || '',
                                     property: getUrl(thing.thing, crm('P177_assigned_property_of_type')) || '',
                                     attribute: getUrl(thing.thing, crm('P141_assigned')) || '',
                                     comment: getStringNoLocale(thing.thing, crm('P3_has_note')) || ''

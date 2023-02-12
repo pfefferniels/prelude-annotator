@@ -21,6 +21,6 @@
     stroke-width: 5;
 }
 
-.mNum {
+.mNum, .meterSig {
     display: none;
 }
