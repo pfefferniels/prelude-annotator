@@ -3,11 +3,11 @@ import { DatasetContext, useDataset, useSession } from "@inrupt/solid-ui-react"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
 import { Save } from "@mui/icons-material"
 import LoadingButton from "@mui/lab/LoadingButton"
-import { Button, DialogActions, Drawer, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
+import { Button, DialogActions, Drawer, FormControl, FormLabel, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
 import { Stack } from "@mui/system"
 import { useContext, useEffect, useState } from "react"
 import availableTreatises from "./availableTreatises.json"
-import { crm, dcterms } from "../helpers/namespaces"
+import { crm, crminf, dcterms } from "../helpers/namespaces"
 import { Ontology } from "../helpers/Ontology"
 import { E13 } from "./Workspace"
 import { SelectionContext } from "../context/SelectionContext"
@@ -70,6 +70,7 @@ export const E13Editor = ({
             name: id
         }))
             .addUrl(RDF.type, crm('E13_Attribute_Assignment'))
+            .addUrl(RDF.type, crminf('I4_Information_Set'))
             .addStringNoLocale(RDFS.label, id)
             .addDate(dcterms('created'), new Date(Date.now()))
             .addUrl(crm('P14_carried_out_by'), session.info.webId!)
@@ -203,13 +204,45 @@ export const E13Editor = ({
                     </>
                 )}
 
-
                 <TextField
                     label='Comment'
                     placeholder='Comment'
                     size='small'
                     value={comment}
                     onChange={(e) => setComment(e.target.value)} />
+
+                <FormControl>
+                    <FormLabel>Hold this proposition to be …</FormLabel>
+                    <Select size='small'>
+                        <MenuItem>likely</MenuItem>
+                        <MenuItem>unlikely/questionable</MenuItem>
+                        <MenuItem>false</MenuItem>
+                    </Select>
+                </FormControl>
+
+                <FormControl>
+                    <FormLabel>And argue that …</FormLabel>
+                    <TextField size='small' placeholder="Proposition ..." />
+                </FormControl>
+
+                <FormControl>
+                    <FormLabel>is</FormLabel>
+                    <Select size='small'>
+                        <MenuItem>likely</MenuItem>
+                        <MenuItem>unlikely/questionable</MenuItem>
+                        <MenuItem>false</MenuItem>
+                    </Select>
+                </FormControl>
+
+                <FormControl>
+                    <FormLabel>based on</FormLabel>
+                    <Select size='small'>
+                        <MenuItem>Belief Adoption</MenuItem>
+                        <MenuItem>Method or Reasoning</MenuItem>
+                    </Select>
+                </FormControl>
+
+                <TextField label="Textual description of adopted belief or the applied method" />
             </Stack>
 
             <DialogActions>
@@ -221,6 +254,6 @@ export const E13Editor = ({
                     Save
                 </LoadingButton>
             </DialogActions>
-        </Paper>
+        </Paper >
     )
 }
