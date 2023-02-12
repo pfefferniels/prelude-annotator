@@ -1,8 +1,8 @@
 import { Add, Delete, Edit, Save } from "@mui/icons-material"
 import { IconButton, List, ListItem, ListItemText, Paper, Typography } from "@mui/material"
 import { useContext, useEffect } from "react"
-import { isSelection, Selection } from "./Workspace"
-import { useDataset, useSession } from "@inrupt/solid-ui-react"
+import { Selection, isSelection } from "../types/Selection"
+import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
 import { buildThing, createThing, setThing, saveSolidDatasetAt, getSourceUrl } from "@inrupt/solid-client"
 import { RDF } from "@inrupt/vocab-common-rdf"
 import { crm, dcterms } from "../helpers/namespaces"
@@ -22,7 +22,7 @@ export const SelectionEditor = ({
     selection,
     setSelection }: SelectionEditorProps) => {
     const { highlightSelection } = useContext(SelectionContext)
-    const { dataset } = useDataset()
+    const { solidDataset: dataset } = useContext(DatasetContext)
     const { session } = useSession()
 
     useEffect(() => {
@@ -53,11 +53,11 @@ export const SelectionEditor = ({
         saveSolidDatasetAt(getSourceUrl(dataset)!, modifiedDataset, { fetch: session.fetch as any });
     }
 
-    const isPersonalSelection = dataset && selection?.provenience === getSourceUrl(dataset)
-
     if (!selection) {
         return <div>no selection specified</div>
     }
+
+    const isPersonalSelection = dataset && selection.provenience === getSourceUrl(dataset)
 
     return (
         <>
@@ -66,34 +66,12 @@ export const SelectionEditor = ({
             }}>
                 <h3 style={{ marginBottom: '0' }}>Selection {selection.id}</h3>
                 <div>
-                    <small>affects {selection.refs.length} elements, has {selection.e13s.length} attribute assignments</small>
+                    <small>affects {selection.refs.length} elements</small>
                 </div>
 
                 <IconButton onClick={saveToPod}>
                     <Save />
                 </IconButton>
-
-                {session.info.isLoggedIn && isPersonalSelection && (
-                    <IconButton onClick={() => {
-                        const id = v4()
-                        setSelection({
-                            id: selection.id,
-                            refs: selection.refs,
-                            provenience: selection.provenience,
-
-                            // append a new E13
-                            e13s: [...selection.e13s, {
-                                id,
-                                treatise: '',
-                                property: '',
-                                attribute: '',
-                                comment: ''
-                            }]
-                        })
-                    }}>
-                        <Add />
-                    </IconButton>
-                )}
 
                 <Stack spacing={1}>
                     <Paper>
@@ -110,8 +88,7 @@ export const SelectionEditor = ({
                                                     setSelection({
                                                         id: selection.id,
                                                         provenience: selection.provenience,
-                                                        refs: selection.refs,
-                                                        e13s: selection.e13s
+                                                        refs: selection.refs
                                                     })
                                                 }}>
                                                     <Delete />
@@ -126,8 +103,7 @@ export const SelectionEditor = ({
                         </List>
                     </Paper>
                     <E13List
-                        e13s={selection.e13s}
-                        selectionId={selection.id} />
+                        forSelection={selection} />
                 </Stack>
             </Paper >
         </>

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { DatasetContext, DatasetProvider, LoginButton, SessionProvider, useSession } from '@inrupt/solid-ui-react';
+import { DatasetContext, SessionProvider, useSession } from '@inrupt/solid-ui-react';
 import { Workspace } from './components/Workspace';
-import { WorkPicker } from './components/WorkPicker';
 import { LoginForm } from './components/Login';
 import { getPodUrlAll, getSolidDataset, SolidDataset } from '@inrupt/solid-client';
 

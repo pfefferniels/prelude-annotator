@@ -1,5 +1,5 @@
 import { RDF } from "@inrupt/vocab-common-rdf";
-import { E13 } from "./Workspace";
+import { E13 } from "../types/E13";
 
 export const urlAsLabel = (url: string) => {
     if (!url.length) return ''

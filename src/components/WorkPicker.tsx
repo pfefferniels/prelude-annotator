@@ -1,14 +1,14 @@
 import { asUrl, getFile, getSolidDataset, getSourceUrl, getStringNoLocale, getThingAll, getUrl, getUrlAll, hasResourceInfo, removeThing, saveSolidDatasetAt, SolidDataset, Thing } from "@inrupt/solid-client"
 import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf"
-import { AddOutlined, Delete, Edit, Expand, ExpandCircleDown, OpenInNew } from "@mui/icons-material"
+import { AddOutlined, Delete, Edit, ExpandCircleDown, OpenInNew } from "@mui/icons-material"
 import { LoadingButton } from "@mui/lab"
 import { Accordion, AccordionDetails, AccordionSummary, Button, Dialog, DialogActions, DialogContent, DialogTitle, Drawer, IconButton, List, ListItem, ListItemText, TextField, Typography } from "@mui/material"
 import { styled } from "@mui/system"
 import { useContext, useEffect, useState } from "react"
 import { crm, frbroo } from "../helpers/namespaces"
 import { WorkDialog } from "./WorkDialog"
-import { Selection } from "./Workspace"
+import { Selection } from "../types/Selection"
 
 // avoid overlapping secondary actions in the list
 const StyledList = styled(List)(() => ({

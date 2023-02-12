@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Selection } from "./Workspace";
+import { Selection } from "../types/Selection";
 import * as d3 from 'd3'
 import { createPortal } from 'react-dom';
 import { roundedHull } from "../helpers/roundedHull";
