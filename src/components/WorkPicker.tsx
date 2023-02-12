@@ -147,6 +147,14 @@ export const WorkPicker = ({ open, onClose, setWork, setSourceDataset, setMEI }:
     const [sourceUrl, setSourceUrl] = useState('')
     const [errorMessage, setErrorMessage] = useState('')
 
+    useEffect(() => {
+        // Add the persistent URL as standard to the "foreign" datasets
+        // when mounting the component
+        if (foreignDatasets.length === 0) {
+            addSource('https://pfefferniels.inrupt.net/preludes/works.ttl')
+        }
+    }, [])
+
     const addSource = async (sourceUrl: string) => {
         setErrorMessage('')
         setLoadingDataset(true)
@@ -160,7 +168,7 @@ export const WorkPicker = ({ open, onClose, setWork, setSourceDataset, setMEI }:
             setErrorMessage((e as Error).message)
             setLoadingDataset(false)
         }
-    } 
+    }
 
     const openWork = async (work: Thing, sourceDataset: SolidDataset) => {
         setSourceDataset(sourceDataset)

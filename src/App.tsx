@@ -1,31 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { DatasetProvider, LoginButton, SessionProvider, useSession } from '@inrupt/solid-ui-react';
+import { DatasetContext, DatasetProvider, LoginButton, SessionProvider, useSession } from '@inrupt/solid-ui-react';
 import { Workspace } from './components/Workspace';
 import { WorkPicker } from './components/WorkPicker';
 import { LoginForm } from './components/Login';
-import { getPodUrlAll } from '@inrupt/solid-client';
+import { getPodUrlAll, getSolidDataset, SolidDataset } from '@inrupt/solid-client';
 
 const WorkspaceWithDataset = () => {
-  const [datasetUrl, setDatasetUrl] = useState('https://pfefferniels.inrupt.net/preludes/works.ttl')
+  const [solidDataset, setDataset] = useState<SolidDataset>()
   const { session } = useSession()
 
   useEffect(() => {
-    if (session.info.isLoggedIn && session.info.webId) {
-      getPodUrlAll(session.info.webId, { fetch: session.fetch as any })
-        .then(podUrl => {
-          setDatasetUrl(podUrl + 'preludes/works.ttl')
-        })
+    const fetchDataset = async () => {
+      if (session.info.isLoggedIn && session.info.webId) {
+        const podUrl = await getPodUrlAll(session.info.webId, { fetch: session.fetch as any })
+        setDataset(await getSolidDataset(podUrl + 'preludes/works.ttl', { fetch: session.fetch as any }))
+      }
+  
     }
   }, [session])
 
-  useEffect(() => console.log(datasetUrl), [datasetUrl])
-
   return (
-    <DatasetProvider datasetUrl={datasetUrl}>
+    <DatasetContext.Provider value={{
+      solidDataset,
+      setDataset
+    }}>
       <Workspace />
-    </DatasetProvider>
+    </DatasetContext.Provider>
 
   )
 }
