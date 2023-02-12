@@ -1,4 +1,4 @@
-import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getUrlAll, hasResourceInfo, saveSolidDatasetAt, setThing } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getThing, getUrlAll, hasResourceInfo, removeThing, removeUrl, saveSolidDatasetAt, setThing } from "@inrupt/solid-client"
 import { DCTERMS, RDF } from "@inrupt/vocab-common-rdf"
 import { Delete, Save } from "@mui/icons-material"
 import LoadingButton from "@mui/lab/LoadingButton"
@@ -90,6 +90,7 @@ export const E13Editor = ({
             } : undefined))
                 .addUrl(RDF.type, crminf('I1_Argumentation'))
                 .addUrl(crm('P14_carried_out_by'), argumentation.carriedOutBy)
+                .addStringNoLocale(crm('P3_has_note'), argumentation.note)
 
         let modifiedDataset = dataset
         argumentation.concluded.map(belief => {
@@ -115,13 +116,33 @@ export const E13Editor = ({
     }
 
     const removeArgumentation = async (argumentation: Argumentation) => {
+        if (!dataset || !hasResourceInfo(dataset)) return 
+        const argumentationToRemove = getThing(dataset, argumentation.url)
+        const beliefsToRemove = argumentation.concluded.map(belief => {
+            return getThing(dataset, belief.url) || null
+        })
+        .filter(thing => thing !== null)
 
+        // first remove the argumentation itself
+        let modifiedDataset = dataset
+        if (argumentationToRemove) {
+            modifiedDataset = removeThing(dataset, argumentationToRemove)
+        }
+
+        // and then all the associated belief values
+        beliefsToRemove.forEach(beliefThing => {
+            modifiedDataset = removeThing(modifiedDataset, beliefThing!)
+        })
+
+        const savedDataset = await saveSolidDatasetAt(getSourceUrl(dataset), modifiedDataset, { fetch: session.fetch as any })
+        setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
     }
 
     const createArgumentation = () => {
         saveArgumentation({
             url: '',
             carriedOutBy: session.info.webId || '',
+            note: '',
             concluded: [{
                 url: '',
                 time: new Date(Date.now()),
@@ -133,7 +154,7 @@ export const E13Editor = ({
     }
 
     return (
-        <Paper style={{ minWidth: '200px' }}>
+        <Paper style={{ minWidth: '200px', padding: '0.5rem' }}>
             <Stack spacing={2}>
                 <FormControl variant='standard'>
                     <InputLabel>According to …</InputLabel>
@@ -216,7 +237,7 @@ export const E13Editor = ({
                                 <Stack>
                                     <Button onClick={() => setAssignSelectionOpen(true)}>assign {expectedRange?.split('/').at(-1) || 'selection'}</Button>
                                     <div>{attribute.split('#').at(-1)}</div>
-                                    <Drawer open={assignSelectionOpen}>
+                                    <Drawer open={assignSelectionOpen} anchor='right'>
                                         <List dense>
                                             {availableSelections.map((selectionId => {
                                                 return (
@@ -243,7 +264,8 @@ export const E13Editor = ({
                     <ArgumentationEditor
                         key={`argumentation_editor_${arg.url}`}
                         argumentation={arg}
-                        saveArgumentation={saveArgumentation} />
+                        saveArgumentation={saveArgumentation}
+                        removeArgumentation={() => removeArgumentation(arg)} />
                 ))}
 
                 <Button onClick={async () => {

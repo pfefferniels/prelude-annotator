@@ -112,7 +112,8 @@ export const Workspace = () => {
                                         holdsToBe: getStringNoLocale(thing.thing, crminf('J5_holds_to_be')) as BeliefValue,
                                         note: getStringNoLocale(thing.thing, crm('P3_has_note')) || ''
                                     }
-                                })
+                                }),
+                        note: getStringNoLocale(argumentationThing.thing, crm('P3_has_note')) || ''
                     }
                 })
         )

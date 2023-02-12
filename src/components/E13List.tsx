@@ -150,7 +150,7 @@ export const E13List = ({ forSelection }: E13ListProps) => {
                             expandIcon={<ExpandMore />}>
                             <Typography>
                                 <b>
-                                    {urlAsLabel(e13.property) || <span style={{ color: 'red' }}>[New Attribute Assignment]</span>}
+                                    {urlAsLabel(e13.property) || <span style={{ color: '#f44336' }}>[New Attribute Assignment]</span>}
                                 </b>
                             </Typography>
 
