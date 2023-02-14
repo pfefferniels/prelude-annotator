@@ -11,6 +11,7 @@ import { v4 } from "uuid"
 import { E13List } from "./E13List"
 import { SelectionContext } from "../context/SelectionContext"
 import { LoadingButton } from "@mui/lab"
+import { urlAsLabel } from "./E13Summary"
 
 interface SelectionEditorProps {
     selection: Selection | undefined
@@ -23,15 +24,14 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
     const { session } = useSession()
 
     useEffect(() => {
-        console.log('click')
-        selection && highlightSelection(selection.id)
+        selection && highlightSelection(selection.url)
     }, [selection])
 
     if (!selection) {
         return <div>no selection specified</div>
     }
 
-    const isPersonalSelection = dataset && selection.provenience === getSourceUrl(dataset)
+    const isPersonalSelection = dataset !== undefined /*&& selection.provenience === getSourceUrl(dataset)*/
 
     return (
         <>
@@ -39,7 +39,7 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
                 paddingLeft: '1rem',
                 paddingRight: '1rem'
             }}>
-                <h3 style={{ marginBottom: '0' }}>Selection {selection.id}</h3>
+                <h3 style={{ marginBottom: '0' }}>Selection {urlAsLabel(selection.url)}</h3>
 
                 <Stack spacing={1}>
                     <Accordion elevation={1}>
@@ -55,8 +55,7 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
                                                         const refs = selection.refs
                                                         refs.splice(refs.findIndex(r => r === ref), 1)
                                                         setSelection({
-                                                            id: selection.id,
-                                                            provenience: selection.provenience,
+                                                            url: selection.url,
                                                             refs: selection.refs
                                                         })
                                                     }}>
@@ -65,7 +64,7 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
                                                 )
                                             }
                                             key={`selection_editor_${ref}`}>
-                                            <ListItemText primary={isSelection(ref) ? ref.id : ref} />
+                                            <ListItemText primary={isSelection(ref) ? ref.url : ref} />
                                         </ListItem>
                                     )
                                 })}

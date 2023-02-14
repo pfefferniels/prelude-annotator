@@ -1,20 +1,21 @@
 import { MutableRefObject, useCallback, useEffect, useState } from "react";
 import verovio from "verovio";
+import { EventEmitter } from "../helpers/EventEmitter";
 import newVerovio from "../helpers/loadVerovio";
 
 interface VerovioProps {
   mei: string,
-  startNewSelection: (ref: string) => void
-  expandActiveSelection: (ref: string) => void
-  removeFromActiveSelection: (ref: string) => void
+  // startNewSelection: (ref: string) => void
+  // expandActiveSelection: (ref: string) => void
+  // removeFromActiveSelection: (ref: string) => void
   onReady: () => void
 }
 
 export default function Verovio({
   mei,
-  startNewSelection,
-  expandActiveSelection,
-  removeFromActiveSelection,
+  // startNewSelection,
+  // expandActiveSelection,
+  // removeFromActiveSelection,
   onReady
 }: VerovioProps) {
 
@@ -23,10 +24,9 @@ export default function Verovio({
   const [pageWidth, setPageWidth] = useState(800);
 
   useEffect(() => {
-    console.log('svg changed')
-    if (svg.length) {
-      setTimeout(onReady, 1000)
-    }
+    if (!svg.length) return
+
+    setTimeout(onReady, 1000)
   }, [svg])
 
   const render = useCallback(() => {
@@ -79,9 +79,12 @@ export default function Verovio({
     const dataId = clickedElement?.getAttribute('data-id')
     if (!dataId) return
 
-    if (e.shiftKey) expandActiveSelection(dataId)
-    else if (e.altKey) removeFromActiveSelection(dataId)
-    else startNewSelection(dataId)
+    if (e.shiftKey) EventEmitter.dispatch('expand-active-selection', dataId)
+    else if (e.altKey) EventEmitter.dispatch('remove-from-active-selection', dataId)
+    else {
+      console.log('dispatch')
+      EventEmitter.dispatch('start-new-selection', dataId)
+    }
   }
 
   return (

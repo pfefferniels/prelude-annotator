@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Selection } from "../types/Selection";
 import * as d3 from 'd3'
 import { createPortal } from 'react-dom';
 import { roundedHull } from "../helpers/roundedHull";
+import { UrlString } from "@inrupt/solid-client";
+import { AnalysisContext } from "../context/AnalysisContext";
 
 interface SelectionOverlayProps {
     selection: Selection
     highlight: boolean
-    removeSelection: (id: string) => void
-    setActiveSelection: (id: string) => void
+    removeSelection: (url: UrlString) => void
+    setActiveSelection: (selection: Selection) => void
     svgBackground: Element
 }
 
@@ -29,6 +31,7 @@ export const SelectionOverlay = ({
     removeSelection,
     setActiveSelection,
     svgBackground }: SelectionOverlayProps) => {
+    const { color } = useContext(AnalysisContext)
     // since system breaks may occur inside one selection, a single 
     // selection may consist of multiple hulls
     const [hulls, setHulls] = useState<Hull[]>([])
@@ -74,11 +77,12 @@ export const SelectionOverlay = ({
                 return (
                     createPortal(
                         <path
-                            className={`hull ${highlight ? 'hull-highlighted' : ''}`}
+                            fill={color}
+                            className={`${highlight ? 'hull-highlighted' : ''}`}
                             d={roundedHull(hull.points)}
                             onClick={(e) => {
-                                if (e.altKey) removeSelection(selection.id)
-                                else setActiveSelection(selection.id)
+                                if (e.altKey) removeSelection(selection.url)
+                                else setActiveSelection(selection)
                             }} />,
                         svgBackground
                     ))

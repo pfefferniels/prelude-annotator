@@ -1,6 +1,6 @@
 import { Drawer, List, ListItem, ListItemText } from "@mui/material"
 import { useContext } from "react";
-import { E13Context } from "../context/E13Context";
+import { AnalysisContext } from "../context/AnalysisContext";
 import { SelectionContext } from "../context/SelectionContext";
 import { E13 } from "../types/E13";
 import { urlAsLabel } from "./E13Summary";
@@ -11,7 +11,7 @@ interface E13PickerProps {
 }
 
 export const E13Picker = ({ open, onReady }: E13PickerProps) => {
-    const { availableE13s } = useContext(E13Context)
+    const { availableE13s } = useContext(AnalysisContext)
     const { highlightSelection } = useContext(SelectionContext)
 
     return (
@@ -23,11 +23,11 @@ export const E13Picker = ({ open, onReady }: E13PickerProps) => {
                             onClick={() => {
                                 onReady(proposition)
                             }}
-                            onMouseOver={() => highlightSelection(proposition.target.split('#').at(-1) || '')}
-                            key={`e13picker_${proposition.id}`}>
+                            onMouseOver={() => highlightSelection(proposition.target)}
+                            key={`e13picker_${proposition.url}`}>
                             <ListItemText
-                                primary={`${urlAsLabel(proposition.property)} → ${urlAsLabel(proposition.attribute)}`}
-                                secondary={proposition.id} />
+                                primary={`${urlAsLabel(proposition.property)} → ${typeof proposition.attribute === 'string' && urlAsLabel(proposition.attribute)}`}
+                                secondary={proposition.url} />
                         </ListItem>
                     );
                 })}

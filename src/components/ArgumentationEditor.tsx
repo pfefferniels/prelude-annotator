@@ -5,7 +5,6 @@ import { LoadingButton } from "@mui/lab";
 import { Accordion, AccordionDetails, AccordionSummary, Button, FormControl, FormLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 import { Stack } from "@mui/system";
 import { useContext, useEffect, useState } from "react";
-import { E13Context } from "../context/E13Context";
 import { Argumentation, Belief, BeliefValue, beliefValues } from "../types/Belief";
 import { E13 } from "../types/E13";
 import { E13Picker } from "./E13Picker";
@@ -87,7 +86,7 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation, removeAr
                                                     if (!e13) return
                                                     setBeliefs(beliefs => {
                                                         const newBeliefs = beliefs.slice()
-                                                        newBeliefs[i].that = e13.id
+                                                        newBeliefs[i].that = e13.url
                                                         return newBeliefs
                                                     })
                                                     setE13PickerOpen(false)

@@ -1,11 +1,11 @@
-import { Provenience } from "./Provenience";
+import { UrlString } from "@inrupt/solid-client";
+import { Selection } from "./Selection";
 
 export type E13 = {
-    id: string
-    treatise: string
-    property: string
-    attribute: string
+    url: UrlString
+    treatise: UrlString
+    property: UrlString
+    attribute: Selection | UrlString
     target: string
     comment: string
-} & Provenience
-
+}

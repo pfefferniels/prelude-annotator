@@ -1,3 +1,3 @@
 export type Provenience = {
-    provenience: string
+    provenience?: string
 }

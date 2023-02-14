@@ -1,4 +1,4 @@
-import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getThing, getUrlAll, hasResourceInfo, removeThing, removeUrl, saveSolidDatasetAt, setThing } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, getSolidDataset, getSourceIri, getSourceUrl, getThing, getUrlAll, hasResourceInfo, removeThing, removeUrl, saveSolidDatasetAt, setThing, UrlString } from "@inrupt/solid-client"
 import { DCTERMS, RDF } from "@inrupt/vocab-common-rdf"
 import { Delete, Save } from "@mui/icons-material"
 import LoadingButton from "@mui/lab/LoadingButton"
@@ -9,11 +9,12 @@ import { Ontology } from "../helpers/Ontology"
 import { E13 } from "../types/E13"
 import { SelectionContext } from "../context/SelectionContext"
 import { Argumentation } from "../types/Belief"
-import { ArgumentationContext } from "../context/ArgumentationContext"
 import { crm, crminf } from "../helpers/namespaces"
 import { ArgumentationEditor } from "./ArgumentationEditor"
 import { DatasetContext, SessionContext, useSession } from "@inrupt/solid-ui-react"
-import { OntologyContext } from "../context/OntologyContext"
+import { Selection } from "../types/Selection"
+import { AnalysisContext } from "../context/AnalysisContext"
+import { v4 } from "uuid"
 
 interface E13EditorProps {
     selectionUrl: string
@@ -36,18 +37,19 @@ export const E13Editor = ({
     const { session } = useSession()
     const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
     const { availableSelections, highlightSelection } = useContext(SelectionContext)
-    const { availableArgumentations } = useContext(ArgumentationContext)
-    const { availableOntologies } = useContext(OntologyContext)
+    const { analysisUrl, availableArgumentations, availableOntologies, editable } = useContext(AnalysisContext)
 
     const [referredArgumentations, setReferredArgumentations] = useState<Argumentation[]>()
 
     const [currentTreatise, setCurrentTreatise] = useState<Ontology>()
     const [property, setProperty] = useState(e13.property)
     const [expectedRange, setExpectedRange] = useState<string | null>(null)
-    const [attribute, setAttribute] = useState<string>(e13.attribute)
+    const [attribute, setAttribute] = useState<Selection | UrlString>(e13.attribute)
     const [comment, setComment] = useState(e13?.comment)
 
     const [assignSelectionOpen, setAssignSelectionOpen] = useState(false)
+
+    console.log('available argumentations', availableArgumentations)
 
     useEffect(() => {
         if (!e13) return
@@ -73,7 +75,7 @@ export const E13Editor = ({
                     // be considered as well, not only conclusions
                     const referredBelief = argumentation.concluded.find(belief => {
                         // console.log('belief that', belief.that, '===', e13.id, '?')
-                        return belief.that === e13.id
+                        return belief.that === e13.url.split('#').at(-1)
                     })
                     return referredBelief !== undefined
                 })
@@ -85,9 +87,7 @@ export const E13Editor = ({
 
         // stores the given argumentation into the personal POD
         const argumentationBuilder =
-            buildThing(createThing(argumentation.url !== '' ? {
-                url: argumentation.url
-            } : undefined))
+            buildThing(createThing({ url: argumentation.url }))
                 .addUrl(RDF.type, crminf('I1_Argumentation'))
                 .addUrl(crm('P14_carried_out_by'), argumentation.carriedOutBy)
                 .addStringNoLocale(crm('P3_has_note'), argumentation.note)
@@ -109,7 +109,17 @@ export const E13Editor = ({
             argumentationBuilder.addUrl(crminf('J2_concluded_that'), concludingBelief)
         })
 
+        const analysis = getThing(dataset, analysisUrl)
+        if (!analysis) {
+            console.log('Analysis', analysisUrl, 'not found in dataset')
+            return
+        }
+
+        const updatedAnalysis = buildThing(analysis)
+        updatedAnalysis.addUrl(crm('P3_consists_of'), argumentation.url)
+
         modifiedDataset = setThing(modifiedDataset, argumentationBuilder.build())
+        modifiedDataset = setThing(modifiedDataset, updatedAnalysis.build())
 
         const savedDataset = await saveSolidDatasetAt(getSourceUrl(dataset), modifiedDataset, { fetch: session.fetch as any })
         setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
@@ -139,14 +149,15 @@ export const E13Editor = ({
     }
 
     const createArgumentation = () => {
+        if (!dataset || !hasResourceInfo(dataset)) return
         saveArgumentation({
-            url: '',
+            url: `${getSourceUrl(dataset)}#${v4()}`,
             carriedOutBy: session.info.webId || '',
             note: '',
             concluded: [{
                 url: '',
                 time: new Date(Date.now()),
-                that: e13.id,
+                that: e13.url,
                 holdsToBe: 'true',
                 note: ''
             }]
@@ -160,6 +171,7 @@ export const E13Editor = ({
                     <InputLabel>According to …</InputLabel>
 
                     <Select
+                        disabled={!editable}
                         size='small'
                         value={currentTreatise?.name || ''}
                         onChange={async (e) => {
@@ -184,6 +196,7 @@ export const E13Editor = ({
                             <FormControl variant='standard'>
                                 <InputLabel>the selection …</InputLabel>
                                 <Select
+                                    disabled={!editable}
                                     style={{ minWidth: '200px' }}
                                     size='small'
                                     value={property}
@@ -218,6 +231,7 @@ export const E13Editor = ({
                                     <InputLabel>Assigned Object</InputLabel>
 
                                     <Select
+                                        disabled={!editable}
                                         sx={{ minWidth: 200 }}
                                         size='small'
                                         value={attribute}
@@ -235,20 +249,20 @@ export const E13Editor = ({
                                 </FormControl>
                             ) :
                                 <Stack>
-                                    <Button onClick={() => setAssignSelectionOpen(true)}>assign {expectedRange?.split('/').at(-1) || 'selection'}</Button>
-                                    <div>{attribute.split('#').at(-1)}</div>
+                                    {editable && <Button onClick={() => setAssignSelectionOpen(true)}>assign {expectedRange?.split('/').at(-1) || 'selection'}</Button>}
+                                    <div>{typeof attribute === "string" ? attribute : attribute.url.split('#').at(-1)}</div>
                                     <Drawer open={assignSelectionOpen} anchor='right'>
                                         <List dense>
-                                            {availableSelections.map((selectionId => {
+                                            {availableSelections.map((selection => {
                                                 return (
                                                     <ListItem
                                                         onClick={() => {
-                                                            setAttribute(selectionId)
+                                                            setAttribute(selection)
                                                             setAssignSelectionOpen(false)
                                                         }}
-                                                        onMouseOver={() => highlightSelection(selectionId)}
-                                                        key={`selection_picker_${selectionId}`}>
-                                                        <ListItemText primary={selectionId} />
+                                                        onMouseOver={() => highlightSelection(selection.url)}
+                                                        key={`selection_picker_${selection.url}`}>
+                                                        <ListItemText primary={selection.url} />
                                                     </ListItem>
                                                 )
                                             }))}
@@ -271,8 +285,7 @@ export const E13Editor = ({
                 <Button onClick={async () => {
                     await saveE13({
                         // ID and provenience are immutable
-                        provenience: e13.provenience,
-                        id: e13.id,
+                        url: e13.url,
 
                         // all other properties have been changed
                         // and are read from the respective states
@@ -291,6 +304,7 @@ export const E13Editor = ({
 
             <DialogActions>
                 <LoadingButton
+                    disabled={!editable}
                     color='secondary'
                     variant='outlined'
                     onClick={() => removeE13(e13)}>
@@ -298,14 +312,14 @@ export const E13Editor = ({
                 </LoadingButton>
 
                 <LoadingButton
+                    disabled={!editable}
                     startIcon={<Save />}
                     loading={saving}
                     variant='contained'
                     onClick={async () => {
                         await saveE13({
-                            // ID and provenience are immutable
-                            provenience: e13.provenience,
-                            id: e13.id,
+                            // The URL remains the same
+                            url: e13.url,
 
                             // all other properties have been changed
                             // and are read from the respective states
