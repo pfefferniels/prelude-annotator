@@ -31,11 +31,12 @@ export const SelectionContainer = ({ selections }: { selections: Selection[] }) 
         if (dataset &&
             hasResourceInfo(dataset) &&
             editable) {
+                console.log('assigned!')
             EventEmitter.subscribe('start-new-selection', startNewSelection)
             EventEmitter.subscribe('remove-from-active-selection', removeFromActiveSelection)
             EventEmitter.subscribe('expand-active-selection', expandActiveSelection)
         }
-    }, [])
+    }, [dataset])
 
     useEffect(() => {
         if (!scoreIsReady) return
@@ -50,8 +51,17 @@ export const SelectionContainer = ({ selections }: { selections: Selection[] }) 
                 return
             }
 
+            // Does the SVG have a hull container already?
+            const existingContainer = svg.querySelector('#hull-container')
+            if (existingContainer) {
+                setHullContainer(existingContainer as SVGGElement)
+                return
+            }
+
+            // otherwise create a new container and insert it 
+            // below the staves, so that notes etc. remain selectable
             const g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-            g.setAttribute('id', `hulls-${v4()}`)
+            g.setAttribute('id', 'hull-container')
             const firstSystem = svg.querySelector('.system')
             if (!firstSystem) return
 
@@ -59,6 +69,11 @@ export const SelectionContainer = ({ selections }: { selections: Selection[] }) 
             setHullContainer(g)
         }, 1000)
     }, [scoreIsReady])
+
+    useEffect(() => {
+        // whenever the active selection changes, save it silently
+        activeSelection && saveSelection(activeSelection)
+    }, [activeSelection])
 
     const saveSelection = async (selection: Selection) => {
         console.log('save', selection)
@@ -115,17 +130,20 @@ export const SelectionContainer = ({ selections }: { selections: Selection[] }) 
             refs: [ref]
         }
         setActiveSelection(newSelection)
-        saveSelection(newSelection)
     }
-
-    console.log('active selection', activeSelection)
 
     const expandActiveSelection = (ref: string) => {
         console.log('expanding active selection')
         if (!editable) return
-        if (!activeSelection) return
-        activeSelection.refs.push(ref)
-        saveSelection(activeSelection)
+
+        setActiveSelection(active => {
+            if (!active) return active
+
+            return {
+                url: active.url,
+                refs: [...active.refs, ref]
+            }
+        })
     }
 
     const removeSelection = async (selectionUrl: UrlString) => {
@@ -189,7 +207,7 @@ export const SelectionContainer = ({ selections }: { selections: Selection[] }) 
                 </Drawer>
             ) : null /* otherwise just show popups containing the information */}
 
-            {hullContainer && selections.map(selection => {
+            {hullContainer && [...selections].map(selection => {
                 return (
                     <SelectionOverlay
                         key={`overlay_${selection.url}`}

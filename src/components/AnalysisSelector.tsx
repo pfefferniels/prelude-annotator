@@ -118,7 +118,7 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
 
     return (
         <Drawer open={open} onClose={onClose}>
-            <Typography sx={{margin: '0.5rem'}}>Available Analyses</Typography>
+            <Typography sx={{ margin: '0.5rem' }}>Available Analyses</Typography>
             <Stack direction='row'>
                 <Button
                     startIcon={<Add />}
@@ -144,6 +144,7 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
                     const labelId = `checkbox-list-secondary-label-${expression}`;
                     return (
                         <AnalysisListItem
+                            key={expression}
                             expression={expression}
                             checked={selectedExpressions.indexOf(expression) !== -1}
                             onChange={() => {

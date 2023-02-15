@@ -45,7 +45,6 @@ export const AnalysisListItem = ({ expression, checked, onChange }: AnalysisList
 
     return (
         <ListItem
-            key={expression}
             secondaryAction={<Checkbox
                 edge="end"
                 onChange={onChange}
