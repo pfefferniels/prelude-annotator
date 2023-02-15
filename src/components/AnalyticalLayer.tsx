@@ -1,4 +1,4 @@
-import { asUrl, buildThing, createThing, getDate, getPodOwner, getPodUrlAll, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, saveSolidDatasetAt, setThing, SolidDataset, Thing, UrlString } from "@inrupt/solid-client"
+import { asUrl, buildThing, createThing, getAgentAccess, getDate, getPodOwner, getPodUrlAll, getSolidDataset, getSolidDatasetWithAcl, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, saveSolidDatasetAt, setThing, SolidDataset, Thing, universalAccess, UrlString } from "@inrupt/solid-client"
 import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
 import { RDF, DCTERMS } from "@inrupt/vocab-common-rdf"
 import { useEffect, useState } from "react"
@@ -35,6 +35,8 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
     const [e13s, setE13s] = useState<E13[]>([])
     const [argumentations, setArgumentations] = useState<Argumentation[]>([])
 
+    const [editable, setEditable] = useState(false)
+
     useEffect(() => {
         // TODO: The used ontologies should also be deduced 
         // from the given E7, using the `used specific technique`
@@ -47,11 +49,20 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
 
         Promise.all(fetchOntologies(availableTreatises)).then(setOntologies)
 
-        // load the dataset to which the analysis belongs to
+        // load the dataset the analysis belongs to
         const fetchDataset = async () => {
             try {
-                const dataset = await getSolidDataset(analysisUrl, { fetch: session.fetch as any })
+                const dataset = await getSolidDatasetWithAcl(analysisUrl, { fetch: session.fetch as any })
                 setDataset(dataset)
+                
+                // check the rights - are we allowed to edit this layer?
+                if (!session.info.isLoggedIn || !session.info.webId) {
+
+                    setEditable(false)
+                    return
+                }
+                const rights = await getAgentAccess(dataset, session.info.webId)
+                rights && setEditable(rights?.write)
             }
             catch (e) {
                 console.log(e)
@@ -185,7 +196,7 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
                 availableArgumentations: argumentations,
                 availableE13s: e13s,
                 analysisUrl,
-                editable: true,
+                editable,
                 color: stringToColour(analysisUrl)
             }}>
                 <SelectionContainer selections={selections} />
