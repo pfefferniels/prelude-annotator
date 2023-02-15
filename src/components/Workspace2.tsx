@@ -20,7 +20,9 @@ export const Workspace2 = () => {
         <div id='workspace'>
             <header id='app-bar'>
                 <Button onClick={() => setScoreSelectorOpen(true)}>Open Work</Button>
-                <Button onClick={() => setAnalysisSelectorOpen(true)}>Available Analyses</Button>
+                <Button
+                    disabled={!score}
+                    onClick={() => setAnalysisSelectorOpen(true)}>Available Analyses</Button>
             </header>
 
             {score && (

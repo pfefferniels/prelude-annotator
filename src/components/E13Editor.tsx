@@ -15,6 +15,7 @@ import { DatasetContext, SessionContext, useSession } from "@inrupt/solid-ui-rea
 import { Selection } from "../types/Selection"
 import { AnalysisContext } from "../context/AnalysisContext"
 import { v4 } from "uuid"
+import { urlAsLabel } from "./E13Summary"
 
 interface E13EditorProps {
     selectionUrl: string
@@ -262,7 +263,7 @@ export const E13Editor = ({
                                                         }}
                                                         onMouseOver={() => highlightSelection(selection.url)}
                                                         key={`selection_picker_${selection.url}`}>
-                                                        <ListItemText primary={selection.url} />
+                                                        <ListItemText primary={urlAsLabel(selection.url)} />
                                                     </ListItem>
                                                 )
                                             }))}
