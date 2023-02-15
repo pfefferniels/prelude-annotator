@@ -144,6 +144,7 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
                     const labelId = `checkbox-list-secondary-label-${expression}`;
                     return (
                         <AnalysisListItem
+                            forWork={forWork}
                             key={expression}
                             expression={expression}
                             checked={selectedExpressions.indexOf(expression) !== -1}

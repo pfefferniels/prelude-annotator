@@ -7,19 +7,23 @@ import { useEffect, useState } from "react";
 import { crm } from "../helpers/namespaces";
 import { stringToColour } from "../helpers/string2color";
 import { urlAsLabel } from "./E13Summary";
+import { ShareDialog } from "./ShareDialog"
 
 export interface AnalysisListItemProps {
+    forWork: UrlString
     expression: UrlString
     checked: boolean
     onChange: () => void
 }
 
-export const AnalysisListItem = ({ expression, checked, onChange }: AnalysisListItemProps): JSX.Element => {
+export const AnalysisListItem = ({ forWork, expression, checked, onChange }: AnalysisListItemProps): JSX.Element => {
     const { session } = useSession();
     const [owner, setOwner] = useState('')
     const [myRights, setMyRights] = useState<Access | null>()
     const [isPublic, setIsPublic] = useState(false)
     const [isDeleted, setIsDeleted] = useState(false)
+
+    const [shareDialogOpen, setShareDialogOpen] = useState(false)
 
     useEffect(() => {
         // try to define the owner and the rights. TODO: The path 
@@ -88,7 +92,7 @@ export const AnalysisListItem = ({ expression, checked, onChange }: AnalysisList
                 secondaryAction={
                     <>
                         {myRights?.write && (
-                            <IconButton>
+                            <IconButton onClick={() => setShareDialogOpen(true)}>
                                 <Share />
                             </IconButton>
                         )}
@@ -115,6 +119,8 @@ export const AnalysisListItem = ({ expression, checked, onChange }: AnalysisList
                 </ListItemButton>
             </ListItem>
             <Divider variant='inset' />
+
+            <ShareDialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)} analysisUrl={expression} forWork={forWork} />
         </>
     );
 };
