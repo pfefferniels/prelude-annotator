@@ -20,11 +20,20 @@
 
     <xsl:template match="mei:tabGrp">
         <xsl:variable name="position" select="position()" />
+        <xsl:variable name="id" select="@xml:id" />
+
         <xsl:element name="measure" namespace="http://www.music-encoding.org/ns/mei">
             <xsl:attribute name="right">invis</xsl:attribute>
             <xsl:attribute name="n">
                 <xsl:value-of select="$position"></xsl:value-of>
             </xsl:attribute>
+
+            <xsl:copy-of select="//mei:arpeg[@startid=concat('#', $id)]" />
+
+            <xsl:for-each select="mei:note[@xml:id]">
+                <xsl:variable name="noteId" select="concat('#', @xml:id)" />
+                <xsl:copy-of select="//mei:arpeg[@startid=$noteId]" />
+            </xsl:for-each>
 
             <xsl:element name="staff" namespace="http://www.music-encoding.org/ns/mei">
                 <xsl:attribute name="n">1</xsl:attribute>
@@ -33,10 +42,12 @@
                     <xsl:attribute name="n">1</xsl:attribute>
 
                     <xsl:element name="tabGrp" namespace="http://www.music-encoding.org/ns/mei">
-                        <xsl:apply-templates select="*" />
+                        <xsl:apply-templates select="mei:note" />
                     </xsl:element>
                 </xsl:element>
             </xsl:element>
         </xsl:element>
     </xsl:template>
+
+    <xsl:template match="mei:arpeg" />
 </xsl:stylesheet>
