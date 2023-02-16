@@ -75,9 +75,18 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
         const publicExpressions = await fetchPublicExpressions()
         const personalExpressions = await fetchPersonalExpressions()
 
-        setAvailableExpressions([
+        let allExpressions = [
             ...publicExpressions,
-            ...personalExpressions])
+            ...personalExpressions]
+        allExpressions = allExpressions
+            .filter((expression, i) => {
+                // filter out duplicate expressions. 
+                // This is not unlikely to happen, since 
+                // publicly shared analyses will be fetched
+                // from both, the public as well the private pod.
+                return allExpressions.indexOf(expression) === i
+            })
+        setAvailableExpressions(allExpressions)
     }
 
     useEffect(() => {

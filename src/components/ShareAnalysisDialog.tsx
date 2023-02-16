@@ -18,7 +18,7 @@ interface ShareDialogProps {
 
 type ShareMode = 'private' | 'public'
 
-export const ShareDialog = ({ analysisUrl, forWork, open, onClose }: ShareDialogProps) => {
+export const ShareAnalysisDialog = ({ analysisUrl, forWork, open, onClose }: ShareDialogProps) => {
     const { session } = useContext(SessionContext)
     const [mode, setMode] = useState<ShareMode>('public')
     const [status, setStatus] = useState<'unsaved' | 'saving' | 'saved'>('unsaved')

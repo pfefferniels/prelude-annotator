@@ -54,7 +54,7 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
             try {
                 const dataset = await getSolidDatasetWithAcl(analysisUrl, { fetch: session.fetch as any })
                 setDataset(dataset)
-                
+
                 // check the rights - are we allowed to edit this layer?
                 if (!session.info.isLoggedIn || !session.info.webId) {
                     setEditable(false)
@@ -64,7 +64,12 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
                 rights && setEditable(rights?.write)
             }
             catch (e) {
-                console.log(e)
+                console.log(`
+                    fetching the dataset with ACL failed. Attempting to fetch it without ACL 
+                    and assuming that no edit access exists.`)
+                const dataset = await getSolidDataset(analysisUrl, { fetch: session.fetch as any })
+                setDataset(dataset)
+                setEditable(false)
             }
         }
 

@@ -1,7 +1,7 @@
-import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getUrl, hasResourceInfo, overwriteFile, saveSolidDatasetAt, setStringNoLocale, setThing, setUrl, Thing } from "@inrupt/solid-client";
+import { asUrl, buildThing, createThing, getPodUrlAll, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getUrl, hasResourceInfo, overwriteFile, saveSolidDatasetAt, setStringNoLocale, setThing, setUrl, SolidDataset, Thing } from "@inrupt/solid-client";
 import { DatasetContext, useSession } from "@inrupt/solid-ui-react";
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, FormGroup, Switch, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { useContext, useEffect, useState } from "react";
 import { v4 } from "uuid";
@@ -19,28 +19,42 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
     // allows editing it - otherwise a new work is being 
     // created
 
-    const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
     const { session } = useSession()
 
-    const [id, setId] = useState(v4())
+    const [dataset, setDataset] = useState<SolidDataset>()
     const [title, setTitle] = useState('')
     const [meiUri, setMeiUri] = useState('')
-
+    const [isPublic, setIsPublic] = useState(false)
     const [saving, setSaving] = useState(false)
 
     useEffect(() => {
         if (!thing) return
 
-        setId(asUrl(thing).split('#').at(-1) || v4())
         setTitle(getStringNoLocale(thing, crm('P102_has_title')) || 'unknown')
-        setMeiUri(getUrl(thing, RDFS.label) || '')
+        setMeiUri(getUrl(thing, RDFS.label) || asUrl(thing) || '')
     }, [thing])
 
-    const saveToPod = async () => {
-        if (!dataset) {
-            console.warn('No dataset found')
-            return
+    useEffect(() => {
+        const fetchPersonalDataset = async () => {
+            if (!session.info.isLoggedIn ||
+                !session.info.webId) return
+
+            try {
+                const podUrl = await getPodUrlAll(session.info.webId)
+                setDataset(await getSolidDataset(`${podUrl}preludes/works.ttl`, { fetch: session.fetch as any }))
+            }
+            catch (e) {
+                console.log(e)
+            }
         }
+        fetchPersonalDataset()
+    }, [session, session.info.isLoggedIn, session.info.webId])
+
+    const saveToPod = async () => {
+        // always upload MEI documents into the private pod 
+        // first. When publishing, share the link to others.
+
+        if (!dataset) return
 
         setSaving(true)
 
@@ -67,7 +81,6 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
                 getSourceUrl(savedDataset),
                 { fetch: session.fetch as any })
 
-            setDataset(updatedDataset)
             setSaving(false)
             onClose()
         }
@@ -121,6 +134,12 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
                         <Divider orientation='vertical' flexItem>or</Divider>
                         <TextField size='small' variant='standard' label='MEI URL' value={meiUri} onChange={(e) => setMeiUri(e.target.value)} />
                     </Stack>
+                    <FormGroup>
+                        <FormControlLabel control={
+                            <Switch checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+                        } label="Make public?" />
+                    </FormGroup>
+                    <Switch />
                 </Stack>
             </DialogContent>
             <DialogActions>

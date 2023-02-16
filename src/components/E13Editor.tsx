@@ -128,12 +128,12 @@ export const E13Editor = ({
     }
 
     const removeArgumentation = async (argumentation: Argumentation) => {
-        if (!dataset || !hasResourceInfo(dataset)) return 
+        if (!dataset || !hasResourceInfo(dataset)) return
         const argumentationToRemove = getThing(dataset, argumentation.url)
         const beliefsToRemove = argumentation.concluded.map(belief => {
             return getThing(dataset, belief.url) || null
         })
-        .filter(thing => thing !== null)
+            .filter(thing => thing !== null)
 
         // first remove the argumentation itself
         let modifiedDataset = dataset
@@ -271,24 +271,26 @@ export const E13Editor = ({
                         removeArgumentation={() => removeArgumentation(arg)} />
                 ))}
 
-                <Button onClick={async () => {
-                    await saveE13({
-                        // ID and provenience are immutable
-                        url: e13.url,
+                <Button
+                    disabled={!session.info.isLoggedIn}
+                    onClick={async () => {
+                        await saveE13({
+                            // ID and provenience are immutable
+                            url: e13.url,
 
-                        // all other properties have been changed
-                        // and are read from the respective states
-                        property,
-                        attribute,
-                        treatise: currentTreatise?.url || '',
-                        comment,
+                            // all other properties have been changed
+                            // and are read from the respective states
+                            property,
+                            attribute,
+                            treatise: currentTreatise?.url || '',
+                            comment,
 
-                        // the target will be ignored by the saveE13 
-                        // routine and replaced by the current selection
-                        target: ''
-                    })
-                    createArgumentation()
-                }}>Add Argumentation</Button>
+                            // the target will be ignored by the saveE13 
+                            // routine and replaced by the current selection
+                            target: ''
+                        })
+                        createArgumentation()
+                    }}>Add Argumentation</Button>
             </Stack>
 
             <DialogActions>

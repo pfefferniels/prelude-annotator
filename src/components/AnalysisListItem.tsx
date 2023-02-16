@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { crm } from "../helpers/namespaces";
 import { stringToColour } from "../helpers/string2color";
 import { urlAsLabel } from "./E13Summary";
-import { ShareDialog } from "./ShareDialog"
+import { ShareAnalysisDialog } from "./ShareAnalysisDialog"
 
 export interface AnalysisListItemProps {
     forWork: UrlString
@@ -125,7 +125,7 @@ export const AnalysisListItem = ({ forWork, expression, checked, onChange }: Ana
             </ListItem>
             <Divider variant='inset' />
 
-            <ShareDialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)} analysisUrl={expression} forWork={forWork} />
+            <ShareAnalysisDialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)} analysisUrl={expression} forWork={forWork} />
         </>
     );
 };

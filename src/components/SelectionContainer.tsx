@@ -31,7 +31,7 @@ export const SelectionContainer = ({ selections }: { selections: Selection[] }) 
         if (dataset &&
             hasResourceInfo(dataset) &&
             editable) {
-                console.log('assigned!')
+            console.log('assigned!')
             EventEmitter.subscribe('start-new-selection', startNewSelection)
             EventEmitter.subscribe('remove-from-active-selection', removeFromActiveSelection)
             EventEmitter.subscribe('expand-active-selection', expandActiveSelection)
@@ -196,16 +196,14 @@ export const SelectionContainer = ({ selections }: { selections: Selection[] }) 
                 toHighlight && setSecondaryActiveSelection(toHighlight)
             }
         }}>
-            {session.info.isLoggedIn ? (
-                <Drawer
-                    variant='persistent'
-                    open={activeSelection !== undefined}
-                    anchor='right'>
-                    <SelectionEditor
-                        selection={activeSelection}
-                        setSelection={setActiveSelection} />
-                </Drawer>
-            ) : null /* otherwise just show popups containing the information */}
+            <Drawer
+                variant='persistent'
+                open={activeSelection !== undefined}
+                anchor='right'>
+                <SelectionEditor
+                    selection={activeSelection}
+                    setSelection={setActiveSelection} />
+            </Drawer>
 
             {hullContainer && [...selections].map(selection => {
                 return (

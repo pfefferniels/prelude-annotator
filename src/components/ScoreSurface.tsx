@@ -3,6 +3,8 @@ import { useEffect, useState } from "react"
 import Verovio from "./Verovio"
 import { Stack } from "@mui/system"
 import { tab2cmn } from "../helpers/tab2cmn"
+import { useSession } from "@inrupt/solid-ui-react"
+import { getFile } from "@inrupt/solid-client"
 
 type DisplayMode = 'staff-notation' | 'tablature'
 
@@ -12,6 +14,7 @@ interface ScoreSurfaceProps {
 }
 
 export const ScoreSurface = ({ meiUrl, onReady }: ScoreSurfaceProps) => {
+    const { session } = useSession()
     const [displayMode, setDispayMode] = useState<DisplayMode>('tablature')
     const [tablatureMEI, setTablatureMEI] = useState('')
     const [cmnMEI, setCmnMEI] = useState('')
@@ -19,8 +22,8 @@ export const ScoreSurface = ({ meiUrl, onReady }: ScoreSurfaceProps) => {
     useEffect(() => {
         const fetchMEI = async () => {
             // load the score from the given URL
-            const response = await fetch(meiUrl)
-            const text = await response.text()
+            const blob = await getFile(meiUrl, { fetch: session.fetch as any })
+            const text = await blob.text()
 
             // insert measures into it (for proper displaying in verovio)
             const xslt = await (await fetch('insertMeasures.xsl')).text()

@@ -28,11 +28,11 @@
                 <xsl:value-of select="$position"></xsl:value-of>
             </xsl:attribute>
 
-            <xsl:copy-of select="//mei:arpeg[@startid=concat('#', $id)]" />
+            <xsl:copy-of select="//mei:*[@startid=concat('#', $id)]" />
 
             <xsl:for-each select="mei:note[@xml:id]">
                 <xsl:variable name="noteId" select="concat('#', @xml:id)" />
-                <xsl:copy-of select="//mei:arpeg[@startid=$noteId]" />
+                <xsl:copy-of select="//mei:*[@startid=$noteId]" />
             </xsl:for-each>
 
             <xsl:element name="staff" namespace="http://www.music-encoding.org/ns/mei">
@@ -42,6 +42,7 @@
                     <xsl:attribute name="n">1</xsl:attribute>
 
                     <xsl:element name="tabGrp" namespace="http://www.music-encoding.org/ns/mei">
+                        <xsl:attribute name="xml:id"><xsl:value-of select="$id" /></xsl:attribute>
                         <xsl:apply-templates select="mei:note" />
                     </xsl:element>
                 </xsl:element>
