@@ -28,8 +28,9 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
     const [selectedExpressions, setSelectedExpressions] = useState<UrlString[]>([])
 
     const fetchPublicExpressions = async () => {
-        const dataset = await getSolidDataset('https://lute-preludes.org/data/works.ttl')
+        const dataset = await getSolidDataset('https://storage.inrupt.com/d14d1c60-6851-4c65-86fa-062c6989387c/preludes/works(4).ttl')
         const things = getThingAll(dataset)
+        console.log('things from public storage', things)
         const e17 = things.find(thing => (
             getUrlAll(thing, RDF.type).includes(frbroo('F17_Aggregation_Work')) &&
             getUrl(thing, frbroo('R2_is_derivative_of')) === forWork

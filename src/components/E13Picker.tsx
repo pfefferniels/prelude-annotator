@@ -1,5 +1,5 @@
-import { Drawer, List, ListItem, ListItemText } from "@mui/material"
-import { useContext } from "react";
+import { Button, Drawer, List, ListItem, ListItemText } from "@mui/material"
+import { useContext, useState } from "react";
 import { AnalysisContext } from "../context/AnalysisContext";
 import { SelectionContext } from "../context/SelectionContext";
 import { E13 } from "../types/E13";
@@ -14,16 +14,22 @@ export const E13Picker = ({ open, onReady }: E13PickerProps) => {
     const { availableE13s } = useContext(AnalysisContext)
     const { highlightSelection } = useContext(SelectionContext)
 
+    const [hovered, setHovered] = useState<E13>()
+
     return (
         <Drawer anchor='right' open={open} onClose={() => onReady()}>
             <List>
                 {availableE13s.map(proposition => {
                     return (
                         <ListItem
+                            selected={proposition.url === hovered?.url}
                             onClick={() => {
                                 onReady(proposition)
                             }}
-                            onMouseOver={() => highlightSelection(proposition.target)}
+                            onMouseOver={() => {
+                                setHovered(proposition)
+                                highlightSelection(proposition.target)
+                            }}
                             key={`e13picker_${proposition.url}`}>
                             <ListItemText
                                 primary={`${urlAsLabel(proposition.property)} → ${typeof proposition.attribute === 'string' && urlAsLabel(proposition.attribute)}`}
@@ -32,6 +38,8 @@ export const E13Picker = ({ open, onReady }: E13PickerProps) => {
                     );
                 })}
             </List>
+
+            <Button onClick={() => onReady()}>Cancel</Button>
         </Drawer>
     )
 }

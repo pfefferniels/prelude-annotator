@@ -1,4 +1,4 @@
-import { Access, AgentAccess, getAgentAccess, getPublicAccess, getSolidDataset, getSolidDatasetWithAcl, getStringNoLocale, getThing, getUrl, getWebIdDataset, UrlString } from "@inrupt/solid-client";
+import { Access, AgentAccess, getAgentAccess, getPublicAccess, getSolidDataset, getSolidDatasetWithAcl, getSourceUrl, getStringNoLocale, getThing, getUrl, getWebIdDataset, hasAccessibleAcl, universalAccess, UrlString } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
 import { FOAF } from "@inrupt/vocab-common-rdf";
 import { Publish, Share } from "@mui/icons-material";
@@ -19,7 +19,7 @@ export interface AnalysisListItemProps {
 export const AnalysisListItem = ({ forWork, expression, checked, onChange }: AnalysisListItemProps): JSX.Element => {
     const { session } = useSession();
     const [owner, setOwner] = useState('')
-    const [myRights, setMyRights] = useState<Access | null>()
+    const [writable, setWritable] = useState(false)
     const [isPublic, setIsPublic] = useState(false)
     const [isDeleted, setIsDeleted] = useState(false)
 
@@ -29,23 +29,14 @@ export const AnalysisListItem = ({ forWork, expression, checked, onChange }: Ana
         // try to define the owner and the rights. TODO: The path 
         // seems complicated and slow. Can it be done simplier?
         const fetchOwner = async () => {
-            let dataset
-            try {
-                dataset = await getSolidDatasetWithAcl(expression, { fetch: session.fetch as any });
-            }
-            catch (e) {
-                console.log(e)
-            }
+            const dataset = await getSolidDataset(expression, { fetch: session.fetch as any });
 
             if (!dataset) {
+                // if we are unable to fetch the resource, we assume 
+                // that it has been deleted by the user.
                 setIsDeleted(true)
                 return
             }
-
-            if (session.info.webId) {
-                setMyRights(await getAgentAccess(dataset, session.info.webId))
-            }
-            setIsPublic(await getPublicAccess(dataset)?.read || false)
 
             const analysis = getThing(dataset, expression);
             if (!analysis)
@@ -62,6 +53,20 @@ export const AnalysisListItem = ({ forWork, expression, checked, onChange }: Ana
             const profile = getThing(webIdDataset, webId);
             if (!profile)
                 return;
+
+            if (`${getSourceUrl(webIdDataset)}#me` === session.info.webId) {
+                if (hasAccessibleAcl(dataset)) {
+                    const datasetWithAcl = await getSolidDatasetWithAcl(expression, { fetch: session.fetch as any });
+                    setIsPublic(await getPublicAccess(datasetWithAcl)?.read || false)
+                }
+                else {
+                    setIsPublic(false)
+                }
+                setWritable(true)
+            }
+            else {
+                setIsPublic(true)
+            }
 
             setOwner(getStringNoLocale(profile, FOAF.name) || '');
         };
@@ -91,7 +96,7 @@ export const AnalysisListItem = ({ forWork, expression, checked, onChange }: Ana
             <ListItem
                 secondaryAction={
                     <>
-                        {myRights?.write && (
+                        {writable && (
                             <IconButton onClick={() => setShareDialogOpen(true)}>
                                 <Share />
                             </IconButton>
@@ -114,7 +119,7 @@ export const AnalysisListItem = ({ forWork, expression, checked, onChange }: Ana
                         <div>
                             {urlAsLabel(expression)}
                             <br />{isPublic && <b>publicly available</b>}
-                            <br />Your access rights: {myRights?.read && 'read'}, {myRights?.write && 'write'}
+                            <br />{writable ? 'writable' : 'read-only'}
                         </div>} />
                 </ListItemButton>
             </ListItem>

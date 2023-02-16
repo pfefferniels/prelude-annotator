@@ -5,6 +5,7 @@ import { LoadingButton } from "@mui/lab";
 import { Accordion, AccordionDetails, AccordionSummary, Button, FormControl, FormLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 import { Stack } from "@mui/system";
 import { useContext, useEffect, useState } from "react";
+import { AnalysisContext } from "../context/AnalysisContext";
 import { Argumentation, Belief, BeliefValue, beliefValues } from "../types/Belief";
 import { E13 } from "../types/E13";
 import { E13Picker } from "./E13Picker";
@@ -16,6 +17,8 @@ interface ArgumentationProps {
 }
 
 export const ArgumentationEditor = ({ argumentation, saveArgumentation, removeArgumentation }: ArgumentationProps) => {
+    const { editable } = useContext(AnalysisContext)
+
     const [note, setNote] = useState('')
     const [beliefs, setBeliefs] = useState<Belief[]>(argumentation.concluded)
     const [expanded, setExpanded] = useState(false)
@@ -62,6 +65,7 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation, removeAr
                     <FormControl required={false}>
                         <FormLabel>Based on …</FormLabel>
                         <TextField
+                            disabled={!editable}
                             value={note}
                             onChange={e => setNote(e.target.value)}
                             size='small'
@@ -78,7 +82,7 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation, removeAr
                                     <FormControl>
                                         <FormLabel required={false}>the proposition …</FormLabel>
                                         <TextField disabled size='small' value={belief.that} />
-                                        <Button onClick={() => setE13PickerOpen(true)}>Select Proposition</Button>
+                                        <Button disabled={!editable} onClick={() => setE13PickerOpen(true)}>Select Proposition</Button>
                                         {e13PickerOpen && (
                                             <E13Picker
                                                 open={e13PickerOpen}
@@ -96,6 +100,7 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation, removeAr
                                     <FormControl>
                                         <FormLabel required={false}>holds to be</FormLabel>
                                         <Select
+                                            disabled={!editable}
                                             value={belief.holdsToBe}
                                             onChange={(e) => {
                                                 const newBeliefs = beliefs.slice()
@@ -116,6 +121,7 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation, removeAr
                                     <FormControl>
                                         <FormLabel>because of …</FormLabel>
                                         <TextField
+                                            disabled={!editable}
                                             value={belief.note}
                                             onChange={(e) => {
                                                 setBeliefs(beliefs => {
@@ -132,38 +138,42 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation, removeAr
                             </Paper>
                         );
                     })}
-                    <Button onClick={createBelief}>Add Belief</Button>
 
-                    <Stack sx={{ marginTop: '1rem' }} direction='row'>
-                        <LoadingButton
-                            color='secondary'
-                            variant='outlined'
-                            onClick={removeArgumentation}>
-                            <Delete />
-                        </LoadingButton>
+                    {editable && (
+                        <>
+                            <Button disabled={!editable} onClick={createBelief}>Add Belief</Button>
+                            <Stack sx={{ marginTop: '1rem' }} direction='row'>
+                                <LoadingButton
+                                    color='secondary'
+                                    variant='outlined'
+                                    onClick={removeArgumentation}>
+                                    <Delete />
+                                </LoadingButton>
 
-                        <LoadingButton
-                            variant='contained'
-                            loading={saving}
-                            startIcon={<Save />}
-                            onClick={
-                                async () => {
-                                    setSaving(true)
-                                    await saveArgumentation({
-                                        // these information cannot be modified in this editor
-                                        url: argumentation.url,
-                                        carriedOutBy: argumentation.carriedOutBy,
+                                <LoadingButton
+                                    variant='contained'
+                                    loading={saving}
+                                    startIcon={<Save />}
+                                    onClick={
+                                        async () => {
+                                            setSaving(true)
+                                            await saveArgumentation({
+                                                // these information cannot be modified in this editor
+                                                url: argumentation.url,
+                                                carriedOutBy: argumentation.carriedOutBy,
 
-                                        // update the conclusions to the new beliefs
-                                        concluded: beliefs,
-                                        note
-                                    })
-                                    setSaving(false)
-                                    setExpanded(false)
-                                }}>
-                            Save Argumentation
-                        </LoadingButton>
-                    </Stack>
+                                                // update the conclusions to the new beliefs
+                                                concluded: beliefs,
+                                                note
+                                            })
+                                            setSaving(false)
+                                            setExpanded(false)
+                                        }}>
+                                    Save Argumentation
+                                </LoadingButton>
+                            </Stack>
+                        </>
+                    )}
                 </Stack>
             </AccordionDetails>
         </Accordion >

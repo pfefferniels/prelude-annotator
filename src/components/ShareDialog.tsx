@@ -40,7 +40,7 @@ export const ShareDialog = ({ analysisUrl, forWork, open, onClose }: ShareDialog
 
         // load dataset a lute-preludes.inrupt.net/works.ttl
         if (mode === 'public') {
-            const publicDataset = await getSolidDataset('lute-preludes.inrupt.net/preludes/works.ttl')
+            const publicDataset = await getSolidDataset('https://storage.inrupt.com/d14d1c60-6851-4c65-86fa-062c6989387c/preludes/works(4).ttl')
             const things = getThingAll(publicDataset)
 
             let aggregationWork = things.find(thing => (
@@ -53,16 +53,16 @@ export const ShareDialog = ({ analysisUrl, forWork, open, onClose }: ShareDialog
                 No F17 Aggregation Work has been found which relates to this work. Creating a new F17.`)
                 aggregationWork = buildThing(createThing())
                     .addUrl(RDF.type, frbroo('F17_Aggregation_Work'))
-                    .addUrl(frbroo('F2_is_derivative_of'), forWork)
+                    .addUrl(frbroo('R2_is_derivative_of'), forWork)
                     .build()
             }
 
-            addUrl(aggregationWork, frbroo('R3_is_realised_in'), analysisUrl)
+            aggregationWork = addUrl(aggregationWork, frbroo('R3_is_realised_in'), analysisUrl)
 
             const modifiedDataset = setThing(publicDataset, aggregationWork)
 
             // The public dataset has public 'append' rights.
-            await saveSolidDatasetAt('lute-preludes.inrupt.net/preludes/works.ttl', modifiedDataset)
+            await saveSolidDatasetAt('https://storage.inrupt.com/d14d1c60-6851-4c65-86fa-062c6989387c/preludes/works(4).ttl', modifiedDataset)
         }
 
         setStatus('saved')

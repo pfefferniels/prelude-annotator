@@ -57,7 +57,6 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
                 
                 // check the rights - are we allowed to edit this layer?
                 if (!session.info.isLoggedIn || !session.info.webId) {
-
                     setEditable(false)
                     return
                 }

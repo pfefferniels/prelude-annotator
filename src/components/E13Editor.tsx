@@ -2,7 +2,7 @@ import { asUrl, buildThing, createThing, getSolidDataset, getSourceIri, getSourc
 import { DCTERMS, RDF } from "@inrupt/vocab-common-rdf"
 import { Delete, Save } from "@mui/icons-material"
 import LoadingButton from "@mui/lab/LoadingButton"
-import { Button, DialogActions, Drawer, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Paper, Select, TextField } from "@mui/material"
+import { Button, DialogActions, FormControl, InputLabel, MenuItem, Paper, Select, TextField } from "@mui/material"
 import { Stack } from "@mui/system"
 import { useContext, useEffect, useState } from "react"
 import { Ontology } from "../helpers/Ontology"
@@ -15,7 +15,8 @@ import { DatasetContext, SessionContext, useSession } from "@inrupt/solid-ui-rea
 import { Selection } from "../types/Selection"
 import { AnalysisContext } from "../context/AnalysisContext"
 import { v4 } from "uuid"
-import { urlAsLabel } from "./E13Summary"
+import { ScoreSurfaceContext } from "../context/ScoreSurfaceContext"
+import { SelectionPicker } from "./SelectionPicker"
 
 interface E13EditorProps {
     selectionUrl: string
@@ -193,7 +194,6 @@ export const E13Editor = ({
                 {currentTreatise && (
                     <>
                         <Stack direction='row'>
-
                             <FormControl variant='standard'>
                                 <InputLabel>the selection …</InputLabel>
                                 <Select
@@ -252,23 +252,11 @@ export const E13Editor = ({
                                 <Stack>
                                     {editable && <Button onClick={() => setAssignSelectionOpen(true)}>assign {expectedRange?.split('/').at(-1) || 'selection'}</Button>}
                                     <div>{typeof attribute === "string" ? attribute : attribute.url.split('#').at(-1)}</div>
-                                    <Drawer open={assignSelectionOpen} anchor='right'>
-                                        <List dense>
-                                            {availableSelections.map((selection => {
-                                                return (
-                                                    <ListItem
-                                                        onClick={() => {
-                                                            setAttribute(selection)
-                                                            setAssignSelectionOpen(false)
-                                                        }}
-                                                        onMouseOver={() => highlightSelection(selection.url)}
-                                                        key={`selection_picker_${selection.url}`}>
-                                                        <ListItemText primary={urlAsLabel(selection.url)} />
-                                                    </ListItem>
-                                                )
-                                            }))}
-                                        </List>
-                                    </Drawer>
+
+                                    <SelectionPicker
+                                        setAttribute={setAttribute}
+                                        open={assignSelectionOpen}
+                                        onClose={() => setAssignSelectionOpen(false)} />
                                 </Stack>
                             }
                         </Stack>
@@ -341,5 +329,6 @@ export const E13Editor = ({
         </Paper >
     )
 }
+
 
 
