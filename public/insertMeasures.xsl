@@ -32,7 +32,11 @@
 
             <xsl:for-each select="mei:note[@xml:id]">
                 <xsl:variable name="noteId" select="concat('#', @xml:id)" />
+
                 <xsl:copy-of select="//mei:*[@startid=$noteId]" />
+                <!--<xsl:if test="count(./mei:*[@plist]) lt 1">
+                    <xsl:copy-of select="//mei:*[contains(@plist, $noteId)]" />
+                </xsl:if>-->
             </xsl:for-each>
 
             <xsl:element name="staff" namespace="http://www.music-encoding.org/ns/mei">
@@ -42,7 +46,9 @@
                     <xsl:attribute name="n">1</xsl:attribute>
 
                     <xsl:element name="tabGrp" namespace="http://www.music-encoding.org/ns/mei">
-                        <xsl:attribute name="xml:id"><xsl:value-of select="$id" /></xsl:attribute>
+                        <xsl:attribute name="xml:id">
+                            <xsl:value-of select="$id" />
+                        </xsl:attribute>
                         <xsl:apply-templates select="mei:note" />
                     </xsl:element>
                 </xsl:element>
@@ -50,5 +56,6 @@
         </xsl:element>
     </xsl:template>
 
-    <xsl:template match="mei:arpeg" />
+    <xsl:template match="*[@plist]" />
+    <xsl:template match="*[@startid]" />
 </xsl:stylesheet>

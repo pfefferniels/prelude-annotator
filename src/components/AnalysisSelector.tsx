@@ -7,7 +7,7 @@ import { Stack } from "@mui/system";
 import { useEffect, useState } from "react";
 import { v4 } from "uuid";
 import { crm, frbroo } from "../helpers/namespaces";
-import { ThingFromDataset } from "../types/ThingFromDataset";
+import { AnalysisEditor } from "./AnalysisEditor";
 import { AnalysisListItem } from "./AnalysisListItem";
 
 interface AnalysisSelector {
@@ -17,15 +17,12 @@ interface AnalysisSelector {
     forWork: UrlString
 }
 
-type ExpressionInfo = {
-    url: UrlString,
-    owner: string
-}
-
 export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: AnalysisSelector) => {
     const { session } = useSession()
     const [availableExpressions, setAvailableExpressions] = useState<UrlString[]>([])
     const [selectedExpressions, setSelectedExpressions] = useState<UrlString[]>([])
+
+    const [createAnalysisOpen, setCreateAnalysisOpen] = useState(false)
 
     const fetchPublicExpressions = async () => {
         const dataset = await getSolidDataset('https://storage.inrupt.com/d14d1c60-6851-4c65-86fa-062c6989387c/preludes/works(4).ttl')
@@ -93,7 +90,7 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
         fetchAllExpressions()
     }, [])
 
-    const createPersonalExpression = async () => {
+    const createPersonalExpression = async (title: string) => {
         if (!session.info.isLoggedIn || !session.info.webId) return
 
         try {
@@ -106,6 +103,7 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
                 .addUrl(RDF.type, frbroo('F22_Self_Contained_Expression'))
                 .addUrl(RDF.type, crm('E7_Activity'))
                 .addUrl(crm('P14_carried_out_by'), session.info.webId)
+                .addStringNoLocale(crm('P102_has_title'), title)
                 .build()
             const modifiedAnalysisDataset = setThing(analysisDataset, newAnalysisExpression)
             await saveSolidDatasetAt(`${podUrl}preludes/analysis-${analysisDatasetId}.ttl`, modifiedAnalysisDataset, { fetch: session.fetch as any })
@@ -120,6 +118,9 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
                 .build()
             const modifiedWorksDataset = setThing(worksDataset, newAnalysisWork)
             await saveSolidDatasetAt(`${podUrl}preludes/works.ttl`, modifiedWorksDataset, { fetch: session.fetch as any })
+
+            // update the list of available analyses
+            fetchAllExpressions()
         }
         catch (e) {
             console.log(e)
@@ -132,10 +133,7 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
             <Stack direction='row'>
                 <Button
                     startIcon={<Add />}
-                    onClick={async () => {
-                        await createPersonalExpression()
-                        await fetchAllExpressions()
-                    }}>
+                    onClick={() => setCreateAnalysisOpen(true)}>
                     Create
                 </Button>
 
@@ -173,6 +171,12 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
                     );
                 })}
             </List>
+
+            <AnalysisEditor
+                open={createAnalysisOpen}
+                onClose={() => setCreateAnalysisOpen(false)}
+                onCreate={createPersonalExpression}
+            />
         </Drawer>
     );
 };

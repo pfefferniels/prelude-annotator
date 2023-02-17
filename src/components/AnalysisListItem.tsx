@@ -22,6 +22,7 @@ export const AnalysisListItem = ({ forWork, expression, checked, onChange }: Ana
     const [writable, setWritable] = useState(false)
     const [isPublic, setIsPublic] = useState(false)
     const [isDeleted, setIsDeleted] = useState(false)
+    const [title, setTitle] = useState<string>()
 
     const [shareDialogOpen, setShareDialogOpen] = useState(false)
 
@@ -41,11 +42,13 @@ export const AnalysisListItem = ({ forWork, expression, checked, onChange }: Ana
             const analysis = getThing(dataset, expression);
             if (!analysis)
                 return;
+            
+            setTitle(getStringNoLocale(analysis, crm('P102_has_title')) || undefined)
 
             const webId = getUrl(analysis, crm('P14_carried_out_by'));
             if (!webId)
                 return;
-
+            
             const webIdDataset = await getWebIdDataset(webId);
             if (!webIdDataset)
                 return;
@@ -117,7 +120,7 @@ export const AnalysisListItem = ({ forWork, expression, checked, onChange }: Ana
                     </ListItemAvatar>
                     <ListItemText id={expression} primary={owner} secondary={
                         <div>
-                            {urlAsLabel(expression)}
+                            {title ? title : urlAsLabel(expression)}
                             <br />{isPublic && <b>publicly available</b>}
                             <br />{writable ? 'writable' : 'read-only'}
                         </div>} />
@@ -125,7 +128,11 @@ export const AnalysisListItem = ({ forWork, expression, checked, onChange }: Ana
             </ListItem>
             <Divider variant='inset' />
 
-            <ShareAnalysisDialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)} analysisUrl={expression} forWork={forWork} />
+            <ShareAnalysisDialog
+                open={shareDialogOpen}
+                onClose={() => setShareDialogOpen(false)}
+                analysisUrl={expression}
+                forWork={forWork} />
         </>
     );
 };
