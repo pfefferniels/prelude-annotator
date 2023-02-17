@@ -139,7 +139,6 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
                             <Switch checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
                         } label="Make public?" />
                     </FormGroup>
-                    <Switch />
                 </Stack>
             </DialogContent>
             <DialogActions>

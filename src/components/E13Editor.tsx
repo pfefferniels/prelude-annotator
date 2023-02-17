@@ -38,7 +38,6 @@ export const E13Editor = ({
 }: E13EditorProps) => {
     const { session } = useSession()
     const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
-    const { availableSelections, highlightSelection } = useContext(SelectionContext)
     const { analysisUrl, availableArgumentations, availableOntologies, editable } = useContext(AnalysisContext)
 
     const [referredArgumentations, setReferredArgumentations] = useState<Argumentation[]>()

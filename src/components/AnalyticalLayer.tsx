@@ -12,6 +12,7 @@ import { SelectionContainer } from "./SelectionContainer"
 import availableTreatises from "./availableTreatises.json"
 import { AnalysisContext } from "../context/AnalysisContext"
 import { stringToColour } from "../helpers/string2color"
+import { toE13 } from "../mappings/mapE13"
 
 interface AnalyticalLayerProps {
     analysisUrl: UrlString
@@ -136,16 +137,7 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
                     return getUrlAll(thing, RDF.type).includes(crm('E13_Attribute_Assignment')) &&
                         getUrlAll(analysis, crm('P3_consists_of')).includes(asUrl(thing))
                 })
-                .map((thing): E13 => {
-                    return {
-                        url: asUrl(thing),
-                        treatise: getUrl(thing, crm('P33_used_specific_technique')) || '',
-                        property: getUrl(thing, crm('P177_assigned_property_of_type')) || '',
-                        attribute: getUrl(thing, crm('P141_assigned')) || '',
-                        target: getUrl(thing, crm('P140_assigned_attribute_to')) || '',
-                        comment: getStringNoLocale(thing, crm('P3_has_note')) || '',
-                    }
-                })
+                .map(toE13)
         )
     }
 

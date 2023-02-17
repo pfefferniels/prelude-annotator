@@ -29,7 +29,7 @@ export const Workspace2 = () => {
                 <>
                     <ScoreSurface meiUrl={score} onReady={() => setScoreIsReady(ready => ready + 1)} />
 
-                    <ScoreSurfaceContext.Provider value={{ workUrl: score, scoreIsReady }}>
+                    <ScoreSurfaceContext.Provider value={{ workUrl: score, analyses, scoreIsReady }}>
                         {analyses.map(analysis => (
                             <AnalyticalLayer key={`analysis_${analysis}`} analysisUrl={analysis} />
                         ))}

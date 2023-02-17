@@ -1,0 +1,98 @@
+@prefix : <urn:webprotege:ontology:b35419bf-510f-4c50-be5a-23c02660932c#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <urn:webprotege:ontology:b35419bf-510f-4c50-be5a-23c02660932c> .
+
+<urn:webprotege:ontology:b35419bf-510f-4c50-be5a-23c02660932c> rdf:type owl:Ontology .
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://lute-preludes.org/delair/AccompagnemensExtraordinaires
+<http://lute-preludes.org/delair/AccompagnemensExtraordinaires> rdf:type owl:Class ;
+                                                                rdfs:label "Accompagnemens Extraordinaires" .
+
+
+###  http://lute-preludes.org/delair/NeuviemeAvecLaSeptieme
+<http://lute-preludes.org/delair/NeuviemeAvecLaSeptieme> rdf:type owl:Class ;
+                                                         rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                         rdfs:label "Neuvieme avec la Septieme" .
+
+
+###  http://lute-preludes.org/delair/QuarteEtSeptieme
+<http://lute-preludes.org/delair/QuarteEtSeptieme> rdf:type owl:Class ;
+                                                   rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                   rdfs:label "Quarte et Septieme" .
+
+
+###  http://lute-preludes.org/delair/QuinteAvecLaSexte
+<http://lute-preludes.org/delair/QuinteAvecLaSexte> rdf:type owl:Class ;
+                                                    rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                    rdfs:label "Quinte avec la Sexte" .
+
+
+###  http://lute-preludes.org/delair/QuinteSuperflueAvecLaNeuvieme
+<http://lute-preludes.org/delair/QuinteSuperflueAvecLaNeuvieme> rdf:type owl:Class ;
+                                                                rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                                rdfs:label "Quinte Superflue avec la Neuvieme" .
+
+
+###  http://lute-preludes.org/delair/QuinteSuperflueAvecLaSeptieme
+<http://lute-preludes.org/delair/QuinteSuperflueAvecLaSeptieme> rdf:type owl:Class ;
+                                                                rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                                rdfs:label "Quinte Superflue avec la Septieme" .
+
+
+###  http://lute-preludes.org/delair/SexteAvecLa3ceEtLaQuarte
+<http://lute-preludes.org/delair/SexteAvecLa3ceEtLaQuarte> rdf:type owl:Class ;
+                                                           rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                           rdfs:label "Sexte avec la 3ce et la 4te"^^xsd:string .
+
+
+###  http://lute-preludes.org/delair/TritonAvecLaTierceMineur
+<http://lute-preludes.org/delair/TritonAvecLaTierceMineur> rdf:type owl:Class ;
+                                                           rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                           rdfs:label "Triton avec la Tierce Mineur" .
+
+
+###  http://lute-preludes.org/delair/7eMajeureAvecLaSecondeEtLaQuarte
+<http://lute-preludes.org/delair/7eMajeureAvecLaSecondeEtLaQuarte> rdf:type owl:Class ;
+                                                                   rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                                   rdfs:label "7e Majeure avec la Seconde et la Quarte" .
+
+
+###  http://lute-preludes.org/delair/7eMajeureAvecLaSexteMineur
+<http://lute-preludes.org/delair/7eMajeureAvecLaSexteMineur> rdf:type owl:Class ;
+                                                             rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                             rdfs:label "7e Majeure avec la Sexte Mineur" .
+
+
+###  http://lute-preludes.org/delair/FausseQuinteAvecL%27Octave
+<http://lute-preludes.org/delair/FausseQuinteAvecL%27Octave> rdf:type owl:Class ;
+                                                             rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                             rdfs:label "Fausse Quinte avec l'Octave" .
+
+
+###  http://lute-preludes.org/delair/FausseQuinteAvecLa7eDiminu%C3%A9e
+<http://lute-preludes.org/delair/FausseQuinteAvecLa7eDiminu%C3%A9e> rdf:type owl:Class ;
+                                                                    rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                                    rdfs:label "Fausse Quinte avec la 7e Diminuée" .
+
+
+###  http://lute-preludes.org/delair/SecondeSuperfl%C3%BCe
+<http://lute-preludes.org/delair/SecondeSuperfl%C3%BCe> rdf:type owl:Class ;
+                                                        rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                        rdfs:label "Seconde Superflüe" .
+
+
+###  http://lute-preludes.org/delair/SexteAvecLa4teEtL%27Octave
+<http://lute-preludes.org/delair/SexteAvecLa4teEtL%27Octave> rdf:type owl:Class ;
+                                                             rdfs:subClassOf <http://lute-preludes.org/delair/AccompagnemensExtraordinaires> ;
+                                                             rdfs:label "Sexte avec la 4te et l'Octave" .
+
+
+###  Generated by the OWL API (version 4.5.13) https://github.com/owlcs/owlapi

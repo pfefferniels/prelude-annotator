@@ -8,5 +8,10 @@
         "url": "/millet1666.ttl",
         "name": "millet1666",
         "label": "Millet, L'art de Bien Chanter, Besançon 1666"
+    },
+    {
+        "url": "/delair1690.ttl",
+        "name": "delair1690",
+        "label": "Delair, Traité d'Accompagnment, Paris 1690"
     }
 ]
