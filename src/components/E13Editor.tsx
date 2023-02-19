@@ -166,7 +166,7 @@ export const E13Editor = ({
     }
 
     return (
-        <Paper style={{ minWidth: '200px', padding: '0.5rem' }}>
+        <Paper style={{ minWidth: '200px', maxWidth: '350px', padding: '0.5rem' }}>
             <Stack spacing={2}>
                 <FormControl variant='standard'>
                     <InputLabel>According to …</InputLabel>

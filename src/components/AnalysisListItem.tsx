@@ -115,7 +115,7 @@ export const AnalysisListItem = ({ forWork, expression, checked, onChange }: Ana
                 <ListItemButton>
                     <ListItemAvatar>
                         <Avatar
-                            sx={{ bgcolor: stringToColour(expression) }}
+                            sx={{ bgcolor: stringToColour(expression.split('#').at(-1) || expression) }}
                         > </Avatar>
                     </ListItemAvatar>
                     <ListItemText id={expression} primary={owner} secondary={

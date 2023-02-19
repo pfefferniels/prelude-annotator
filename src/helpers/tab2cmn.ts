@@ -14,7 +14,7 @@ export const tab2cmn = (mei: string) => {
             { pname: 'c' },
             keySig <= -3 ? { pname: 'd', accid: 'f' } : { pname: 'c', accid: 's' },
             { pname: 'd' },
-            keySig >= 2 ? { pname: 'd', accid: 's'} : { pname: 'e', accid: 'f' },
+            keySig >= 2 ? { pname: 'd', accid: 's' } : { pname: 'e', accid: 'f' },
             { pname: 'e' },
             { pname: 'f' },
             { pname: 'f', accid: 's' },
@@ -28,12 +28,26 @@ export const tab2cmn = (mei: string) => {
         return result
     }
 
-    const baroqueDMinorTuning = [ 65, 62, 57, 53, 50, 45, 43, 41, 40, 38, 36 ]
+    type Course = [number, number] | number
+
+    const baroqueDMinorTuning: Course[] =
+        [
+            65,
+            62,
+            57,
+            53,
+            50,
+            [45, 57],
+            [43, 55],
+            [41, 53],
+            [40, 52],
+            [38, 50],
+            [36, 48]
+        ]
+    const baroqueGMinorTuning = []
 
     console.log('mei=', mei)
 
-    // update the staff notation MEI 
-    // everytime the tablature MEI changes
     const meiDoc = new DOMParser().parseFromString(mei, 'application/xml')
 
     const staffDef = meiDoc.querySelector('staffDef')
@@ -55,13 +69,38 @@ export const tab2cmn = (mei: string) => {
             console.log('no @tab.course or @tab.fret attribute found')
             return
         }
-        const pitch = baroqueDMinorTuning[+course - 1] + (+fret)
-        const newNote = pitchToNote(pitch, -1)
-        note.setAttribute('pname', newNote.pname)
-        newNote.accid && note.setAttribute('accid', newNote.accid)
-        newNote.oct && note.setAttribute('oct', newNote.oct.toString())
-        note.removeAttribute('tab.course')
-        note.removeAttribute('tab.fret')
+
+        const correspCourse = baroqueDMinorTuning[+course - 1]
+        const pitches =
+            typeof correspCourse === 'number'
+                ? [correspCourse + (+fret)]
+                : [
+                    correspCourse[0] + (+fret), // first string of the course
+                    correspCourse[1] + (+fret) // second string of the course
+                ]
+
+        const newNoteElements = pitches.map((pitch, i) => {
+            const newPitch = pitchToNote(pitch, -1)
+            const newNoteEl = meiDoc.createElementNS('http://www.music-encoding.org/ns/mei', 'note')
+
+            // copy all attributes from the original <note>, except 
+            // @tab.course and @tab.fret
+            note.getAttributeNames()
+                .filter(name => name !== 'tab.course' && name !== 'tab.fret')
+                .forEach(name => {
+                    newNoteEl.setAttribute(name, note.getAttribute(name)!)
+                })
+
+            newNoteEl.setAttribute('pname', newPitch.pname)
+            newPitch.accid && newNoteEl.setAttribute('accid', newPitch.accid)
+            newPitch.oct && newNoteEl.setAttribute('oct', newPitch.oct.toString())
+
+            // display the octave string somewhat smaller
+            i === 1 && newNoteEl.setAttribute('head.mod', 'paren')
+
+            return newNoteEl
+        })
+        note.replaceWith(...newNoteElements)
     })
 
     return new XMLSerializer().serializeToString(meiDoc).replaceAll('tabGrp', 'chord')

@@ -193,7 +193,7 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
                 availableE13s: e13s,
                 analysisUrl,
                 editable,
-                color: stringToColour(analysisUrl)
+                color: stringToColour(analysisUrl.split('#').at(-1) || analysisUrl)
             }}>
                 <SelectionContainer selections={selections} />
             </AnalysisContext.Provider>
