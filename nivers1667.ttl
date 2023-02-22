@@ -1,0 +1,196 @@
+@prefix : <urn:webprotege:ontology:365bfaef-4dd8-452e-8209-645f5c9c29bc#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <urn:webprotege:ontology:365bfaef-4dd8-452e-8209-645f5c9c29bc> .
+
+<urn:webprotege:ontology:365bfaef-4dd8-452e-8209-645f5c9c29bc> rdf:type owl:Ontology .
+
+#################################################################
+#    Annotation properties
+#################################################################
+
+###  http://purl.org/dc/elements/1.1/source
+<http://purl.org/dc/elements/1.1/source> rdf:type owl:AnnotationProperty .
+
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://webprotege.stanford.edu/hasBassProgression
+<http://webprotege.stanford.edu/hasBassProgression> rdf:type owl:ObjectProperty ;
+                                                    rdfs:subPropertyOf owl:topObjectProperty ;
+                                                    rdfs:domain <http://webprotege.stanford.edu/Cadence> ;
+                                                    rdfs:range <http://webprotege.stanford.edu/Degrez> ;
+                                                    rdfs:label "has bass progression" .
+
+
+###  http://webprotege.stanford.edu/hasFirstInterval
+<http://webprotege.stanford.edu/hasFirstInterval> rdf:type owl:ObjectProperty ;
+                                                  rdfs:subPropertyOf owl:topObjectProperty ;
+                                                  rdfs:domain <http://webprotege.stanford.edu/Cadence> ;
+                                                  rdfs:range <http://webprotege.stanford.edu/Interval> ;
+                                                  rdfs:label "hasFirstInterval" .
+
+
+###  http://webprotege.stanford.edu/hasMelodicProgression
+<http://webprotege.stanford.edu/hasMelodicProgression> rdf:type owl:ObjectProperty ;
+                                                       rdfs:subPropertyOf owl:topObjectProperty ;
+                                                       rdfs:domain <http://webprotege.stanford.edu/Cadence> ;
+                                                       rdfs:range <http://webprotege.stanford.edu/Degrez> ;
+                                                       rdfs:label "hasMelodicProgression" .
+
+
+###  http://webprotege.stanford.edu/hasSecondInterval
+<http://webprotege.stanford.edu/hasSecondInterval> rdf:type owl:ObjectProperty ;
+                                                   rdfs:subPropertyOf owl:topObjectProperty ;
+                                                   rdfs:domain <http://webprotege.stanford.edu/Cadence> ;
+                                                   rdfs:range <http://webprotege.stanford.edu/Interval> ;
+                                                   rdfs:label "hasSecondInterval" .
+
+
+###  http://webprotege.stanford.edu/takesPlaceOn
+<http://webprotege.stanford.edu/takesPlaceOn> rdf:type owl:ObjectProperty ;
+                                              rdfs:subPropertyOf owl:topObjectProperty ;
+                                              rdfs:domain <http://webprotege.stanford.edu/Cadence> ;
+                                              rdfs:range <http://webprotege.stanford.edu/Corde> ;
+                                              rdfs:label "takesPlaceOn" .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://webprotege.stanford.edu/Cadence
+<http://webprotege.stanford.edu/Cadence> rdf:type owl:Class ;
+                                         rdfs:subClassOf owl:Thing ;
+                                         rdfs:label "Cadence" .
+
+
+###  http://webprotege.stanford.edu/CadenceImparfaite
+<http://webprotege.stanford.edu/CadenceImparfaite> rdf:type owl:Class ;
+                                                   rdfs:subClassOf <http://webprotege.stanford.edu/Cadence> ;
+                                                   <http://purl.org/dc/elements/1.1/source> <https://cadence-project.org/nivers1667.tei#cadence_imparfaite> ;
+                                                   rdfs:label "CadenceImparfaite" .
+
+
+###  http://webprotege.stanford.edu/CadenceParfaite
+<http://webprotege.stanford.edu/CadenceParfaite> rdf:type owl:Class ;
+                                                 rdfs:subClassOf <http://webprotege.stanford.edu/Cadence> ;
+                                                 rdfs:label "CadenceParfaite" .
+
+
+###  http://webprotege.stanford.edu/CadenceRompue
+<http://webprotege.stanford.edu/CadenceRompue> rdf:type owl:Class ;
+                                               rdfs:subClassOf <http://webprotege.stanford.edu/Cadence> ;
+                                               rdfs:label "CadenceRompue" .
+
+
+###  http://webprotege.stanford.edu/Corde
+<http://webprotege.stanford.edu/Corde> rdf:type owl:Class ;
+                                       rdfs:label "Corde" .
+
+
+###  http://webprotege.stanford.edu/CordeEmpruntee
+<http://webprotege.stanford.edu/CordeEmpruntee> rdf:type owl:Class ;
+                                                rdfs:subClassOf <http://webprotege.stanford.edu/Corde> ;
+                                                rdfs:label "CordeEmpruntee" .
+
+
+###  http://webprotege.stanford.edu/CordeEssentielle
+<http://webprotege.stanford.edu/CordeEssentielle> rdf:type owl:Class ;
+                                                  rdfs:subClassOf <http://webprotege.stanford.edu/Corde> ;
+                                                  rdfs:label "CordeEssentielle" .
+
+
+###  http://webprotege.stanford.edu/Degrez
+<http://webprotege.stanford.edu/Degrez> rdf:type owl:Class .
+
+
+###  http://webprotege.stanford.edu/DegrezConjoint
+<http://webprotege.stanford.edu/DegrezConjoint> rdf:type owl:Class ;
+                                                rdfs:subClassOf <http://webprotege.stanford.edu/Degrez> ;
+                                                rdfs:label "DegrezConjoint" .
+
+
+###  http://webprotege.stanford.edu/DegrezDisjoint
+<http://webprotege.stanford.edu/DegrezDisjoint> rdf:type owl:Class ;
+                                                rdfs:subClassOf <http://webprotege.stanford.edu/Degrez> ;
+                                                rdfs:label "DegrezDisjoint" .
+
+
+###  http://webprotege.stanford.edu/Dominante
+<http://webprotege.stanford.edu/Dominante> rdf:type owl:Class ;
+                                           rdfs:subClassOf <http://webprotege.stanford.edu/CordeEssentielle> ;
+                                           rdfs:label "Dominante" .
+
+
+###  http://webprotege.stanford.edu/Finale
+<http://webprotege.stanford.edu/Finale> rdf:type owl:Class ;
+                                        rdfs:subClassOf <http://webprotege.stanford.edu/CordeEssentielle> ;
+                                        rdfs:label "Finale" .
+
+
+###  http://webprotege.stanford.edu/Interval
+<http://webprotege.stanford.edu/Interval> rdf:type owl:Class ;
+                                          rdfs:label "Interval" .
+
+
+###  http://webprotege.stanford.edu/Mediante
+<http://webprotege.stanford.edu/Mediante> rdf:type owl:Class ;
+                                          rdfs:subClassOf <http://webprotege.stanford.edu/CordeEssentielle> ;
+                                          rdfs:label "Mediante" .
+
+
+###  http://webprotege.stanford.edu/Octave
+<http://webprotege.stanford.edu/Octave> rdf:type owl:Class ;
+                                        rdfs:subClassOf <http://webprotege.stanford.edu/Interval> ;
+                                        rdfs:label "Octave" .
+
+
+###  http://webprotege.stanford.edu/Quarte
+<http://webprotege.stanford.edu/Quarte> rdf:type owl:Class ;
+                                        rdfs:subClassOf <http://webprotege.stanford.edu/DegrezDisjoint> ,
+                                                        <http://webprotege.stanford.edu/Interval> ;
+                                        rdfs:label "Quarte" .
+
+
+###  http://webprotege.stanford.edu/Quinte
+<http://webprotege.stanford.edu/Quinte> rdf:type owl:Class ;
+                                        rdfs:subClassOf <http://webprotege.stanford.edu/DegrezDisjoint> ,
+                                                        <http://webprotege.stanford.edu/Interval> ;
+                                        rdfs:label "Quinte" .
+
+
+###  http://webprotege.stanford.edu/Seconde
+<http://webprotege.stanford.edu/Seconde> rdf:type owl:Class ;
+                                         rdfs:subClassOf <http://webprotege.stanford.edu/DegrezConjoint> ,
+                                                         <http://webprotege.stanford.edu/Interval> ;
+                                         rdfs:label "Seconde" .
+
+
+###  http://webprotege.stanford.edu/SixteMajeur
+<http://webprotege.stanford.edu/SixteMajeur> rdf:type owl:Class ;
+                                             rdfs:subClassOf <http://webprotege.stanford.edu/DegrezDisjoint> ,
+                                                             <http://webprotege.stanford.edu/Interval> ;
+                                             rdfs:label "SixteMajeur" .
+
+
+###  http://webprotege.stanford.edu/TierceMajeur
+<http://webprotege.stanford.edu/TierceMajeur> rdf:type owl:Class ;
+                                              rdfs:subClassOf <http://webprotege.stanford.edu/DegrezDisjoint> ,
+                                                              <http://webprotege.stanford.edu/Interval> ;
+                                              rdfs:label "TierceMajeur" .
+
+
+###  http://webprotege.stanford.edu/TierceMineur
+<http://webprotege.stanford.edu/TierceMineur> rdf:type owl:Class ;
+                                              rdfs:subClassOf <http://webprotege.stanford.edu/Interval> ;
+                                              rdfs:label "TierceMineur" .
+
+
+###  Generated by the OWL API (version 4.5.13) https://github.com/owlcs/owlapi

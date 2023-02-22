@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.css": "/prelude-annotator/static/css/main.f2cbdb9e.css",
+    "main.js": "/prelude-annotator/static/js/main.b036c1fe.js",
+    "static/js/670.f27ae18e.chunk.js": "/prelude-annotator/static/js/670.f27ae18e.chunk.js",
+    "static/js/787.370df1cb.chunk.js": "/prelude-annotator/static/js/787.370df1cb.chunk.js",
+    "static/js/180.57ff3f76.chunk.js": "/prelude-annotator/static/js/180.57ff3f76.chunk.js",
+    "index.html": "/prelude-annotator/index.html",
+    "main.f2cbdb9e.css.map": "/prelude-annotator/static/css/main.f2cbdb9e.css.map",
+    "main.b036c1fe.js.map": "/prelude-annotator/static/js/main.b036c1fe.js.map",
+    "787.370df1cb.chunk.js.map": "/prelude-annotator/static/js/787.370df1cb.chunk.js.map",
+    "180.57ff3f76.chunk.js.map": "/prelude-annotator/static/js/180.57ff3f76.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.f2cbdb9e.css",
+    "static/js/main.b036c1fe.js"
+  ]
+}
