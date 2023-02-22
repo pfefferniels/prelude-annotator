@@ -1,10 +1,11 @@
 import { UrlString } from "@inrupt/solid-client"
-import { Button } from "@mui/material"
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material"
 import { useState } from "react"
 import { ScoreSurfaceContext } from "../context/ScoreSurfaceContext"
 import { ThingFromDataset } from "../types/ThingFromDataset"
 import { AnalysisSelector } from "./AnalysisSelector"
 import { AnalyticalLayer } from "./AnalyticalLayer"
+import { Evaluation } from "./Evaluation"
 import { ScoreSurface } from "./ScoreSurface"
 import { WorkSelector } from "./WorkSelector"
 
@@ -15,6 +16,7 @@ export const Workspace2 = () => {
 
     const [scoreSelectorOpen, setScoreSelectorOpen] = useState(false)
     const [analysisSelectorOpen, setAnalysisSelectorOpen] = useState(false)
+    const [evaluationsOpen, setEvaluationsOpen] = useState(false)
 
     return (
         <div id='workspace'>
@@ -23,7 +25,22 @@ export const Workspace2 = () => {
                 <Button
                     disabled={!score}
                     onClick={() => setAnalysisSelectorOpen(true)}>Available Analyses</Button>
+                <Button onClick={() => setEvaluationsOpen(true)}>Show Statistical Review</Button>
             </header>
+
+            <Dialog
+                open={evaluationsOpen}
+                onClose={() => setEvaluationsOpen(false)}
+                fullWidth
+                maxWidth="md">
+                <DialogTitle>Statistical Review</DialogTitle>
+                <DialogContent>
+                    <Evaluation />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEvaluationsOpen(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
 
             {score && (
                 <>

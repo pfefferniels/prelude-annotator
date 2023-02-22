@@ -9,6 +9,7 @@ import { v4 } from "uuid";
 import { crm, frbroo } from "../helpers/namespaces";
 import { AnalysisEditor } from "./AnalysisEditor";
 import { AnalysisListItem } from "./AnalysisListItem";
+import { fetchPublicAnalyses } from "../helpers/fetchPublicAnalyses";
 
 interface AnalysisSelector {
     open: boolean
@@ -23,24 +24,6 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
     const [selectedExpressions, setSelectedExpressions] = useState<UrlString[]>([])
 
     const [createAnalysisOpen, setCreateAnalysisOpen] = useState(false)
-
-    const fetchPublicExpressions = async () => {
-        const dataset = await getSolidDataset('https://storage.inrupt.com/d14d1c60-6851-4c65-86fa-062c6989387c/preludes/works(4).ttl')
-        const things = getThingAll(dataset)
-        console.log('things from public storage', things)
-        const e17 = things.find(thing => (
-            getUrlAll(thing, RDF.type).includes(frbroo('F17_Aggregation_Work')) &&
-            getUrl(thing, frbroo('R2_is_derivative_of')) === forWork
-        ))
-
-        if (!e17) {
-            console.log(`It seems that no analyses have been published yet on this work:
-            No F17 Aggregation Work has been found which relates to this work.`)
-            return []
-        }
-
-        return getUrlAll(e17, frbroo('R3_is_realised_in'))
-    }
 
     const fetchPersonalExpressions = async () => {
         if (!session.info.isLoggedIn ||
@@ -69,7 +52,7 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
     }
 
     const fetchAllExpressions = async () => {
-        const publicExpressions = await fetchPublicExpressions()
+        const publicExpressions = await fetchPublicAnalyses(forWork)
         const personalExpressions = await fetchPersonalExpressions()
 
         let allExpressions = [
@@ -88,7 +71,7 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
 
     useEffect(() => {
         fetchAllExpressions()
-    }, [])
+    }, [open, forWork])
 
     const createPersonalExpression = async (title: string) => {
         if (!session.info.isLoggedIn || !session.info.webId) return
@@ -180,3 +163,5 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
         </Drawer>
     );
 };
+
+
