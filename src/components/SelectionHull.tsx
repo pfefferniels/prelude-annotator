@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Selection } from "../types/Selection";
-import * as d3 from 'd3'
 import { createPortal } from 'react-dom';
 import { roundedHull } from "../helpers/roundedHull";
 import { UrlString } from "@inrupt/solid-client";
@@ -25,7 +24,7 @@ type Hull = {
  * This component draws a hull around a given selection 
  * into the `svgBackground` prop.
  */
-export const SelectionOverlay = ({
+export const SelectionHull = ({
     selection,
     highlight,
     removeSelection,

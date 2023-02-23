@@ -5,7 +5,7 @@ import { useContext, useEffect, useState } from "react"
 import { SelectionContext } from "../context/SelectionContext"
 import { Selection } from "../types/Selection"
 import { SelectionEditor } from "./SelectionEditor"
-import { SelectionOverlay } from "./SelectionOverlay"
+import { SelectionHull } from "./SelectionHull"
 import { RDF, DCTERMS } from "@inrupt/vocab-common-rdf"
 import { v4 } from "uuid"
 import { crm } from "../helpers/namespaces"
@@ -207,7 +207,7 @@ export const SelectionContainer = ({ selections }: { selections: Selection[] }) 
 
             {hullContainer && [...selections].map(selection => {
                 return (
-                    <SelectionOverlay
+                    <SelectionHull
                         key={`overlay_${selection.url}`}
                         selection={selection}
                         highlight={selection.url === secondaryActiveSelection?.url}
