@@ -1,7 +1,7 @@
 import { asUrl, buildThing, createThing, getAgentAccess, getDate, getPodOwner, getPodUrlAll, getSolidDataset, getSolidDatasetWithAcl, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, saveSolidDatasetAt, setThing, SolidDataset, Thing, universalAccess, UrlString } from "@inrupt/solid-client"
 import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
 import { RDF, DCTERMS } from "@inrupt/vocab-common-rdf"
-import { useEffect, useState } from "react"
+import { createRef, useEffect, useRef, useState } from "react"
 import { v4 } from "uuid"
 import { crminf, crm } from "../helpers/namespaces"
 import { Ontology } from "../helpers/Ontology"
@@ -13,6 +13,35 @@ import availableTreatises from "./availableTreatises.json"
 import { AnalysisContext } from "../context/AnalysisContext"
 import { stringToColour } from "../helpers/string2color"
 import { toE13 } from "../mappings/mapE13"
+import { ArgumentationContainer } from "./ArgumentationContainer"
+import { Accordion, AccordionDetails, AccordionSummary, Divider, Drawer, IconButton, Tab, Tabs, Typography } from "@mui/material"
+import { ChevronRight } from "@mui/icons-material"
+import { Box } from "@mui/system"
+
+interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`simple-tabpanel-${index}`}
+            aria-labelledby={`simple-tab-${index}`}
+            {...other}
+        >
+            <Box hidden={value !== index} sx={{ p: 3 }}>
+                {children}
+            </Box>
+
+        </div>
+    );
+}
 
 interface AnalyticalLayerProps {
     analysisUrl: UrlString
@@ -35,8 +64,10 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
     const [selections, setSelections] = useState<Selection[]>([])
     const [e13s, setE13s] = useState<E13[]>([])
     const [argumentations, setArgumentations] = useState<Argumentation[]>([])
-
     const [editable, setEditable] = useState(false)
+    const [currentTab, setCurrentTab] = useState(0)
+
+    const selectionPanelRef = useRef<HTMLDivElement>()
 
     useEffect(() => {
         // TODO: The used ontologies should also be deduced 
@@ -170,11 +201,19 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
         )
     }
 
+    console.log('something changed')
+
+    useEffect(() => {
+        console.log('panel changed', selectionPanelRef)
+    }, [selectionPanelRef])
+
     // Whenever something in the dataset changes,
     // usually through some user action in one of the 
     // child components, keep the corresponding states up-to-date.
     useEffect(() => {
         if (!dataset) return
+
+        console.log('dataset changed')
 
         const things = getThingAll(dataset)
         console.log('update dataset from', things.length)
@@ -195,8 +234,34 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
                 editable,
                 color: stringToColour(analysisUrl.split('#').at(-1) || analysisUrl)
             }}>
-                <SelectionContainer selections={selections} />
-            </AnalysisContext.Provider>
+                <Drawer
+                    variant='persistent'
+                    open={true}
+                    anchor='right'
+                    PaperProps={{
+                        sx: { width: "30vw" },
+                    }}
+                >
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                        <Tabs value={currentTab} onChange={(_: React.SyntheticEvent, newValue: number) => {
+                            setCurrentTab(newValue)
+                        }}>
+                            <Tab label="Selections" />
+                            <Tab label="Argumentations" />
+                        </Tabs>
+                    </Box>
+
+                    <TabPanel value={currentTab} index={0}>
+                        <div id="selection-panel" ref={(ref) => ref && (selectionPanelRef.current = ref)} />
+                    </TabPanel>
+
+                    <TabPanel value={currentTab} index={1}>
+                        <ArgumentationContainer />
+                    </TabPanel>
+
+                    <SelectionContainer selections={selections} panel={selectionPanelRef} />
+                </Drawer>
+            </AnalysisContext.Provider >
         </DatasetContext.Provider >
     )
 }

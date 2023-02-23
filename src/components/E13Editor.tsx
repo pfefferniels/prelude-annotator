@@ -261,35 +261,6 @@ export const E13Editor = ({
                         </Stack>
                     </>
                 )}
-
-                {referredArgumentations?.map(arg => (
-                    <ArgumentationEditor
-                        key={`argumentation_editor_${arg.url}`}
-                        argumentation={arg}
-                        saveArgumentation={saveArgumentation}
-                        removeArgumentation={() => removeArgumentation(arg)} />
-                ))}
-
-                <Button
-                    disabled={!session.info.isLoggedIn}
-                    onClick={async () => {
-                        await saveE13({
-                            // ID and provenience are immutable
-                            url: e13.url,
-
-                            // all other properties have been changed
-                            // and are read from the respective states
-                            property,
-                            attribute,
-                            treatise: currentTreatise?.url || '',
-                            comment,
-
-                            // the target will be ignored by the saveE13 
-                            // routine and replaced by the current selection
-                            target: ''
-                        })
-                        createArgumentation()
-                    }}>Add Argumentation</Button>
             </Stack>
 
             <DialogActions>

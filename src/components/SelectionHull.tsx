@@ -77,7 +77,7 @@ export const SelectionHull = ({
                     createPortal(
                         <path
                             fill={color}
-                            className={`${highlight ? 'hull-highlighted' : ''}`}
+                            className={`hull ${highlight ? 'hull-highlighted' : ''}`}
                             d={roundedHull(hull.points)}
                             onClick={(e) => {
                                 if (e.altKey) removeSelection(selection.url)

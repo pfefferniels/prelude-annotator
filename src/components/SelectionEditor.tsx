@@ -33,54 +33,43 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
 
     return (
         <>
-            <Paper sx={{
-                paddingLeft: '1rem',
-                paddingRight: '1rem'
-            }}>
-                <IconButton>
-                    <ChevronRight onClick={() => setSelection(undefined)} />
-                </IconButton>
-
-                <Divider />
-
-                <h5 style={{ marginBottom: '0' }}>Selection {urlAsLabel(selection.url)}</h5>
+            <Typography>Selection: <span style={{ color: 'gray' }}>{urlAsLabel(selection.url)}</span></Typography>
 
 
-                <Stack spacing={1}>
-                    <Accordion elevation={1}>
-                        <AccordionSummary>affects {selection.refs.length} notes</AccordionSummary>
-                        <AccordionDetails>
-                            <List dense>
-                                {selection.refs.map(ref => {
-                                    return (
-                                        <ListItem
-                                            secondaryAction={
-                                                editable && (
-                                                    <IconButton onClick={() => {
-                                                        const refs = selection.refs
-                                                        refs.splice(refs.findIndex(r => r === ref), 1)
-                                                        setSelection({
-                                                            url: selection.url,
-                                                            refs: selection.refs
-                                                        })
-                                                    }}>
-                                                        <Delete />
-                                                    </IconButton>
-                                                )
-                                            }
-                                            key={`selection_editor_${ref}`}>
-                                            <ListItemText primary={isSelection(ref) ? ref.url : ref} />
-                                        </ListItem>
-                                    )
-                                })}
-                            </List>
-                        </AccordionDetails>
-                    </Accordion>
+            <Stack spacing={1}>
+                <Accordion elevation={1}>
+                    <AccordionSummary>affects {selection.refs.length} notes</AccordionSummary>
+                    <AccordionDetails>
+                        <List dense>
+                            {selection.refs.map(ref => {
+                                return (
+                                    <ListItem
+                                        secondaryAction={
+                                            editable && (
+                                                <IconButton onClick={() => {
+                                                    const refs = selection.refs
+                                                    refs.splice(refs.findIndex(r => r === ref), 1)
+                                                    setSelection({
+                                                        url: selection.url,
+                                                        refs: selection.refs
+                                                    })
+                                                }}>
+                                                    <Delete />
+                                                </IconButton>
+                                            )
+                                        }
+                                        key={`selection_editor_${ref}`}>
+                                        <ListItemText primary={isSelection(ref) ? ref.url : ref} />
+                                    </ListItem>
+                                )
+                            })}
+                        </List>
+                    </AccordionDetails>
+                </Accordion>
 
-                    <Typography>Attributes</Typography>
-                    <E13List forSelection={selection} />
-                </Stack>
-            </Paper >
+                <Typography>Attributes</Typography>
+                <E13List forSelection={selection} />
+            </Stack>
         </>
     )
 }

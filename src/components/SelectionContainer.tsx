@@ -1,7 +1,7 @@
 import { asUrl, buildThing, createThing, getPodOwner, getPodUrlAll, getResourceInfo, getSolidDataset, getSourceUrl, getThing, hasResourceInfo, removeThing, saveSolidDatasetAt, setThing, UrlString, WithServerResourceInfo } from "@inrupt/solid-client"
 import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
 import { Drawer } from "@mui/material"
-import { useContext, useEffect, useState } from "react"
+import { MutableRefObject, RefObject, useContext, useEffect, useState } from "react"
 import { SelectionContext } from "../context/SelectionContext"
 import { Selection } from "../types/Selection"
 import { SelectionEditor } from "./SelectionEditor"
@@ -12,12 +12,13 @@ import { crm } from "../helpers/namespaces"
 import { EventEmitter } from "../helpers/EventEmitter"
 import { ScoreSurfaceContext } from "../context/ScoreSurfaceContext"
 import { AnalysisContext } from "../context/AnalysisContext"
+import { createPortal } from "react-dom"
 
 /**
  * Manages the selections of a particular analytical layer
  * by displaying overlays and the selection editor.
  */
-export const SelectionContainer = ({ selections }: { selections: Selection[] }) => {
+export const SelectionContainer = ({ selections, panel }: { selections: Selection[], panel: MutableRefObject<HTMLDivElement | undefined> }) => {
     const { session } = useSession()
     const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
     const { editable, analysisUrl, availableE13s: e13s } = useContext(AnalysisContext)
@@ -186,7 +187,7 @@ export const SelectionContainer = ({ selections }: { selections: Selection[] }) 
         saveSelection(activeSelection)
     }
 
-    console.log('hullContainer=', hullContainer)
+    console.log('panel.current=', panel.current)
 
     return (
         <SelectionContext.Provider value={{
@@ -196,14 +197,13 @@ export const SelectionContainer = ({ selections }: { selections: Selection[] }) 
                 toHighlight && setSecondaryActiveSelection(toHighlight)
             }
         }}>
-            <Drawer
-                variant='persistent'
-                open={activeSelection !== undefined}
-                anchor='right'>
+
+            {panel.current && createPortal((
                 <SelectionEditor
                     selection={activeSelection}
-                    setSelection={setActiveSelection} />
-            </Drawer>
+                    setSelection={setActiveSelection} />),
+                panel.current
+            )}
 
             {hullContainer && [...selections].map(selection => {
                 return (

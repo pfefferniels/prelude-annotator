@@ -1,13 +1,12 @@
-import { getProfileAll, getStringNoLocale, getThing, getWebIdDataset } from "@inrupt/solid-client";
+import { getStringNoLocale, getThing, getWebIdDataset } from "@inrupt/solid-client";
 import { FOAF } from "@inrupt/vocab-common-rdf";
-import { Delete, Remove, Save } from "@mui/icons-material";
+import { Delete, Save } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import { Accordion, AccordionDetails, AccordionSummary, Button, FormControl, FormLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 import { Stack } from "@mui/system";
 import { useContext, useEffect, useState } from "react";
 import { AnalysisContext } from "../context/AnalysisContext";
 import { Argumentation, Belief, BeliefValue, beliefValues } from "../types/Belief";
-import { E13 } from "../types/E13";
 import { E13Picker } from "./E13Picker";
 
 interface ArgumentationProps {
@@ -87,7 +86,10 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation, removeAr
                                             <E13Picker
                                                 open={e13PickerOpen}
                                                 onReady={(e13) => {
-                                                    if (!e13) return
+                                                    if (!e13) {
+                                                        setE13PickerOpen(false)
+                                                        return
+                                                    }
                                                     setBeliefs(beliefs => {
                                                         const newBeliefs = beliefs.slice()
                                                         newBeliefs[i].that = e13.url
