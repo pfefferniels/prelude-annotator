@@ -1,15 +1,15 @@
-import { asUrl, buildThing, createSolidDataset, createThing, getPodOwner, getPodUrlAll, getPodUrlAllFrom, getResourceInfo, getSolidDataset, getThingAll, getUrl, getUrlAll, saveSolidDatasetAt, setThing, UrlString } from "@inrupt/solid-client";
+import { asUrl, buildThing, createSolidDataset, createThing, getPodUrlAll, getSolidDataset, getThingAll, getUrl, getUrlAll, saveSolidDatasetAt, setThing, UrlString } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
 import { RDF } from "@inrupt/vocab-common-rdf";
-import { Add, Create, OpenInFull, OpenInNew, OpenInNewOff, OpenInNewOffOutlined } from "@mui/icons-material";
-import { Button, Divider, Drawer, FormControl, IconButton, InputLabel, List, MenuItem, OutlinedInput, Select, SelectChangeEvent, Typography } from "@mui/material";
+import { Add, OpenInNew } from "@mui/icons-material";
+import { Button, Drawer, List, Typography } from "@mui/material";
 import { Stack } from "@mui/system";
 import { useEffect, useState } from "react";
 import { v4 } from "uuid";
-import { crm, frbroo } from "../helpers/namespaces";
+import { crm, frbroo } from "../../helpers/namespaces";
 import { AnalysisEditor } from "./AnalysisEditor";
 import { AnalysisListItem } from "./AnalysisListItem";
-import { fetchPublicAnalyses } from "../helpers/fetchPublicAnalyses";
+import { fetchPublicAnalyses } from "../../helpers/fetchPublicAnalyses";
 
 interface AnalysisSelector {
     open: boolean
@@ -162,6 +162,5 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
             />
         </Drawer>
     );
-};
-
+}
 

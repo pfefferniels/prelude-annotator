@@ -1,17 +1,16 @@
-import { asUrl, buildThing, createThing, getPodOwner, getPodUrlAll, getResourceInfo, getSolidDataset, getSourceUrl, getThing, hasResourceInfo, removeThing, saveSolidDatasetAt, setThing, UrlString, WithServerResourceInfo } from "@inrupt/solid-client"
-import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
-import { Drawer } from "@mui/material"
-import { MutableRefObject, RefObject, useContext, useEffect, useState } from "react"
-import { SelectionContext } from "../context/SelectionContext"
-import { Selection } from "../types/Selection"
+import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getThing, hasResourceInfo, removeThing, saveSolidDatasetAt, setThing, UrlString } from "@inrupt/solid-client"
+import { useSession } from "@inrupt/solid-ui-react"
+import { MutableRefObject, useContext, useEffect, useState } from "react"
+import { SelectionContext } from "../../context/SelectionContext"
+import { Selection } from "../../types/Selection"
 import { SelectionEditor } from "./SelectionEditor"
 import { SelectionHull } from "./SelectionHull"
 import { RDF, DCTERMS } from "@inrupt/vocab-common-rdf"
 import { v4 } from "uuid"
-import { crm } from "../helpers/namespaces"
-import { EventEmitter } from "../helpers/EventEmitter"
-import { ScoreSurfaceContext } from "../context/ScoreSurfaceContext"
-import { AnalysisContext } from "../context/AnalysisContext"
+import { crm } from "../../helpers/namespaces"
+import { EventEmitter } from "../../helpers/EventEmitter"
+import { ScoreSurfaceContext } from "../../context/ScoreSurfaceContext"
+import { AnalysisContext } from "../../context/AnalysisContext"
 import { createPortal } from "react-dom"
 
 /**
@@ -20,8 +19,7 @@ import { createPortal } from "react-dom"
  */
 export const SelectionContainer = ({ selections, panel }: { selections: Selection[], panel: MutableRefObject<HTMLDivElement | undefined> }) => {
     const { session } = useSession()
-    const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
-    const { editable, analysisUrl, availableE13s: e13s } = useContext(AnalysisContext)
+    const { analysisThing, analysisDataset: dataset, updateDataset, editable, availableE13s: e13s } = useContext(AnalysisContext)
     const { workUrl, scoreIsReady } = useContext(ScoreSurfaceContext)
 
     const [hullContainer, setHullContainer] = useState<SVGGElement>()
@@ -32,12 +30,11 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
         if (dataset &&
             hasResourceInfo(dataset) &&
             editable) {
-            console.log('assigned!')
             EventEmitter.subscribe('start-new-selection', startNewSelection)
             EventEmitter.subscribe('remove-from-active-selection', removeFromActiveSelection)
             EventEmitter.subscribe('expand-active-selection', expandActiveSelection)
         }
-    }, [dataset])
+    }, [dataset, editable])
 
     useEffect(() => {
         if (!scoreIsReady) return
@@ -100,17 +97,16 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
             selectionThing.addUrl(crm('P106_is_composed_of'), `${workUrl}#${ref}`)
         })
 
-        const analysis = getThing(dataset, analysisUrl)
-        if (!analysis) return
+        if (!analysisThing) return
 
-        const updatedAnalysis = buildThing(analysis)
+        const updatedAnalysis = buildThing(analysisThing)
             .addUrl(crm('P16_used_specific_object'), selection.url)
 
         let modifiedDataset = setThing(dataset, selectionThing.build())
         modifiedDataset = setThing(modifiedDataset, updatedAnalysis.build())
 
         const savedDataset = await saveSolidDatasetAt(getSourceUrl(modifiedDataset), modifiedDataset, { fetch: session.fetch as any });
-        setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
+        updateDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
     }
 
     const startNewSelection = (ref: string) => {
@@ -169,7 +165,7 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
             })
 
         const savedDataset = await saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any })
-        setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
+        updateDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
         console.log('Selection succesfully removed from your personal dataset')
     }
 

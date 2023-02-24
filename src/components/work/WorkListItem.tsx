@@ -1,14 +1,10 @@
-import { Access, AgentAccess, asUrl, getAgentAccess, getFileWithAcl, getPodUrlAll, getPodUrlAllFrom, getPublicAccess, getResourceAcl, getSolidDataset, getSolidDatasetWithAcl, getSourceUrl, getStringNoLocale, getThing, getUrl, getWebIdDataset, hasAccessibleAcl, Thing, universalAccess, Url, UrlString } from "@inrupt/solid-client";
+import { asUrl, getAgentAccess, getFileWithAcl, getPublicAccess, getStringNoLocale, Thing } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
-import { FOAF } from "@inrupt/vocab-common-rdf";
-import { Edit, Publish, Share } from "@mui/icons-material";
-import { Avatar, Checkbox, Divider, IconButton, ListItem, ListItemAvatar, ListItemButton, ListItemText } from "@mui/material";
+import { Edit, Share } from "@mui/icons-material";
+import { Divider, IconButton, ListItem, ListItemButton, ListItemText } from "@mui/material";
 import { useEffect, useState } from "react";
-import { crm } from "../helpers/namespaces";
-import { stringToColour } from "../helpers/string2color";
-import { urlAsLabel } from "./E13Summary";
-import { ShareAnalysisDialog } from "./ShareAnalysisDialog"
-import { ShareWorkDialog } from "./ShareWorkDialog";
+import { crm } from "../../helpers/namespaces";
+import { ShareWorkDialog } from './ShareWorkDialog';
 
 export interface WorkListItemProps {
     work: Thing

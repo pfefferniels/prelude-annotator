@@ -1,21 +1,19 @@
-import { asUrl, buildThing, createThing, getAgentAccess, getDate, getPodOwner, getPodUrlAll, getSolidDataset, getSolidDatasetWithAcl, getSourceUrl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, saveSolidDatasetAt, setThing, SolidDataset, Thing, universalAccess, UrlString } from "@inrupt/solid-client"
-import { DatasetContext, useSession } from "@inrupt/solid-ui-react"
+import { asUrl, getAgentAccess, getDate, getSolidDataset, getSolidDatasetWithAcl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, SolidDataset, Thing, UrlString } from "@inrupt/solid-client"
+import { useSession } from "@inrupt/solid-ui-react"
 import { RDF, DCTERMS } from "@inrupt/vocab-common-rdf"
-import { createRef, useEffect, useRef, useState } from "react"
-import { v4 } from "uuid"
-import { crminf, crm } from "../helpers/namespaces"
-import { Ontology } from "../helpers/Ontology"
-import { Argumentation, Belief, BeliefValue } from "../types/Belief"
-import { E13 } from "../types/E13"
-import { Selection } from "../types/Selection"
-import { SelectionContainer } from "./SelectionContainer"
-import availableTreatises from "./availableTreatises.json"
-import { AnalysisContext } from "../context/AnalysisContext"
-import { stringToColour } from "../helpers/string2color"
-import { toE13 } from "../mappings/mapE13"
-import { ArgumentationContainer } from "./ArgumentationContainer"
-import { Accordion, AccordionDetails, AccordionSummary, Divider, Drawer, IconButton, Tab, Tabs, Typography } from "@mui/material"
-import { ChevronRight } from "@mui/icons-material"
+import { useEffect, useRef, useState } from "react"
+import { crminf, crm } from "../../helpers/namespaces"
+import { Ontology } from "../../helpers/Ontology"
+import { Argumentation, Belief, BeliefValue } from "../../types/Belief"
+import { E13 } from "../../types/E13"
+import { Selection } from "../../types/Selection"
+import { SelectionContainer } from "../selection"
+import availableTreatises from "../availableTreatises.json"
+import { AnalysisContext } from "../../context/AnalysisContext"
+import { stringToColour } from "../../helpers/string2color"
+import { toE13 } from "../../mappings/mapE13"
+import { ArgumentationContainer } from "../argumentation"
+import { Drawer, Tab, Tabs } from "@mui/material"
 import { Box } from "@mui/system"
 
 interface TabPanelProps {
@@ -223,45 +221,43 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
     }, [dataset])
 
     return (
-        <DatasetContext.Provider value={{
-            solidDataset: dataset, setDataset
+        <AnalysisContext.Provider value={{
+            analysisDataset: dataset,
+            updateDataset: setDataset,
+            availableOntologies: ontologies,
+            availableArgumentations: argumentations,
+            availableE13s: e13s,
+            analysisThing: dataset && getThing(dataset, analysisUrl) || undefined,
+            editable,
+            color: stringToColour(analysisUrl.split('#').at(-1) || analysisUrl)
         }}>
-            <AnalysisContext.Provider value={{
-                availableOntologies: ontologies,
-                availableArgumentations: argumentations,
-                availableE13s: e13s,
-                analysisUrl,
-                editable,
-                color: stringToColour(analysisUrl.split('#').at(-1) || analysisUrl)
-            }}>
-                <Drawer
-                    variant='persistent'
-                    open={true}
-                    anchor='right'
-                    PaperProps={{
-                        sx: { width: "30vw" },
-                    }}
-                >
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                        <Tabs value={currentTab} onChange={(_: React.SyntheticEvent, newValue: number) => {
-                            setCurrentTab(newValue)
-                        }}>
-                            <Tab label="Selections" />
-                            <Tab label="Argumentations" />
-                        </Tabs>
-                    </Box>
+            <Drawer
+                variant='persistent'
+                open={true}
+                anchor='right'
+                PaperProps={{
+                    sx: { width: "30vw" },
+                }}
+            >
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    <Tabs value={currentTab} onChange={(_: React.SyntheticEvent, newValue: number) => {
+                        setCurrentTab(newValue)
+                    }}>
+                        <Tab label="Selections" />
+                        <Tab label="Argumentations" />
+                    </Tabs>
+                </Box>
 
-                    <TabPanel value={currentTab} index={0}>
-                        <div id="selection-panel" ref={(ref) => ref && (selectionPanelRef.current = ref)} />
-                    </TabPanel>
+                <TabPanel value={currentTab} index={0}>
+                    <div id="selection-panel" ref={(ref) => ref && (selectionPanelRef.current = ref)} />
+                </TabPanel>
 
-                    <TabPanel value={currentTab} index={1}>
-                        <ArgumentationContainer />
-                    </TabPanel>
+                <TabPanel value={currentTab} index={1}>
+                    <ArgumentationContainer />
+                </TabPanel>
 
-                    <SelectionContainer selections={selections} panel={selectionPanelRef} />
-                </Drawer>
-            </AnalysisContext.Provider >
-        </DatasetContext.Provider >
+                <SelectionContainer selections={selections} panel={selectionPanelRef} />
+            </Drawer>
+        </AnalysisContext.Provider>
     )
 }

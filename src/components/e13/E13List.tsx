@@ -1,25 +1,24 @@
-import { Delete, ExpandMore } from "@mui/icons-material";
-import { Accordion, AccordionActions, AccordionDetails, AccordionSummary, Button, IconButton, Typography } from "@mui/material";
+import { ExpandMore } from "@mui/icons-material";
+import { Accordion, AccordionDetails, AccordionSummary, Button, Typography } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { E13Editor } from "./E13Editor";
-import { DatasetContext, useSession } from "@inrupt/solid-ui-react";
+import { useSession } from "@inrupt/solid-ui-react";
 import { saveSolidDatasetAt, removeThing, getSourceUrl, getSolidDataset, hasResourceInfo, buildThing, createThing, setThing, getThing } from "@inrupt/solid-client";
-import { RDF, RDFS } from "@inrupt/vocab-common-rdf";
-import { urlAsLabel } from "./E13Summary";
-import { E13 } from "../types/E13";
+import { RDF } from "@inrupt/vocab-common-rdf";
+import { urlAsLabel } from "../../helpers/urlAsLabel";
+import { E13 } from "../../types/E13";
 import { Stack } from "@mui/system";
-import { crm, crminf, dcterms } from "../helpers/namespaces";
+import { crm, crminf, dcterms } from "../../helpers/namespaces";
 import { v4 } from "uuid";
-import { Selection } from "../types/Selection";
-import { AnalysisContext } from "../context/AnalysisContext";
+import { Selection } from "../../types/Selection";
+import { AnalysisContext } from "../../context/AnalysisContext";
 
 export interface E13ListProps {
     forSelection: Selection
 }
 
 export const E13List = ({ forSelection }: E13ListProps) => {
-    const { analysisUrl, availableE13s, editable } = useContext(AnalysisContext)
-    const { solidDataset: dataset, setDataset } = useContext(DatasetContext);
+    const { analysisThing, analysisDataset: dataset, updateDataset, availableE13s, editable } = useContext(AnalysisContext)
     const { session } = useSession();
 
     const [referredE13s, setReferredE13s] = useState<E13[]>([])
@@ -59,7 +58,7 @@ export const E13List = ({ forSelection }: E13ListProps) => {
         const sourceUrl = getSourceUrl(dataset);
         const modifiedDataset = removeThing(dataset, e13.url);
         const savedDataset = await saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any });
-        setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }));
+        updateDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }));
     }
 
     const saveE13 = async (e13: E13) => {
@@ -92,13 +91,12 @@ export const E13List = ({ forSelection }: E13ListProps) => {
             e13Thing.addUrl(crm('P177_assigned_property_of_type'), e13.property)
         }
 
-        const analysis = getThing(dataset, analysisUrl)
-        if (!analysis) {
-            console.log('Analysis', analysisUrl, 'not found in dataset')
+        if (!analysisThing) {
+            console.log('Analysis not yet present')
             return
         }
 
-        const updatedAnalysis = buildThing(analysis)
+        const updatedAnalysis = buildThing(analysisThing)
         updatedAnalysis.addUrl(crm('P3_consists_of'), e13.url)
 
         let modifiedDataset = setThing(dataset, e13Thing.build())
@@ -106,7 +104,7 @@ export const E13List = ({ forSelection }: E13ListProps) => {
 
         setSavingE13s(savings => [...savings, e13.url])
         const savedDataset = await saveSolidDatasetAt(sourceUrl, modifiedDataset, { fetch: session.fetch as any })
-        setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
+        updateDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
 
         setSavingE13s(savings => {
             const newSavings = savings.slice()

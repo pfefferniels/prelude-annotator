@@ -1,10 +1,10 @@
-import { asUrl, getPodUrlAll, getSolidDataset, getStringNoLocale, getThingAll, getUrl, getUrlAll, Thing, Url, UrlString } from "@inrupt/solid-client";
+import { asUrl, getPodUrlAll, getSolidDataset, getThingAll, getUrlAll, Thing, Url, UrlString } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
 import { RDF } from "@inrupt/vocab-common-rdf";
-import { Edit, Upload } from "@mui/icons-material";
-import { Button, Drawer, IconButton, List, ListItem, ListItemText } from "@mui/material";
+import { Upload } from "@mui/icons-material";
+import { Button, Drawer, List } from "@mui/material";
 import { useEffect, useState } from "react";
-import { crm, frbroo } from "../helpers/namespaces";
+import { frbroo } from "../../helpers/namespaces";
 import { WorkDialog } from "./WorkDialog";
 import { WorkListItem } from "./WorkListItem";
 

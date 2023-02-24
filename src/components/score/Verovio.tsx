@@ -1,7 +1,7 @@
-import { MutableRefObject, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import verovio from "verovio";
-import { EventEmitter } from "../helpers/EventEmitter";
-import newVerovio from "../helpers/loadVerovio";
+import { EventEmitter } from "../../helpers/EventEmitter";
+import newVerovio from "../../helpers/loadVerovio";
 
 interface VerovioProps {
   mei: string,
@@ -30,13 +30,15 @@ export default function Verovio({
   }, [svg])
 
   const render = useCallback(() => {
-    const pages = [];
-    const pageCount = vrvToolkit!.getPageCount();
-    for (let i = 1; i <= pageCount; i++) {
+    if (!vrvToolkit) return
+
+    const pages = []
+    const pageCount = vrvToolkit.getPageCount()
+    for (let i=1; i<=pageCount; i++) {
       pages.push(vrvToolkit!.renderToSVG(i));
     }
-    setSvg(pages.join("\n"));
-  }, [setSvg, vrvToolkit]);
+    setSvg(pages.join('\n'))
+  }, [setSvg, vrvToolkit])
 
   const options = useCallback(
     () => ({
@@ -52,16 +54,18 @@ export default function Verovio({
       svgHtml5: true,
     }),
     [pageWidth],
-  );
+  )
 
   useEffect(() => {
-    (async function init() {
-      setSvg("Loading Verovio...");
-      const vrvToolkit = await newVerovio();
-      vrvToolkit.setOptions(options());
-      setVrvToolkit(vrvToolkit);
-      setSvg("Verovio ready.");
-    })();
+    const loadVerovio = async () => {
+      setSvg('loading verovio …')
+      const vrvToolkit = await newVerovio()
+      vrvToolkit.setOptions(options())
+      setVrvToolkit(vrvToolkit)
+      setSvg('verovio is ready')
+    }
+
+    loadVerovio()
   }, [setVrvToolkit, options]);
 
   useEffect(() => {

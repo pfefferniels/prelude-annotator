@@ -2,7 +2,7 @@ import { ToggleButton, ToggleButtonGroup } from "@mui/material"
 import { useEffect, useState } from "react"
 import Verovio from "./Verovio"
 import { Stack } from "@mui/system"
-import { tab2cmn } from "../helpers/tab2cmn"
+import { tab2cmn } from "../../helpers/tab2cmn"
 import { useSession } from "@inrupt/solid-ui-react"
 import { getFile } from "@inrupt/solid-client"
 

@@ -1,11 +1,14 @@
-import { UrlString } from "@inrupt/solid-client"
+import { SolidDataset, Thing, UrlString } from "@inrupt/solid-client"
 import { createContext } from "react"
 import { Ontology } from "../helpers/Ontology"
 import { Argumentation } from "../types/Belief"
 import { E13 } from "../types/E13"
 
 type AnalysisContextType = {
-    analysisUrl: UrlString,
+    analysisDataset?: SolidDataset,
+    updateDataset: (modifiedDataset: SolidDataset) => void,
+    analysisThing?: Thing,
+
     availableArgumentations: Argumentation[]
     availableE13s: E13[],
     availableOntologies: Ontology[]
@@ -14,7 +17,8 @@ type AnalysisContextType = {
 }
 
 export const AnalysisContext = createContext<AnalysisContextType>({
-    analysisUrl: '',
+    updateDataset: (_) => {},
+
     availableArgumentations: [],
     availableE13s: [],
     availableOntologies: [],

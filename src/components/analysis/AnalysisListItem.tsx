@@ -1,12 +1,12 @@
-import { Access, AgentAccess, getAgentAccess, getPublicAccess, getSolidDataset, getSolidDatasetWithAcl, getSourceUrl, getStringNoLocale, getThing, getUrl, getWebIdDataset, hasAccessibleAcl, universalAccess, UrlString } from "@inrupt/solid-client";
+import { getPublicAccess, getSolidDataset, getSolidDatasetWithAcl, getSourceUrl, getStringNoLocale, getThing, getUrl, getWebIdDataset, hasAccessibleAcl, UrlString } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
 import { FOAF } from "@inrupt/vocab-common-rdf";
-import { Publish, Share } from "@mui/icons-material";
+import { Share } from "@mui/icons-material";
 import { Avatar, Checkbox, Divider, IconButton, ListItem, ListItemAvatar, ListItemButton, ListItemText } from "@mui/material";
 import { useEffect, useState } from "react";
-import { crm } from "../helpers/namespaces";
-import { stringToColour } from "../helpers/string2color";
-import { urlAsLabel } from "./E13Summary";
+import { crm } from "../../helpers/namespaces";
+import { stringToColour } from "../../helpers/string2color";
+import { urlAsLabel } from "../../helpers/urlAsLabel";
 import { ShareAnalysisDialog } from "./ShareAnalysisDialog"
 
 export interface AnalysisListItemProps {

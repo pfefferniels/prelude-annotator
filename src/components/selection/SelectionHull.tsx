@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Selection } from "../types/Selection";
+import { Selection } from "../../types/Selection";
 import { createPortal } from 'react-dom';
-import { roundedHull } from "../helpers/roundedHull";
+import { roundedHull } from "../../helpers/roundedHull";
 import { UrlString } from "@inrupt/solid-client";
-import { AnalysisContext } from "../context/AnalysisContext";
+import { AnalysisContext } from "../../context/AnalysisContext";
 
 interface SelectionOverlayProps {
     selection: Selection

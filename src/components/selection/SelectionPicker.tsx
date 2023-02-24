@@ -1,9 +1,9 @@
 import { UrlString } from "@inrupt/solid-client";
 import { Drawer, List, ListItem, ListItemText } from "@mui/material";
 import { useContext, useState } from "react";
-import { SelectionContext } from "../context/SelectionContext";
-import { Selection } from "../types/Selection";
-import { urlAsLabel } from "./E13Summary";
+import { SelectionContext } from "../../context/SelectionContext";
+import { Selection } from "../../types/Selection";
+import { urlAsLabel } from "../../helpers/urlAsLabel";
 
 interface SelectionPickerProps {
     open: boolean,

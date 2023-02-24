@@ -1,11 +1,11 @@
-import { asUrl, buildThing, createThing, getPodUrlAll, getSolidDataset, getSourceUrl, getStringNoLocale, getThing, getUrl, hasResourceInfo, overwriteFile, saveSolidDatasetAt, setStringNoLocale, setThing, setUrl, SolidDataset, Thing } from "@inrupt/solid-client";
-import { DatasetContext, useSession } from "@inrupt/solid-ui-react";
+import { asUrl, buildThing, createThing, getPodUrlAll, getSolidDataset, getSourceUrl, getStringNoLocale, getUrl, hasResourceInfo, overwriteFile, saveSolidDatasetAt, setThing, SolidDataset, Thing } from "@inrupt/solid-client";
+import { useSession } from "@inrupt/solid-ui-react";
 import { RDF, RDFS } from "@inrupt/vocab-common-rdf";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, FormGroup, Switch, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { v4 } from "uuid";
-import { crm, crmdig, frbroo } from "../helpers/namespaces";
+import { crm, crmdig, frbroo } from "../../helpers/namespaces";
 
 interface WorkDialogProps {
     open: boolean

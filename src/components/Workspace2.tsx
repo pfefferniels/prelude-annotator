@@ -2,12 +2,10 @@ import { UrlString } from "@inrupt/solid-client"
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material"
 import { useState } from "react"
 import { ScoreSurfaceContext } from "../context/ScoreSurfaceContext"
-import { ThingFromDataset } from "../types/ThingFromDataset"
-import { AnalysisSelector } from "./AnalysisSelector"
-import { AnalyticalLayer } from "./AnalyticalLayer"
-import { Evaluation } from "./Evaluation"
-import { ScoreSurface } from "./ScoreSurface"
-import { WorkSelector } from "./WorkSelector"
+import { AnalyticalLayer, AnalysisSelector } from "./analysis"
+import { Evaluation } from "./statistics/Evaluation"
+import { ScoreSurface } from "./score/ScoreSurface"
+import { WorkSelector } from "./work"
 
 export const Workspace2 = () => {
     const [scoreIsReady, setScoreIsReady] = useState(0)

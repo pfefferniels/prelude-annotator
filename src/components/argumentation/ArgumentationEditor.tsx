@@ -5,9 +5,9 @@ import { LoadingButton } from "@mui/lab";
 import { Accordion, AccordionDetails, AccordionSummary, Button, FormControl, FormLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 import { Stack } from "@mui/system";
 import { useContext, useEffect, useState } from "react";
-import { AnalysisContext } from "../context/AnalysisContext";
-import { Argumentation, Belief, BeliefValue, beliefValues } from "../types/Belief";
-import { E13Picker } from "./E13Picker";
+import { AnalysisContext } from "../../context/AnalysisContext";
+import { Argumentation, Belief, BeliefValue, beliefValues } from "../../types/Belief";
+import { E13Picker } from "../e13";
 
 interface ArgumentationProps {
     argumentation: Argumentation

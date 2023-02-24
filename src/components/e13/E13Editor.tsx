@@ -1,22 +1,16 @@
-import { asUrl, buildThing, createThing, getSolidDataset, getSourceIri, getSourceUrl, getThing, getUrlAll, hasResourceInfo, removeThing, removeUrl, saveSolidDatasetAt, setThing, UrlString } from "@inrupt/solid-client"
-import { DCTERMS, RDF } from "@inrupt/vocab-common-rdf"
+import { UrlString } from "@inrupt/solid-client"
+import { RDF } from "@inrupt/vocab-common-rdf"
 import { Delete, Save } from "@mui/icons-material"
 import LoadingButton from "@mui/lab/LoadingButton"
-import { Button, DialogActions, FormControl, InputLabel, MenuItem, Paper, Select, TextField } from "@mui/material"
+import { Button, DialogActions, FormControl, InputLabel, MenuItem, Paper, Select } from "@mui/material"
 import { Stack } from "@mui/system"
 import { useContext, useEffect, useState } from "react"
-import { Ontology } from "../helpers/Ontology"
-import { E13 } from "../types/E13"
-import { SelectionContext } from "../context/SelectionContext"
-import { Argumentation } from "../types/Belief"
-import { crm, crminf } from "../helpers/namespaces"
-import { ArgumentationEditor } from "./ArgumentationEditor"
-import { DatasetContext, SessionContext, useSession } from "@inrupt/solid-ui-react"
-import { Selection } from "../types/Selection"
-import { AnalysisContext } from "../context/AnalysisContext"
-import { v4 } from "uuid"
-import { ScoreSurfaceContext } from "../context/ScoreSurfaceContext"
-import { SelectionPicker } from "./SelectionPicker"
+import { Ontology } from "../../helpers/Ontology"
+import { E13 } from "../../types/E13"
+import { Argumentation } from "../../types/Belief"
+import { Selection } from "../../types/Selection"
+import { AnalysisContext } from "../../context/AnalysisContext"
+import { SelectionPicker } from "../selection"
 
 interface E13EditorProps {
     selectionUrl: string
@@ -36,9 +30,7 @@ export const E13Editor = ({
     saveE13,
     removeE13
 }: E13EditorProps) => {
-    const { session } = useSession()
-    const { solidDataset: dataset, setDataset } = useContext(DatasetContext)
-    const { analysisUrl, availableArgumentations, availableOntologies, editable } = useContext(AnalysisContext)
+    const { availableArgumentations, availableOntologies, editable } = useContext(AnalysisContext)
 
     const [referredArgumentations, setReferredArgumentations] = useState<Argumentation[]>()
 
@@ -82,88 +74,6 @@ export const E13Editor = ({
                 })
         )
     }, [availableArgumentations])
-
-    const saveArgumentation = async (argumentation: Argumentation) => {
-        if (!dataset || !hasResourceInfo(dataset)) return
-
-        // stores the given argumentation into the personal POD
-        const argumentationBuilder =
-            buildThing(createThing({ url: argumentation.url }))
-                .addUrl(RDF.type, crminf('I1_Argumentation'))
-                .addUrl(crm('P14_carried_out_by'), argumentation.carriedOutBy)
-                .addStringNoLocale(crm('P3_has_note'), argumentation.note)
-
-        let modifiedDataset = dataset
-        argumentation.concluded.map(belief => {
-            return buildThing(createThing(belief.url !== '' ? {
-                url: belief.url
-            } : undefined))
-                .addUrl(RDF.type, crminf('I2_Belief'))
-                .addDate(DCTERMS.created, belief.time)
-                .addDate(DCTERMS.modified, new Date(Date.now()))
-                .addUrl(crminf('J4_that'), `${getSourceUrl(dataset)}#${belief.that}`)
-                .addStringNoLocale(crminf('J5_holds_to_be'), belief.holdsToBe)
-                .addStringNoLocale(crm('P3_has_note'), belief.note)
-                .build()
-        }).forEach(concludingBelief => {
-            modifiedDataset = setThing(modifiedDataset, concludingBelief)
-            argumentationBuilder.addUrl(crminf('J2_concluded_that'), concludingBelief)
-        })
-
-        const analysis = getThing(dataset, analysisUrl)
-        if (!analysis) {
-            console.log('Analysis', analysisUrl, 'not found in dataset')
-            return
-        }
-
-        const updatedAnalysis = buildThing(analysis)
-        updatedAnalysis.addUrl(crm('P3_consists_of'), argumentation.url)
-
-        modifiedDataset = setThing(modifiedDataset, argumentationBuilder.build())
-        modifiedDataset = setThing(modifiedDataset, updatedAnalysis.build())
-
-        const savedDataset = await saveSolidDatasetAt(getSourceUrl(dataset), modifiedDataset, { fetch: session.fetch as any })
-        setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
-    }
-
-    const removeArgumentation = async (argumentation: Argumentation) => {
-        if (!dataset || !hasResourceInfo(dataset)) return
-        const argumentationToRemove = getThing(dataset, argumentation.url)
-        const beliefsToRemove = argumentation.concluded.map(belief => {
-            return getThing(dataset, belief.url) || null
-        })
-            .filter(thing => thing !== null)
-
-        // first remove the argumentation itself
-        let modifiedDataset = dataset
-        if (argumentationToRemove) {
-            modifiedDataset = removeThing(dataset, argumentationToRemove)
-        }
-
-        // and then all the associated belief values
-        beliefsToRemove.forEach(beliefThing => {
-            modifiedDataset = removeThing(modifiedDataset, beliefThing!)
-        })
-
-        const savedDataset = await saveSolidDatasetAt(getSourceUrl(dataset), modifiedDataset, { fetch: session.fetch as any })
-        setDataset(await getSolidDataset(getSourceUrl(savedDataset), { fetch: session.fetch as any }))
-    }
-
-    const createArgumentation = () => {
-        if (!dataset || !hasResourceInfo(dataset)) return
-        saveArgumentation({
-            url: `${getSourceUrl(dataset)}#${v4()}`,
-            carriedOutBy: session.info.webId || '',
-            note: '',
-            concluded: [{
-                url: '',
-                time: new Date(Date.now()),
-                that: e13.url,
-                holdsToBe: 'true',
-                note: ''
-            }]
-        })
-    }
 
     return (
         <Paper style={{ minWidth: '200px', maxWidth: '350px', padding: '0.5rem' }}>

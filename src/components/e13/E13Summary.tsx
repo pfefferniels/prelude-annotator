@@ -1,12 +1,5 @@
-import { RDF } from "@inrupt/vocab-common-rdf";
-import { E13 } from "../types/E13";
-
-export const urlAsLabel = (url: string) => {
-    if (!url.length) return ''
-    if (url === RDF.type) return 'a'
-
-    return url.split(/(#|\/)/).at(-1)
-}
+import { E13 } from "../../types/E13";
+import { urlAsLabel } from '../../helpers/urlAsLabel'
 
 interface E13SummaryProps {
     e13: E13

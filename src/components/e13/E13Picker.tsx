@@ -3,13 +3,12 @@ import { useSession } from "@inrupt/solid-ui-react";
 import { RDF } from "@inrupt/vocab-common-rdf";
 import { Button, CircularProgress, Drawer, List, ListItem, ListItemText } from "@mui/material"
 import { useContext, useEffect, useState } from "react";
-import { AnalysisContext } from "../context/AnalysisContext";
-import { ScoreSurfaceContext } from "../context/ScoreSurfaceContext";
-import { SelectionContext } from "../context/SelectionContext";
-import { crm } from "../helpers/namespaces";
-import { toE13 } from "../mappings/mapE13";
-import { E13 } from "../types/E13";
-import { urlAsLabel } from "./E13Summary";
+import { ScoreSurfaceContext } from "../../context/ScoreSurfaceContext";
+import { SelectionContext } from "../../context/SelectionContext";
+import { crm } from "../../helpers/namespaces";
+import { toE13 } from "../../mappings/mapE13";
+import { E13 } from "../../types/E13";
+import { urlAsLabel } from "../../helpers/urlAsLabel";
 
 interface E13PickerProps {
     open: boolean
