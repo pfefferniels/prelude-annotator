@@ -1,8 +1,8 @@
 import { UrlString } from "@inrupt/solid-client"
 import { RDF } from "@inrupt/vocab-common-rdf"
-import { Delete, Save } from "@mui/icons-material"
+import { AddLink, ArrowForward, ArrowRight, ArrowRightAlt, Delete, LinkSharp, Save } from "@mui/icons-material"
 import LoadingButton from "@mui/lab/LoadingButton"
-import { Button, DialogActions, FormControl, InputLabel, MenuItem, Paper, Select } from "@mui/material"
+import { Button, DialogActions, FormControl, IconButton, InputLabel, Link, MenuItem, Paper, Select, Tooltip } from "@mui/material"
 import { Stack } from "@mui/system"
 import { useContext, useEffect, useState } from "react"
 import { Ontology } from "../../helpers/Ontology"
@@ -11,6 +11,7 @@ import { Argumentation } from "../../types/Belief"
 import { Selection } from "../../types/Selection"
 import { AnalysisContext } from "../../context/AnalysisContext"
 import { SelectionPicker } from "../selection"
+import { SelectionContext } from "../../context/SelectionContext"
 
 interface E13EditorProps {
     selectionUrl: string
@@ -30,6 +31,7 @@ export const E13Editor = ({
     saveE13,
     removeE13
 }: E13EditorProps) => {
+    const { highlightSelection, setActiveSelection } = useContext(SelectionContext)
     const { availableArgumentations, availableOntologies, editable } = useContext(AnalysisContext)
 
     const [referredArgumentations, setReferredArgumentations] = useState<Argumentation[]>()
@@ -76,7 +78,7 @@ export const E13Editor = ({
     }, [availableArgumentations])
 
     return (
-        <Paper style={{ minWidth: '200px', maxWidth: '350px', padding: '0.5rem' }}>
+        <div style={{ minWidth: '200px', maxWidth: '350px' }}>
             <Stack spacing={2}>
                 <FormControl variant='standard'>
                     <InputLabel>According to …</InputLabel>
@@ -102,39 +104,40 @@ export const E13Editor = ({
 
                 {currentTreatise && (
                     <>
-                        <Stack direction='row'>
-                            <FormControl variant='standard'>
-                                <InputLabel>the selection …</InputLabel>
-                                <Select
-                                    disabled={!editable}
-                                    style={{ minWidth: '200px' }}
-                                    size='small'
-                                    value={property}
-                                    onChange={(e) => {
-                                        setProperty(e.target.value)
-                                        setExpectedRange(currentTreatise.rangeOfProperty(e.target.value))
-                                    }}>
-                                    <MenuItem value={RDF.type}>is a</MenuItem>
+                        <Stack direction='row' alignItems='end'>
+                            {editable && (
+                                <FormControl variant='standard'>
+                                    <InputLabel>the selection …</InputLabel>
+                                    <Select
+                                        style={{ minWidth: '150px' }}
+                                        size='small'
+                                        value={property}
+                                        onChange={(e) => {
+                                            setProperty(e.target.value)
+                                            setExpectedRange(currentTreatise.rangeOfProperty(e.target.value))
+                                        }}>
+                                        <MenuItem value={RDF.type}>is a</MenuItem>
 
-                                    {availableDomains
-                                        .map(assignedClass => currentTreatise.propertiesWithDomain(assignedClass))
-                                        .flat()
-                                        .filter((item, i, arr) => {
-                                            // filter out duplicates
-                                            return arr.findIndex(other => other.uri === item.uri) === i
-                                        })
-                                        .map(property => {
-                                            return (
-                                                <MenuItem
-                                                    key={`property_${property.uri}`}
-                                                    value={property.uri}>
-                                                    {property.label}
-                                                </MenuItem>
-                                            )
-                                        })
-                                    }
-                                </Select>
-                            </FormControl>
+                                        {availableDomains
+                                            .map(assignedClass => currentTreatise.propertiesWithDomain(assignedClass))
+                                            .flat()
+                                            .filter((item, i, arr) => {
+                                                // filter out duplicates
+                                                return arr.findIndex(other => other.uri === item.uri) === i
+                                            })
+                                            .map(property => {
+                                                return (
+                                                    <MenuItem
+                                                        key={`property_${property.uri}`}
+                                                        value={property.uri}>
+                                                        {property.label}
+                                                    </MenuItem>
+                                                )
+                                            })
+                                        }
+                                    </Select>
+                                </FormControl>
+                            )}
 
                             {property === RDF.type ? (
                                 <FormControl variant='standard'>
@@ -142,7 +145,7 @@ export const E13Editor = ({
 
                                     <Select
                                         disabled={!editable}
-                                        sx={{ minWidth: 200 }}
+                                        sx={{ minWidth: '150px' }}
                                         size='small'
                                         value={attribute}
                                         onChange={(e) => setAttribute(e.target.value)}>
@@ -158,57 +161,73 @@ export const E13Editor = ({
                                     </Select>
                                 </FormControl>
                             ) :
-                                <Stack>
-                                    {editable && <Button onClick={() => setAssignSelectionOpen(true)}>assign {expectedRange?.split('/').at(-1) || 'selection'}</Button>}
-                                    <div>{typeof attribute === "string" ? attribute : attribute.url.split('#').at(-1)}</div>
+                                <>
+                                    {typeof attribute === "string"
+                                        ? <div>attribute</div>
+                                        : <Button
+                                            startIcon={<ArrowRightAlt />}
+                                            onMouseOver={() => {
+                                                highlightSelection(attribute.url)
+                                            }}
+                                            onClick={() => {
+                                                setActiveSelection(attribute.url)
+                                            }}>Selection</Button>
+                                    }
+                                    {editable &&
+                                        <Tooltip title={`Assign ${expectedRange?.split('/').at(-1) || 'Selection'}`}>
+                                            <IconButton onClick={() => setAssignSelectionOpen(true)}>
+                                                <AddLink />
+                                            </IconButton>
+                                        </Tooltip>
+                                    }
 
                                     <SelectionPicker
                                         setAttribute={setAttribute}
                                         open={assignSelectionOpen}
                                         onClose={() => setAssignSelectionOpen(false)} />
-                                </Stack>
+                                </>
                             }
                         </Stack>
                     </>
                 )}
             </Stack>
 
-            <DialogActions>
-                <LoadingButton
-                    disabled={!editable}
-                    color='secondary'
-                    variant='outlined'
-                    onClick={() => removeE13(e13)}>
-                    <Delete />
-                </LoadingButton>
+            {editable &&
+                <DialogActions>
+                    <LoadingButton
+                        color='secondary'
+                        variant='outlined'
+                        onClick={() => removeE13(e13)}>
+                        <Delete />
+                    </LoadingButton>
 
-                <LoadingButton
-                    disabled={!editable}
-                    startIcon={<Save />}
-                    loading={saving}
-                    variant='contained'
-                    onClick={async () => {
-                        await saveE13({
-                            // The URL remains the same
-                            url: e13.url,
+                    <LoadingButton
+                        startIcon={<Save />}
+                        loading={saving}
+                        variant='contained'
+                        onClick={async () => {
+                            await saveE13({
+                                // The URL remains the same
+                                url: e13.url,
 
-                            // all other properties have been changed
-                            // and are read from the respective states
-                            property,
-                            attribute,
-                            treatise: currentTreatise?.url || '',
-                            comment,
+                                // all other properties have been changed
+                                // and are read from the respective states
+                                property,
+                                attribute,
+                                treatise: currentTreatise?.url || '',
+                                comment,
 
-                            // the target will be ignored by the saveE13 
-                            // routine and replaced by the current selection
-                            target: ''
-                        })
-                        onClose()
-                    }}>
-                    Save
-                </LoadingButton>
-            </DialogActions>
-        </Paper >
+                                // the target will be ignored by the saveE13 
+                                // routine and replaced by the current selection
+                                target: ''
+                            })
+                            onClose()
+                        }}>
+                        Save
+                    </LoadingButton>
+                </DialogActions>
+            }
+        </div>
     )
 }
 

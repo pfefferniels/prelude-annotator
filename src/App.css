@@ -12,6 +12,26 @@
     stroke: black;
 }
 
+.hull-secondary-highlighted {
+    stroke-width: 80;
+    stroke: black;
+    stroke-dasharray: 30;
+}
+
+@keyframes blinking {
+  0% {
+      fill-opacity: 0;
+  }
+
+  50% {
+      fill-opacity: 1;
+  }
+
+  100% {
+      fill-opacity: 0;
+  }
+}
+
 .hull-removing {
     fill: lightgray;
     stroke: gray;

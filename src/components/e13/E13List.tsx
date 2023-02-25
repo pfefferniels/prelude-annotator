@@ -3,7 +3,7 @@ import { Accordion, AccordionDetails, AccordionSummary, Button, Typography } fro
 import { useContext, useEffect, useState } from "react";
 import { E13Editor } from "./E13Editor";
 import { useSession } from "@inrupt/solid-ui-react";
-import { saveSolidDatasetAt, removeThing, getSourceUrl, getSolidDataset, hasResourceInfo, buildThing, createThing, setThing, getThing } from "@inrupt/solid-client";
+import { saveSolidDatasetAt, removeThing, getSourceUrl, getSolidDataset, hasResourceInfo, buildThing, createThing, setThing, getThing, UrlString } from "@inrupt/solid-client";
 import { RDF } from "@inrupt/vocab-common-rdf";
 import { urlAsLabel } from "../../helpers/urlAsLabel";
 import { E13 } from "../../types/E13";
@@ -160,7 +160,7 @@ export const E13List = ({ forSelection }: E13ListProps) => {
                                     </b>
                                 </Typography>
 
-                                {e13.attribute && <Typography> {urlAsLabel(typeof e13.attribute === "string" ? e13.attribute : e13.attribute.url)}</Typography>}
+                                {e13.property === RDF.type && <Typography> {urlAsLabel(e13.attribute as UrlString)}</Typography>}
                             </AccordionSummary>
 
                             <AccordionDetails>

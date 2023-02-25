@@ -1,7 +1,7 @@
 import { UrlString } from "@inrupt/solid-client"
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material"
 import { useState } from "react"
-import { ScoreSurfaceContext } from "../context/ScoreSurfaceContext"
+import { ScoreContext } from "../context/ScoreSurfaceContext"
 import { AnalyticalLayer, AnalysisSelector } from "./analysis"
 import { Evaluation } from "./statistics/Evaluation"
 import { ScoreSurface } from "./score/ScoreSurface"
@@ -44,11 +44,11 @@ export const Workspace2 = () => {
                 <>
                     <ScoreSurface meiUrl={score} onReady={() => setScoreIsReady(ready => ready + 1)} />
 
-                    <ScoreSurfaceContext.Provider value={{ workUrl: score, analyses, scoreIsReady }}>
+                    <ScoreContext.Provider value={{ workUrl: score, analyses, scoreIsReady }}>
                         {analyses.map(analysis => (
                             <AnalyticalLayer key={`analysis_${analysis}`} analysisUrl={analysis} />
                         ))}
-                    </ScoreSurfaceContext.Provider>
+                    </ScoreContext.Provider>
                 </>
             )}
 

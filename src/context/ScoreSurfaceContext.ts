@@ -7,7 +7,7 @@ type ScoreSurfaceContextType = {
     scoreIsReady: number
 }
 
-export const ScoreSurfaceContext = createContext<ScoreSurfaceContextType>({
+export const ScoreContext = createContext<ScoreSurfaceContextType>({
     analyses: [],
     workUrl: '',
     scoreIsReady: 0

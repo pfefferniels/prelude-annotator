@@ -1,10 +1,10 @@
-import { asUrl, getAgentAccess, getDate, getSolidDataset, getSolidDatasetWithAcl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, SolidDataset, Thing, UrlString } from "@inrupt/solid-client"
+import { asUrl, getAgentAccess, getSolidDataset, getSolidDatasetWithAcl, getThing, getThingAll, getUrl, getUrlAll, SolidDataset, Thing, UrlString } from "@inrupt/solid-client"
 import { useSession } from "@inrupt/solid-ui-react"
-import { RDF, DCTERMS } from "@inrupt/vocab-common-rdf"
+import { RDF } from "@inrupt/vocab-common-rdf"
 import { useEffect, useRef, useState } from "react"
 import { crminf, crm } from "../../helpers/namespaces"
 import { Ontology } from "../../helpers/Ontology"
-import { Argumentation, Belief, BeliefValue } from "../../types/Belief"
+import { Argumentation } from "../../types/Belief"
 import { E13 } from "../../types/E13"
 import { Selection } from "../../types/Selection"
 import { SelectionContainer } from "../selection"
@@ -15,6 +15,9 @@ import { toE13 } from "../../mappings/mapE13"
 import { ArgumentationContainer } from "../argumentation"
 import { Drawer, Tab, Tabs } from "@mui/material"
 import { Box } from "@mui/system"
+import { toBelief } from "../../mappings/mapBelief"
+import { toArgumentation } from "../../mappings/mapArgumentation"
+import { toSelection } from "../../mappings/mapSelection"
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -124,28 +127,16 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
                         getUrlAll(analysis, crm('P3_consists_of')).includes(asUrl(thing))
                 })
                 .map((argumentationThing): Argumentation => {
-                    return {
-                        url: asUrl(argumentationThing),
-                        carriedOutBy: getUrl(argumentationThing, crm('P14_carried_out_by')) || '',
-                        concluded:
-                            things
-                                .filter(thing => {
-                                    const conclusions = getUrlAll(argumentationThing, crminf('J2_concluded_that'))
-                                    // get all the I2 Beliefs
-                                    return getUrlAll(thing, RDF.type).includes(crminf('I2_Belief')) &&
-                                        conclusions.includes(asUrl(thing))
-                                })
-                                .map((thing): Belief => {
-                                    return {
-                                        url: asUrl(thing),
-                                        time: getDate(thing, DCTERMS.created) || new Date(),
-                                        that: getUrl(thing, crminf('J4_that'))?.split('#').at(-1) || '',
-                                        holdsToBe: getStringNoLocale(thing, crminf('J5_holds_to_be')) as BeliefValue,
-                                        note: getStringNoLocale(thing, crm('P3_has_note')) || ''
-                                    }
-                                }),
-                        note: getStringNoLocale(argumentationThing, crm('P3_has_note')) || ''
-                    }
+                    const conclusions =
+                        things
+                            .filter(thing => {
+                                const conclusions = getUrlAll(argumentationThing, crminf('J2_concluded_that'))
+                                // get all the I2 Beliefs
+                                return getUrlAll(thing, RDF.type).includes(crminf('I2_Belief')) &&
+                                    conclusions.includes(asUrl(thing))
+                            })
+                            .map(toBelief)
+                    return toArgumentation(argumentationThing, conclusions)
                 })
         )
     }
@@ -166,7 +157,20 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
                     return getUrlAll(thing, RDF.type).includes(crm('E13_Attribute_Assignment')) &&
                         getUrlAll(analysis, crm('P3_consists_of')).includes(asUrl(thing))
                 })
-                .map(toE13)
+                .map(thing => {
+                    // does the E13 point to a selection?
+                    let selection: (Selection | undefined) = undefined
+                    const assigned = getUrl(thing, crm('P141_assigned'))
+                    if (assigned) {
+                        const assignedSelection = getThing(dataset, assigned)
+                        if (assignedSelection && 
+                            getUrlAll(assignedSelection, RDF.type).includes(crm('E90_Symbolic_Object'))) {
+                            selection = toSelection(assignedSelection)
+                        }
+                    }
+
+                    return toE13(thing, selection)
+                })
         )
     }
 
@@ -186,24 +190,9 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
                     return getUrlAll(thing, RDF.type).includes(crm('E90_Symbolic_Object')) &&
                         getUrlAll(analysis, crm('P16_used_specific_object')).includes(asUrl(thing))
                 })
-                .map(thing => {
-                    console.log('found!!')
-                    const selectionUrl = asUrl(thing)
-                    const refs = getUrlAll(thing, crm('P106_is_composed_of')).map(url => url.split('#').at(-1) || '')
-
-                    return {
-                        url: selectionUrl,
-                        refs: refs
-                    }
-                })
+                .map(toSelection)
         )
     }
-
-    console.log('something changed')
-
-    useEffect(() => {
-        console.log('panel changed', selectionPanelRef)
-    }, [selectionPanelRef])
 
     // Whenever something in the dataset changes,
     // usually through some user action in one of the 
@@ -211,10 +200,7 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
     useEffect(() => {
         if (!dataset) return
 
-        console.log('dataset changed')
-
         const things = getThingAll(dataset)
-        console.log('update dataset from', things.length)
         updateSelections(things)
         updateE13s(things)
         updateArgumentations(things)
@@ -227,7 +213,7 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
             availableOntologies: ontologies,
             availableArgumentations: argumentations,
             availableE13s: e13s,
-            analysisThing: dataset && getThing(dataset, analysisUrl) || undefined,
+            analysisThing: (dataset && getThing(dataset, analysisUrl)) || undefined,
             editable,
             color: stringToColour(analysisUrl.split('#').at(-1) || analysisUrl)
         }}>

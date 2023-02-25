@@ -31,7 +31,12 @@ export const SelectionPicker = ({ open, onClose, setAttribute }: SelectionPicker
                             highlightSelection(selection.url);
                         }}
                         key={`selection_picker_${selection.url}`}>
-                        <ListItemText primary={urlAsLabel(selection.url)} />
+                        <ListItemText
+                            onMouseOver={() => {
+                                setHovered(selection);
+                                highlightSelection(selection.url);
+                            }}
+                            primary={urlAsLabel(selection.url)} />
                     </ListItem>
                 );
             }))}

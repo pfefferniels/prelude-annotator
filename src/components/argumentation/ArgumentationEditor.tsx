@@ -123,6 +123,7 @@ export const ArgumentationEditor = ({ argumentation, saveArgumentation, removeAr
                                     <FormControl>
                                         <FormLabel>because of …</FormLabel>
                                         <TextField
+                                            multiline
                                             disabled={!editable}
                                             value={belief.note}
                                             onChange={(e) => {

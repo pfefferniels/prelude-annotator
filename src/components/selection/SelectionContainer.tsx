@@ -9,7 +9,7 @@ import { RDF, DCTERMS } from "@inrupt/vocab-common-rdf"
 import { v4 } from "uuid"
 import { crm } from "../../helpers/namespaces"
 import { EventEmitter } from "../../helpers/EventEmitter"
-import { ScoreSurfaceContext } from "../../context/ScoreSurfaceContext"
+import { ScoreContext } from "../../context/ScoreSurfaceContext"
 import { AnalysisContext } from "../../context/AnalysisContext"
 import { createPortal } from "react-dom"
 
@@ -20,7 +20,7 @@ import { createPortal } from "react-dom"
 export const SelectionContainer = ({ selections, panel }: { selections: Selection[], panel: MutableRefObject<HTMLDivElement | undefined> }) => {
     const { session } = useSession()
     const { analysisThing, analysisDataset: dataset, updateDataset, editable, availableE13s: e13s } = useContext(AnalysisContext)
-    const { workUrl, scoreIsReady } = useContext(ScoreSurfaceContext)
+    const { workUrl, scoreIsReady } = useContext(ScoreContext)
 
     const [hullContainer, setHullContainer] = useState<SVGGElement>()
     const [activeSelection, setActiveSelection] = useState<Selection>()
@@ -171,6 +171,7 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
 
     const removeFromActiveSelection = (ref: string) => {
         if (!activeSelection) return
+
         setActiveSelection(activeSelection => {
             if (!activeSelection) return
             const newRefs = activeSelection.refs
@@ -190,28 +191,40 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
             availableSelections: selections,
             highlightSelection: (targetUrl: UrlString) => {
                 const toHighlight = selections.find(selection => selection.url === targetUrl)
-                toHighlight && setSecondaryActiveSelection(toHighlight)
+                if (!toHighlight) return
+                setSecondaryActiveSelection(toHighlight)
+                setTimeout(() => {
+                    setSecondaryActiveSelection(undefined)
+                }, 2000)
+            },
+            setActiveSelection: (selectionUrl: UrlString) => {
+                const toSet = selections.find(selection => selection.url === selectionUrl)
+                toSet && setActiveSelection(toSet)
             }
         }}>
-
-            {panel.current && createPortal((
-                <SelectionEditor
-                    selection={activeSelection}
-                    setSelection={setActiveSelection} />),
-                panel.current
-            )}
-
-            {hullContainer && [...selections].map(selection => {
-                return (
-                    <SelectionHull
-                        key={`overlay_${selection.url}`}
-                        selection={selection}
-                        highlight={selection.url === secondaryActiveSelection?.url}
-                        setActiveSelection={setActiveSelection}
-                        removeSelection={removeSelection}
-                        svgBackground={hullContainer} />
+            {
+                panel.current && createPortal((
+                    <SelectionEditor
+                        selection={activeSelection}
+                        setSelection={setActiveSelection} />),
+                    panel.current
                 )
-            })}
-        </SelectionContext.Provider>
+            }
+
+            {
+                hullContainer && [...selections].map(selection => {
+                    return (
+                        <SelectionHull
+                            key={`overlay_${selection.url}`}
+                            selection={selection}
+                            highlight={selection.url === activeSelection?.url}
+                            secondaryHighlight={selection.url === secondaryActiveSelection?.url}
+                            setActiveSelection={setActiveSelection}
+                            removeSelection={removeSelection}
+                            svgBackground={hullContainer} />
+                    )
+                })
+            }
+        </SelectionContext.Provider >
     )
 }

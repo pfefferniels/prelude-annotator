@@ -8,6 +8,7 @@ import { AnalysisContext } from "../../context/AnalysisContext";
 interface SelectionOverlayProps {
     selection: Selection
     highlight: boolean
+    secondaryHighlight: boolean
     removeSelection: (url: UrlString) => void
     setActiveSelection: (selection: Selection) => void
     svgBackground: Element
@@ -27,6 +28,7 @@ type Hull = {
 export const SelectionHull = ({
     selection,
     highlight,
+    secondaryHighlight,
     removeSelection,
     setActiveSelection,
     svgBackground }: SelectionOverlayProps) => {
@@ -47,23 +49,24 @@ export const SelectionHull = ({
                     if (!el) return result
 
                     const systemId = el.closest('.system')?.getAttribute('data-id') || ''
+                    const bbox = el.getBBox()
 
-                    // start a new hull right in the beginning or
-                    // once we change the system
-                    if (result.length === 0 || systemId !== result.at(-1)?.systemId) {
+                    const existingLine = result.find(hull => hull.systemId === systemId)
+
+                    if (existingLine) {
+                        // if the is a hull aleady in that system, extend it
+                        existingLine.points = [
+                            ...existingLine.points,
+                            [bbox.x + 100, bbox.y + 100]
+                        ]
+                    }
+                    else {
+                        // create a new hull if we are in a new system
                         result.push({
-                            points: [],
+                            points: [[bbox.x + 100, bbox.y + 100]],
                             systemId: systemId
                         } as Hull)
                     }
-
-                    const currentHull = result.at(-1)!
-
-                    const bbox = el.getBBox()
-                    currentHull.points = [
-                        ...currentHull.points,
-                        [bbox.x + 100, bbox.y + 100]
-                    ]
 
                     return result
                 }, [] as Hull[])
@@ -76,8 +79,9 @@ export const SelectionHull = ({
                 return (
                     createPortal(
                         <path
+                            data-selection={selection.url}
                             fill={color}
-                            className={`hull ${highlight ? 'hull-highlighted' : ''}`}
+                            className={`hull ${highlight ? 'hull-highlighted' : ''} ${secondaryHighlight ? 'hull-secondary-highlighted' : ''}`}
                             d={roundedHull(hull.points)}
                             onClick={(e) => {
                                 if (e.altKey) removeSelection(selection.url)

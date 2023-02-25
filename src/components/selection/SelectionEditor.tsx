@@ -15,11 +15,6 @@ interface SelectionEditorProps {
 
 export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProps) => {
     const { editable } = useContext(AnalysisContext)
-    const { highlightSelection } = useContext(SelectionContext)
-
-    useEffect(() => {
-        selection && highlightSelection(selection.url)
-    }, [selection])
 
     if (!selection) {
         return <div>no selection specified</div>
