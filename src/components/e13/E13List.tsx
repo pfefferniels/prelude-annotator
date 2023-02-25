@@ -1,5 +1,5 @@
-import { ExpandMore } from "@mui/icons-material";
-import { Accordion, AccordionDetails, AccordionSummary, Button, Typography } from "@mui/material";
+import { ExpandMore, HighlightAlt } from "@mui/icons-material";
+import { Accordion, AccordionDetails, AccordionSummary, Button, IconButton, Typography } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { E13Editor } from "./E13Editor";
 import { useSession } from "@inrupt/solid-ui-react";
@@ -12,12 +12,14 @@ import { crm, crminf, dcterms } from "../../helpers/namespaces";
 import { v4 } from "uuid";
 import { Selection } from "../../types/Selection";
 import { AnalysisContext } from "../../context/AnalysisContext";
+import { SelectionContext } from "../../context/SelectionContext";
 
 export interface E13ListProps {
     forSelection: Selection
 }
 
 export const E13List = ({ forSelection }: E13ListProps) => {
+    const { highlightSelection, setActiveSelection } = useContext(SelectionContext)
     const { analysisThing, analysisDataset: dataset, updateDataset, availableE13s, editable } = useContext(AnalysisContext)
     const { session } = useSession();
 
@@ -154,13 +156,27 @@ export const E13List = ({ forSelection }: E13ListProps) => {
                             key={`selection_editor_${e13.url}`}>
                             <AccordionSummary
                                 expandIcon={<ExpandMore />}>
-                                <Typography>
-                                    <b>
+                                <Typography style={{ display: 'table' }}>
+                                    <b style={{ display: 'table-cell', verticalAlign: 'middle' }}>
                                         {urlAsLabel(e13.property) || <span style={{ color: '#f44336' }}>[New Attribute Assignment]</span>}
                                     </b>
                                 </Typography>
 
-                                {e13.property === RDF.type && <Typography> {urlAsLabel(e13.attribute as UrlString)}</Typography>}
+                                {e13.property === RDF.type
+                                    ? <Typography> {urlAsLabel(e13.attribute as UrlString)}</Typography>
+                                    : <IconButton
+                                        onMouseOver={() => {
+                                            highlightSelection((e13.attribute as Selection).url)
+                                        }}
+                                        onClick={(e) => {
+                                            // prevent the accordion from closing or opening
+                                            e.stopPropagation()
+                                            setActiveSelection((e13.attribute as Selection).url)
+                                        }}>
+                                        <HighlightAlt />
+                                    </IconButton>
+                                }
+
                             </AccordionSummary>
 
                             <AccordionDetails>

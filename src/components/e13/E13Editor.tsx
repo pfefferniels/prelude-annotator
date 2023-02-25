@@ -1,6 +1,6 @@
 import { UrlString } from "@inrupt/solid-client"
 import { RDF } from "@inrupt/vocab-common-rdf"
-import { AddLink, ArrowForward, ArrowRight, ArrowRightAlt, Delete, LinkSharp, Save } from "@mui/icons-material"
+import { AddLink, ArrowForward, ArrowRight, ArrowRightAlt, Delete, HighlightAlt, LinkSharp, Save } from "@mui/icons-material"
 import LoadingButton from "@mui/lab/LoadingButton"
 import { Button, DialogActions, FormControl, IconButton, InputLabel, Link, MenuItem, Paper, Select, Tooltip } from "@mui/material"
 import { Stack } from "@mui/system"
@@ -139,7 +139,7 @@ export const E13Editor = ({
                                 </FormControl>
                             )}
 
-                            {property === RDF.type ? (
+                            {property === RDF.type && editable ? (
                                 <FormControl variant='standard'>
                                     <InputLabel>Assigned Object</InputLabel>
 
@@ -162,23 +162,27 @@ export const E13Editor = ({
                                 </FormControl>
                             ) :
                                 <>
-                                    {typeof attribute === "string"
-                                        ? <div>attribute</div>
-                                        : <Button
-                                            startIcon={<ArrowRightAlt />}
-                                            onMouseOver={() => {
-                                                highlightSelection(attribute.url)
-                                            }}
-                                            onClick={() => {
-                                                setActiveSelection(attribute.url)
-                                            }}>Selection</Button>
-                                    }
                                     {editable &&
-                                        <Tooltip title={`Assign ${expectedRange?.split('/').at(-1) || 'Selection'}`}>
-                                            <IconButton onClick={() => setAssignSelectionOpen(true)}>
-                                                <AddLink />
-                                            </IconButton>
-                                        </Tooltip>
+                                        <>
+                                            {typeof attribute === "string"
+                                                ? <div>{attribute}</div>
+                                                : <IconButton
+                                                    onMouseOver={() => {
+                                                        highlightSelection(attribute.url)
+                                                    }}
+                                                    onClick={() => {
+                                                        setActiveSelection(attribute.url)
+                                                    }}>
+                                                    <HighlightAlt />
+                                                </IconButton>
+                                            }
+
+                                            <Tooltip title={`Assign ${expectedRange?.split('/').at(-1) || 'Selection'}`}>
+                                                <IconButton onClick={() => setAssignSelectionOpen(true)}>
+                                                    <AddLink />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </>
                                     }
 
                                     <SelectionPicker
