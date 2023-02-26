@@ -1,10 +1,9 @@
 import { Delete } from "@mui/icons-material"
 import { Accordion, AccordionDetails, AccordionSummary, IconButton, List, ListItem, ListItemText, Typography } from "@mui/material"
-import { useContext, useEffect } from "react"
+import { useContext } from "react"
 import { Selection, isSelection } from "../../types/Selection"
 import { Stack } from "@mui/system"
 import { E13List } from "../e13"
-import { SelectionContext } from "../../context/SelectionContext"
 import { urlAsLabel } from "../../helpers/urlAsLabel"
 import { AnalysisContext } from "../../context/AnalysisContext"
 
@@ -17,13 +16,12 @@ export const SelectionEditor = ({ selection, setSelection }: SelectionEditorProp
     const { editable } = useContext(AnalysisContext)
 
     if (!selection) {
-        return <div>no selection specified</div>
+        return <i>Click on a selection in the score to show details.</i>
     }
 
     return (
         <>
             <Typography>Selection: <span style={{ color: 'gray' }}>{urlAsLabel(selection.url)}</span></Typography>
-
 
             <Stack spacing={1}>
                 <Accordion elevation={1}>

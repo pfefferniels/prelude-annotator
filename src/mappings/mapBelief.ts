@@ -7,7 +7,7 @@ export const toBelief = (thing: Thing): Belief => {
     return {
         url: asUrl(thing),
         time: getDate(thing, DCTERMS.created) || new Date(),
-        that: getUrl(thing, crminf('J4_that'))?.split('#').at(-1) || '',
+        that: getUrl(thing, crminf('J4_that')) || '',
         holdsToBe: getStringNoLocale(thing, crminf('J5_holds_to_be')) as BeliefValue,
         note: getStringNoLocale(thing, crm('P3_has_note')) || ''
     }

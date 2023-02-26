@@ -1,17 +1,18 @@
 import { UrlString } from "@inrupt/solid-client"
 import { RDF } from "@inrupt/vocab-common-rdf"
-import { AddLink, ArrowForward, ArrowRight, ArrowRightAlt, Delete, HighlightAlt, LinkSharp, Save } from "@mui/icons-material"
+import { AddLink, Delete, HighlightAlt, Save } from "@mui/icons-material"
 import LoadingButton from "@mui/lab/LoadingButton"
-import { Button, DialogActions, FormControl, IconButton, InputLabel, Link, MenuItem, Paper, Select, Tooltip } from "@mui/material"
+import { AccordionActions, FormControl, IconButton, InputLabel, MenuItem, Select, Tooltip } from "@mui/material"
 import { Stack } from "@mui/system"
 import { useContext, useEffect, useState } from "react"
 import { Ontology } from "../../helpers/Ontology"
 import { E13 } from "../../types/E13"
-import { Argumentation } from "../../types/Belief"
 import { Selection } from "../../types/Selection"
 import { AnalysisContext } from "../../context/AnalysisContext"
 import { SelectionPicker } from "../selection"
 import { SelectionContext } from "../../context/SelectionContext"
+import { ReferredArgumentationContainer } from "../argumentation"
+
 
 interface E13EditorProps {
     selectionUrl: string
@@ -32,9 +33,7 @@ export const E13Editor = ({
     removeE13
 }: E13EditorProps) => {
     const { highlightSelection, setActiveSelection } = useContext(SelectionContext)
-    const { availableArgumentations, availableOntologies, editable } = useContext(AnalysisContext)
-
-    const [referredArgumentations, setReferredArgumentations] = useState<Argumentation[]>()
+    const { availableOntologies, editable } = useContext(AnalysisContext)
 
     const [currentTreatise, setCurrentTreatise] = useState<Ontology>()
     const [property, setProperty] = useState(e13.property)
@@ -44,8 +43,6 @@ export const E13Editor = ({
 
     const [assignSelectionOpen, setAssignSelectionOpen] = useState(false)
 
-    console.log('available argumentations', availableArgumentations)
-
     useEffect(() => {
         if (!e13) return
 
@@ -53,29 +50,13 @@ export const E13Editor = ({
         setAttribute(e13.attribute)
         setComment(e13.comment)
         setCurrentTreatise(availableOntologies.find(ontology => ontology.url === e13.treatise))
-    }, [e13])
+    }, [e13, availableOntologies])
 
     useEffect(() => {
         if (!currentTreatise || !availableDomains.length) return
 
         console.log(currentTreatise.propertiesWithDomain(availableDomains[0]))
     }, [currentTreatise, availableDomains])
-
-    useEffect(() => {
-        // Finds the argumentations which refer to the given E13
-        setReferredArgumentations(
-            availableArgumentations
-                .filter(argumentation => {
-                    // TODO: on the long term premises would have to
-                    // be considered as well, not only conclusions
-                    const referredBelief = argumentation.concluded.find(belief => {
-                        // console.log('belief that', belief.that, '===', e13.id, '?')
-                        return belief.that === e13.url.split('#').at(-1)
-                    })
-                    return referredBelief !== undefined
-                })
-        )
-    }, [availableArgumentations])
 
     return (
         <div style={{ minWidth: '200px', maxWidth: '350px' }}>
@@ -194,10 +175,12 @@ export const E13Editor = ({
                         </Stack>
                     </>
                 )}
+
+                {<ReferredArgumentationContainer e13={e13} />}
             </Stack>
 
             {editable &&
-                <DialogActions>
+                <AccordionActions>
                     <LoadingButton
                         color='secondary'
                         variant='outlined'
@@ -229,7 +212,7 @@ export const E13Editor = ({
                         }}>
                         Save
                     </LoadingButton>
-                </DialogActions>
+                </AccordionActions>
             }
         </div>
     )

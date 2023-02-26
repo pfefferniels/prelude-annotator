@@ -48,7 +48,7 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
             }
         }
         fetchPersonalDataset()
-    }, [session, session.info.isLoggedIn, session.info.webId])
+    }, [session])
 
     const saveToPod = async () => {
         // always upload MEI documents into the private pod 
@@ -77,7 +77,7 @@ export const WorkDialog = ({ open, onClose, thing }: WorkDialogProps) => {
                 modifiedDataset,
                 { fetch: session.fetch as any })
 
-            const updatedDataset = await getSolidDataset(
+            await getSolidDataset(
                 getSourceUrl(savedDataset),
                 { fetch: session.fetch as any })
 

@@ -5,17 +5,11 @@ import newVerovio from "../../helpers/loadVerovio";
 
 interface VerovioProps {
   mei: string,
-  // startNewSelection: (ref: string) => void
-  // expandActiveSelection: (ref: string) => void
-  // removeFromActiveSelection: (ref: string) => void
   onReady: () => void
 }
 
 export default function Verovio({
   mei,
-  // startNewSelection,
-  // expandActiveSelection,
-  // removeFromActiveSelection,
   onReady
 }: VerovioProps) {
 

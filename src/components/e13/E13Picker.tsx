@@ -3,7 +3,7 @@ import { useSession } from "@inrupt/solid-ui-react";
 import { RDF } from "@inrupt/vocab-common-rdf";
 import { Button, CircularProgress, Drawer, List, ListItem, ListItemText } from "@mui/material"
 import { useContext, useEffect, useState } from "react";
-import { ScoreContext } from "../../context/ScoreSurfaceContext";
+import { WorkspaceContext } from "../../context/ScoreSurfaceContext";
 import { SelectionContext } from "../../context/SelectionContext";
 import { crm } from "../../helpers/namespaces";
 import { toE13 } from "../../mappings/mapE13";
@@ -17,7 +17,7 @@ interface E13PickerProps {
 
 export const E13Picker = ({ open, onReady }: E13PickerProps) => {
     const { session } = useSession()
-    const { analyses } = useContext(ScoreContext)
+    const { analyses } = useContext(WorkspaceContext)
     const [availableE13s, setAvailableE13s] = useState<E13[]>([])
     const { highlightSelection } = useContext(SelectionContext)
     const [hovered, setHovered] = useState<E13>()

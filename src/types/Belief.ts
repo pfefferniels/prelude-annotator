@@ -1,10 +1,12 @@
+import { UrlString } from "@inrupt/solid-client"
+
 export const beliefValues = ['true', 'likely', 'questionable', 'false'] as const
 export type BeliefValue = typeof beliefValues[number]
 
 export interface Belief {
-    url: string
+    url: UrlString
     time: Date
-    that: string
+    that: UrlString
     holdsToBe: BeliefValue
     note: string
 }

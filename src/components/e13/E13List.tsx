@@ -1,4 +1,4 @@
-import { ExpandMore, HighlightAlt } from "@mui/icons-material";
+import { ExpandMore, HighlightAlt, LinkSharp } from "@mui/icons-material";
 import { Accordion, AccordionDetails, AccordionSummary, Button, IconButton, Typography } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { E13Editor } from "./E13Editor";
@@ -173,7 +173,7 @@ export const E13List = ({ forSelection }: E13ListProps) => {
                                             e.stopPropagation()
                                             setActiveSelection((e13.attribute as Selection).url)
                                         }}>
-                                        <HighlightAlt />
+                                        <LinkSharp />
                                     </IconButton>
                                 }
 

@@ -1,10 +1,9 @@
 import { asUrl, getAgentAccess, getSolidDataset, getSolidDatasetWithAcl, getThing, getThingAll, getUrl, getUrlAll, SolidDataset, Thing, UrlString } from "@inrupt/solid-client"
 import { useSession } from "@inrupt/solid-ui-react"
 import { RDF } from "@inrupt/vocab-common-rdf"
-import { useEffect, useRef, useState } from "react"
-import { crminf, crm } from "../../helpers/namespaces"
+import { useContext, useEffect, useState } from "react"
+import { crm } from "../../helpers/namespaces"
 import { Ontology } from "../../helpers/Ontology"
-import { Argumentation } from "../../types/Belief"
 import { E13 } from "../../types/E13"
 import { Selection } from "../../types/Selection"
 import { SelectionContainer } from "../selection"
@@ -12,47 +11,21 @@ import availableTreatises from "../availableTreatises.json"
 import { AnalysisContext } from "../../context/AnalysisContext"
 import { stringToColour } from "../../helpers/string2color"
 import { toE13 } from "../../mappings/mapE13"
-import { ArgumentationContainer } from "../argumentation"
-import { Drawer, Tab, Tabs } from "@mui/material"
-import { Box } from "@mui/system"
-import { toBelief } from "../../mappings/mapBelief"
-import { toArgumentation } from "../../mappings/mapArgumentation"
 import { toSelection } from "../../mappings/mapSelection"
-
-interface TabPanelProps {
-    children?: React.ReactNode;
-    index: number;
-    value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-    const { children, value, index, ...other } = props;
-
-    return (
-        <div
-            role="tabpanel"
-            hidden={value !== index}
-            id={`simple-tabpanel-${index}`}
-            aria-labelledby={`simple-tab-${index}`}
-            {...other}
-        >
-            <Box hidden={value !== index} sx={{ p: 3 }}>
-                {children}
-            </Box>
-
-        </div>
-    );
-}
+import { createPortal } from "react-dom"
+import { WorkspaceContext } from "../../context/ScoreSurfaceContext"
 
 interface AnalyticalLayerProps {
     analysisUrl: UrlString
+    active: boolean
 }
 
 /**
  * This class represents a particular analysis, whether personal
  * or public, as a layer on top of an MEI surface.
  */
-export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
+export const AnalyticalLayer = ({ analysisUrl, active }: AnalyticalLayerProps) => {
+    const { selectionPanel } = useContext(WorkspaceContext)
     const { session } = useSession()
 
     // from this point on, objects can be associated with one dataset 
@@ -64,11 +37,7 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
     const [ontologies, setOntologies] = useState<Ontology[]>([])
     const [selections, setSelections] = useState<Selection[]>([])
     const [e13s, setE13s] = useState<E13[]>([])
-    const [argumentations, setArgumentations] = useState<Argumentation[]>([])
     const [editable, setEditable] = useState(false)
-    const [currentTab, setCurrentTab] = useState(0)
-
-    const selectionPanelRef = useRef<HTMLDivElement>()
 
     useEffect(() => {
         // TODO: The used ontologies should also be deduced 
@@ -107,39 +76,7 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
         }
 
         fetchDataset()
-    }, [analysisUrl])
-
-    // maps a `Thing` from the database onto the correponding typescript object
-    const updateArgumentations = (things: Thing[]) => {
-        if (!dataset) {
-            console.log('No dataset given to update the selections')
-            return
-        }
-
-        const analysis = getThing(dataset, analysisUrl)
-        if (!analysis) return
-
-        setArgumentations(
-            things
-                .filter(thing => {
-                    // get all the I1 Argumentations in the datasets
-                    return getUrlAll(thing, RDF.type).includes(crminf('I1_Argumentation')) &&
-                        getUrlAll(analysis, crm('P3_consists_of')).includes(asUrl(thing))
-                })
-                .map((argumentationThing): Argumentation => {
-                    const conclusions =
-                        things
-                            .filter(thing => {
-                                const conclusions = getUrlAll(argumentationThing, crminf('J2_concluded_that'))
-                                // get all the I2 Beliefs
-                                return getUrlAll(thing, RDF.type).includes(crminf('I2_Belief')) &&
-                                    conclusions.includes(asUrl(thing))
-                            })
-                            .map(toBelief)
-                    return toArgumentation(argumentationThing, conclusions)
-                })
-        )
-    }
+    }, [analysisUrl, session])
 
     const updateE13s = (things: Thing[]) => {
         if (!dataset) {
@@ -163,7 +100,7 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
                     const assigned = getUrl(thing, crm('P141_assigned'))
                     if (assigned) {
                         const assignedSelection = getThing(dataset, assigned)
-                        if (assignedSelection && 
+                        if (assignedSelection &&
                             getUrlAll(assignedSelection, RDF.type).includes(crm('E90_Symbolic_Object'))) {
                             selection = toSelection(assignedSelection)
                         }
@@ -203,7 +140,6 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
         const things = getThingAll(dataset)
         updateSelections(things)
         updateE13s(things)
-        updateArgumentations(things)
     }, [dataset])
 
     return (
@@ -211,39 +147,13 @@ export const AnalyticalLayer = ({ analysisUrl }: AnalyticalLayerProps) => {
             analysisDataset: dataset,
             updateDataset: setDataset,
             availableOntologies: ontologies,
-            availableArgumentations: argumentations,
             availableE13s: e13s,
             analysisThing: (dataset && getThing(dataset, analysisUrl)) || undefined,
             editable,
             color: stringToColour(analysisUrl.split('#').at(-1) || analysisUrl)
         }}>
-            <Drawer
-                variant='persistent'
-                open={true}
-                anchor='right'
-                PaperProps={{
-                    sx: { width: "30vw" },
-                }}
-            >
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                    <Tabs value={currentTab} onChange={(_: React.SyntheticEvent, newValue: number) => {
-                        setCurrentTab(newValue)
-                    }}>
-                        <Tab label="Selections" />
-                        <Tab label="Argumentations" />
-                    </Tabs>
-                </Box>
-
-                <TabPanel value={currentTab} index={0}>
-                    <div id="selection-panel" ref={(ref) => ref && (selectionPanelRef.current = ref)} />
-                </TabPanel>
-
-                <TabPanel value={currentTab} index={1}>
-                    <ArgumentationContainer />
-                </TabPanel>
-
-                <SelectionContainer selections={selections} panel={selectionPanelRef} />
-            </Drawer>
+            {selectionPanel.current &&
+                <SelectionContainer selections={selections} active={active} />}
         </AnalysisContext.Provider>
     )
 }

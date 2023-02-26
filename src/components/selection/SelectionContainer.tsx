@@ -1,6 +1,6 @@
 import { asUrl, buildThing, createThing, getSolidDataset, getSourceUrl, getThing, hasResourceInfo, removeThing, saveSolidDatasetAt, setThing, UrlString } from "@inrupt/solid-client"
 import { useSession } from "@inrupt/solid-ui-react"
-import { MutableRefObject, useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { SelectionContext } from "../../context/SelectionContext"
 import { Selection } from "../../types/Selection"
 import { SelectionEditor } from "./SelectionEditor"
@@ -9,32 +9,33 @@ import { RDF, DCTERMS } from "@inrupt/vocab-common-rdf"
 import { v4 } from "uuid"
 import { crm } from "../../helpers/namespaces"
 import { EventEmitter } from "../../helpers/EventEmitter"
-import { ScoreContext } from "../../context/ScoreSurfaceContext"
+import { WorkspaceContext } from "../../context/ScoreSurfaceContext"
 import { AnalysisContext } from "../../context/AnalysisContext"
 import { createPortal } from "react-dom"
 
 /**
  * Manages the selections of a particular analytical layer
- * by displaying overlays and the selection editor.
+ * by displaying hulls and an editor for the attribute assignments
+ * once a hull has been clicked.
  */
-export const SelectionContainer = ({ selections, panel }: { selections: Selection[], panel: MutableRefObject<HTMLDivElement | undefined> }) => {
+export const SelectionContainer = ({ selections, active }: { selections: Selection[], active: boolean }) => {
     const { session } = useSession()
     const { analysisThing, analysisDataset: dataset, updateDataset, editable, availableE13s: e13s } = useContext(AnalysisContext)
-    const { workUrl, scoreIsReady } = useContext(ScoreContext)
+    const { workUrl, scoreIsReady, activeSelection, setActiveSelection, setActiveLayer, selectionPanel } = useContext(WorkspaceContext)
 
     const [hullContainer, setHullContainer] = useState<SVGGElement>()
-    const [activeSelection, setActiveSelection] = useState<Selection>()
     const [secondaryActiveSelection, setSecondaryActiveSelection] = useState<Selection>()
 
     useEffect(() => {
         if (dataset &&
             hasResourceInfo(dataset) &&
-            editable) {
+            editable &&
+            active) {
             EventEmitter.subscribe('start-new-selection', startNewSelection)
             EventEmitter.subscribe('remove-from-active-selection', removeFromActiveSelection)
             EventEmitter.subscribe('expand-active-selection', expandActiveSelection)
         }
-    }, [dataset, editable])
+    }, [dataset, editable, active])
 
     useEffect(() => {
         if (!scoreIsReady) return
@@ -68,13 +69,7 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
         }, 1000)
     }, [scoreIsReady])
 
-    useEffect(() => {
-        // whenever the active selection changes, save it silently
-        activeSelection && saveSelection(activeSelection)
-    }, [activeSelection])
-
     const saveSelection = async (selection: Selection) => {
-        console.log('save', selection)
         if (!selection) return
 
         if (!dataset || !hasResourceInfo(dataset) || !editable) {
@@ -110,6 +105,8 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
     }
 
     const startNewSelection = (ref: string) => {
+        if (!active) return 
+
         console.log('start new selection')
         if (!session.info.isLoggedIn || !editable) {
             console.log('Cannot create a new selection without being logged in')
@@ -127,20 +124,21 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
             refs: [ref]
         }
         setActiveSelection(newSelection)
+        saveSelection(newSelection)
     }
 
     const expandActiveSelection = (ref: string) => {
-        console.log('expanding active selection')
-        if (!editable) return
+        if (!active) return
 
-        setActiveSelection(active => {
-            if (!active) return active
+        if (!editable || !activeSelection) return
 
-            return {
-                url: active.url,
-                refs: [...active.refs, ref]
-            }
-        })
+        const expandedSelection = {
+            url: activeSelection.url,
+            refs: [...activeSelection.refs, ref]
+        } as Selection
+
+        setActiveSelection(expandedSelection)
+        saveSelection(expandedSelection)
     }
 
     const removeSelection = async (selectionUrl: UrlString) => {
@@ -172,7 +170,7 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
     const removeFromActiveSelection = (ref: string) => {
         if (!activeSelection) return
 
-        setActiveSelection(activeSelection => {
+        setActiveSelection((activeSelection): Selection | undefined => {
             if (!activeSelection) return
             const newRefs = activeSelection.refs
             newRefs.splice(newRefs.findIndex(r => r === ref), 1)
@@ -183,8 +181,6 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
         })
         saveSelection(activeSelection)
     }
-
-    console.log('panel.current=', panel.current)
 
     return (
         <SelectionContext.Provider value={{
@@ -202,13 +198,10 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
                 toSet && setActiveSelection(toSet)
             }
         }}>
-            {
-                panel.current && createPortal((
-                    <SelectionEditor
-                        selection={activeSelection}
-                        setSelection={setActiveSelection} />),
-                    panel.current
-                )
+            {(activeSelection && active && selectionPanel.current) && 
+                createPortal(<SelectionEditor
+                    selection={activeSelection}
+                    setSelection={setActiveSelection} />, selectionPanel.current)
             }
 
             {
@@ -219,12 +212,15 @@ export const SelectionContainer = ({ selections, panel }: { selections: Selectio
                             selection={selection}
                             highlight={selection.url === activeSelection?.url}
                             secondaryHighlight={selection.url === secondaryActiveSelection?.url}
-                            setActiveSelection={setActiveSelection}
+                            setActiveSelection={(selection) => {
+                                setActiveSelection(selection)
+                                setActiveLayer(asUrl(analysisThing!))
+                            }}
                             removeSelection={removeSelection}
                             svgBackground={hullContainer} />
                     )
                 })
             }
-        </SelectionContext.Provider >
+        </SelectionContext.Provider>
     )
 }
