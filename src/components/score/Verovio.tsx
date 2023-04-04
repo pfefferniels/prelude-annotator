@@ -2,7 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import verovio from "verovio";
 import { EventEmitter } from "../../helpers/EventEmitter";
 import newVerovio from "../../helpers/loadVerovio";
-
+import { Midi } from '@tonejs/midi'
+import * as Tone from "tone";
+import { Button } from "@mui/material";
+import { PauseCircle, PlayCircle } from "@mui/icons-material";
 interface VerovioProps {
   mei: string,
   onReady: () => void
@@ -17,6 +20,10 @@ export default function Verovio({
   const [svg, setSvg] = useState('')
   const [pageWidth, setPageWidth] = useState(800);
 
+  const [midi, setMidi] = useState<Midi>()
+  const [playing, setPlaying] = useState(false)
+  const [synths, setSynths] = useState<any[]>([])
+
   useEffect(() => {
     if (!svg.length) return
 
@@ -28,10 +35,14 @@ export default function Verovio({
 
     const pages = []
     const pageCount = vrvToolkit.getPageCount()
-    for (let i=1; i<=pageCount; i++) {
+    for (let i = 1; i <= pageCount; i++) {
       pages.push(vrvToolkit!.renderToSVG(i));
     }
     setSvg(pages.join('\n'))
+
+    const base64Midi = vrvToolkit!.renderToMIDI()
+    const midiBuf = Uint8Array.from(window.atob(base64Midi), c => c.charCodeAt(0))
+    setMidi(new Midi(midiBuf))
   }, [setSvg, vrvToolkit])
 
   const options = useCallback(
@@ -77,16 +88,61 @@ export default function Verovio({
     const dataId = clickedElement?.getAttribute('data-id')
     if (!dataId) return
 
+    // play just the given note using Tone.js
+    const midiValues = vrvToolkit?.getMIDIValuesForElement(dataId)
+    console.log('midiValues = ', midiValues)
+    const synth = new Tone.Synth().toDestination();
+    synth.triggerAttackRelease(Tone.Frequency(midiValues?.pitch || 50, "midi").toFrequency(), "8n");
+
     if (e.shiftKey) EventEmitter.dispatch('expand-active-selection', dataId)
     else if (e.altKey) EventEmitter.dispatch('remove-from-active-selection', dataId)
-    else {
-      console.log('dispatch')
-      EventEmitter.dispatch('start-new-selection', dataId)
-    }
+    else EventEmitter.dispatch('start-new-selection', dataId)
   }
+
+  useEffect(() => {
+    if (!midi) return
+
+    if (playing) {
+      const now = Tone.now() + 0.5
+      midi.tracks.forEach((track) => {
+        //create a synth for each track
+        const synth = new Tone.PolySynth(Tone.Synth, {
+          envelope: {
+            attack: 0.02,
+            decay: 0.1,
+            sustain: 0.3,
+            release: 1,
+          },
+        }).toDestination()
+        synths.push(synth)
+        //schedule all of the events
+        track.notes.forEach((note) => {
+          synth.triggerAttackRelease(
+            note.name,
+            note.duration * 0.3,
+            note.time + now,
+            note.velocity
+          )
+        })
+      })
+    }
+    else {
+      //dispose the synth and make a new one
+      while (synths.length) {
+        const synth = synths.shift();
+        synth.disconnect();
+      }
+    }
+  }, [playing])
 
   return (
     <>
+      <Button onClick={() => setPlaying(!playing)}>
+        {playing
+          ? <PauseCircle />
+          : <PlayCircle />
+        }
+      </Button>
       <div
         style={{ width: '65vw' }}
         className='verovio'

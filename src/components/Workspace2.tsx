@@ -9,6 +9,7 @@ import { WorkSelector } from "./work"
 import { Selection } from "../types/Selection"
 import { Stack } from "@mui/system"
 import { stringToColour } from "../helpers/string2color"
+import { LoginForm } from "./Login"
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -58,12 +59,14 @@ export const Workspace2 = () => {
     return (
         <div id='workspace'>
             <header id='app-bar'>
-                <Button onClick={() => setScoreSelectorOpen(true)}>Open Work</Button>
-                <Button
-                    disabled={!score}
-                    onClick={() => setAnalysisSelectorOpen(true)}>Available Analyses</Button>
-                <Button onClick={() => setEvaluationsOpen(true)}>Show Statistical Review</Button>
                 <Stack direction='row'>
+                    <LoginForm />
+                    <Button onClick={() => setScoreSelectorOpen(true)}>Open Work</Button>
+                    <Button
+                        disabled={!score}
+                        onClick={() => setAnalysisSelectorOpen(true)}>Available Analyses</Button>
+                    <Button onClick={() => setEvaluationsOpen(true)}>Show Statistical Review</Button>
+
                     {analyses.map(analysis =>
                         <ListItemAvatar
                             onClick={() => {
@@ -76,7 +79,8 @@ export const Workspace2 = () => {
                                     bgcolor: stringToColour(analysis.split('#').at(-1) || analysis),
                                     borderWidth: analysis === activeLayer ? '4px' : '0px',
                                     borderColor: 'black',
-                                    borderStyle: 'solid'
+                                    borderStyle: 'solid',
+                                    boxSizing: 'border-box'
                                 }}
                             > </Avatar>
                         </ListItemAvatar>

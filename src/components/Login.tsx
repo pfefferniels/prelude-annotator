@@ -1,10 +1,12 @@
 import { CombinedDataProvider, LoginButton, LogoutButton, Text, useSession } from "@inrupt/solid-ui-react";
 import { FOAF } from "@inrupt/vocab-common-rdf";
-import { Button, CircularProgress, Paper } from "@mui/material";
+import { Login, Logout } from "@mui/icons-material";
+import { Button, CircularProgress, IconButton, Paper, Tooltip } from "@mui/material";
+import { Stack } from "@mui/system";
 
 function Profile() {
     const { session, sessionRequestInProgress } = useSession()
-    if (sessionRequestInProgress) return <CircularProgress/>
+    if (sessionRequestInProgress) return <CircularProgress />
 
     const webId = session.info.webId
 
@@ -12,7 +14,7 @@ function Profile() {
 
     return (
         <CombinedDataProvider datasetUrl={webId} thingUrl={webId}>
-            <span>Welcome, <Text property={FOAF.name} /></span>
+            <Button disabled><Text property={FOAF.name} /></Button>
         </CombinedDataProvider>
     )
 }
@@ -21,25 +23,33 @@ export function LoginForm() {
     const { session, sessionRequestInProgress } = useSession();
 
     return (
-        <Paper sx={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 1000, padding: '0.8rem' }}>
+        <>
             {session.info.isLoggedIn ?
-                <>
-                    <Profile />
-                    <LogoutButton>
-                        <Button>Log Out</Button>
-                    </LogoutButton>
-                </> :
+                <Paper>
+                    <Stack direction='row'>
+                        <LogoutButton>
+                            <Tooltip title='Logout'>
+                                <IconButton>
+                                    <Logout />
+                                </IconButton>
+                            </Tooltip>
+                        </LogoutButton>
+                        <Profile />
+                    </Stack>
+                </Paper> :
                 <>
                     <LoginButton
                         oidcIssuer='https://inrupt.net'
                         redirectUrl={window.location.href}
                         authOptions={{ clientName: 'Preludes Annotator' }}>
-                        <Button disabled={sessionRequestInProgress}>
-                            {sessionRequestInProgress ? <CircularProgress /> : "Log In"}
-                        </Button>
+                        <Tooltip title='Login'>
+                            <IconButton disabled={sessionRequestInProgress}>
+                                {sessionRequestInProgress ? <CircularProgress /> : <Login />}
+                            </IconButton>
+                        </Tooltip>
                     </LoginButton>
                 </>
             }
-        </Paper>
+        </>
     )
 }

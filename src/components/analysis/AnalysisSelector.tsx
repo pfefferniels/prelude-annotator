@@ -2,7 +2,7 @@ import { asUrl, buildThing, createSolidDataset, createThing, getPodUrlAll, getSo
 import { useSession } from "@inrupt/solid-ui-react";
 import { RDF } from "@inrupt/vocab-common-rdf";
 import { Add, OpenInNew } from "@mui/icons-material";
-import { Button, Drawer, List, Typography } from "@mui/material";
+import { Button, Drawer, List, Tooltip, Typography } from "@mui/material";
 import { Stack } from "@mui/system";
 import { useEffect, useState } from "react";
 import { v4 } from "uuid";
@@ -114,11 +114,19 @@ export const AnalysisSelector = ({ open, onClose, setAnalyses, forWork }: Analys
         <Drawer open={open} onClose={onClose}>
             <Typography sx={{ margin: '0.5rem' }}>Available Analyses</Typography>
             <Stack direction='row'>
-                <Button
-                    startIcon={<Add />}
-                    onClick={() => setCreateAnalysisOpen(true)}>
-                    Create
-                </Button>
+                <Tooltip
+                    title={
+                        session.info.isLoggedIn
+                            ? 'Creates a new analysis of the selected piece'
+                            : 'you need to be logged in to create a new analysis'}
+                >
+                    <Button
+                        disabled={!session.info.isLoggedIn}
+                        startIcon={<Add />}
+                        onClick={() => setCreateAnalysisOpen(true)}>
+                        Create
+                    </Button>
+                </Tooltip>
 
                 <Button
                     disabled={selectedExpressions.length === 0}

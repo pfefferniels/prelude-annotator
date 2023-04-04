@@ -9,7 +9,6 @@ const App = () => {
   return (
     <SessionProvider sessionId="prelude-annotator">
       <div className="App">
-        <LoginForm />
         <Workspace2 />
       </div>
     </SessionProvider>
