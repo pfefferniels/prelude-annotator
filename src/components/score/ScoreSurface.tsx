@@ -29,7 +29,7 @@ export const ScoreSurface = ({ meiUrl, onReady }: ScoreSurfaceProps) => {
             const blob = await getFile(meiUrl, { fetch: session.fetch as any })
             const text = await blob.text()
 
-            if (text.indexOf('<course') === -1) {
+            if (text.indexOf('tabGrp') === -1) {
                 setCmnMEI(text)
             }
             else {
