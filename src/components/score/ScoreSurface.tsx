@@ -20,29 +20,35 @@ export const ScoreSurface = ({ meiUrl, onReady }: ScoreSurfaceProps) => {
     const [cmnMEI, setCmnMEI] = useState('')
 
     useEffect(() => {
+        if (!tablatureMEI.length) setDispayMode('staff-notation')
+    }, [tablatureMEI, cmnMEI])
+
+    useEffect(() => {
         const fetchMEI = async () => {
             // load the score from the given URL
             const blob = await getFile(meiUrl, { fetch: session.fetch as any })
             const text = await blob.text()
 
-            // insert measures into it (for proper displaying in verovio)
-            const xslt = await (await fetch('insertMeasures.xsl')).text()
-            const xsltProcessor = new XSLTProcessor()
-            xsltProcessor.importStylesheet(new DOMParser().parseFromString(xslt, 'application/xml'))
-            const result = xsltProcessor.transformToDocument(new DOMParser().parseFromString(text, 'application/xml'))
+            if (text.indexOf('<course') === -1) {
+                setCmnMEI(text)
+            }
+            else {
+                // insert measures into it (for proper displaying in verovio)
+                const xslt = await (await fetch('insertMeasures.xsl')).text()
+                const xsltProcessor = new XSLTProcessor()
+                xsltProcessor.importStylesheet(new DOMParser().parseFromString(xslt, 'application/xml'))
+                const result = xsltProcessor.transformToDocument(new DOMParser().parseFromString(text, 'application/xml'))
 
-            const tabMEI = new XMLSerializer().serializeToString(result)
-            setTablatureMEI(tabMEI)
+                const tabMEI = new XMLSerializer().serializeToString(result)
+                setTablatureMEI(tabMEI)
 
-            // once the tablature MEI is set, make sure to have 
-            // a CMN transcription immediately available
-            setCmnMEI(tab2cmn(tabMEI))
+                // once the tablature MEI is set, make sure to have 
+                // a CMN transcription immediately available
+                setCmnMEI(tab2cmn(tabMEI))
+            }
         }
         fetchMEI()
-    }, [meiUrl])
-
-    useEffect(() => console.log('cmn=', cmnMEI), [cmnMEI])
-    useEffect(() => console.log('cmn=', tablatureMEI), [tablatureMEI])
+    }, [meiUrl, session.fetch])
 
     return (
         <div style={{ margin: '1rem' }}>
@@ -52,7 +58,7 @@ export const ScoreSurface = ({ meiUrl, onReady }: ScoreSurfaceProps) => {
                     size='small'
                     value={displayMode}
                     onChange={(_, newMode) => setDispayMode(newMode as DisplayMode)}>
-                    <ToggleButton value='tablature' key='tablature'>
+                    <ToggleButton value='tablature' key='tablature' disabled={tablatureMEI.length === 0}>
                         Tablature
                     </ToggleButton>
                     <ToggleButton value='staff-notation' key='staff-notation'>
