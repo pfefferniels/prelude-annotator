@@ -1,8 +1,10 @@
 import { CombinedDataProvider, LoginButton, LogoutButton, Text, useSession } from "@inrupt/solid-ui-react";
 import { FOAF } from "@inrupt/vocab-common-rdf";
-import { Login, Logout } from "@mui/icons-material";
+import { ChangeCircleOutlined, Login, Logout } from "@mui/icons-material";
 import { Button, CircularProgress, IconButton, Paper, Tooltip } from "@mui/material";
 import { Stack } from "@mui/system";
+import { useState } from "react";
+import { PodProviderDialog } from "./PodProviderDialog";
 
 function Profile() {
     const { session, sessionRequestInProgress } = useSession()
@@ -21,6 +23,8 @@ function Profile() {
 
 export function LoginForm() {
     const { session, sessionRequestInProgress } = useSession();
+    const [oidcIssuer, setOidcIssuer] = useState('https://inrupt.net')
+    const [podProviderDialogOpen, setPodProviderDialogOpen] = useState(false)
 
     return (
         <>
@@ -38,8 +42,13 @@ export function LoginForm() {
                     </Stack>
                 </Paper> :
                 <>
+                    <Tooltip title='Change Pod Provider'>
+                        <IconButton onClick={() => setPodProviderDialogOpen(true)}>
+                            <ChangeCircleOutlined />
+                        </IconButton>
+                    </Tooltip>
                     <LoginButton
-                        oidcIssuer='https://inrupt.net'
+                        oidcIssuer={oidcIssuer}
                         redirectUrl={window.location.href}
                         authOptions={{ clientName: 'Preludes Annotator' }}>
                         <Tooltip title='Login'>
@@ -48,6 +57,13 @@ export function LoginForm() {
                             </IconButton>
                         </Tooltip>
                     </LoginButton>
+                    <PodProviderDialog
+                        oidcIssuer={oidcIssuer}
+                        open={podProviderDialogOpen}
+                        onClose={(issuer) => {
+                            setPodProviderDialogOpen(false)
+                            setOidcIssuer(issuer)
+                        }} />
                 </>
             }
         </>
