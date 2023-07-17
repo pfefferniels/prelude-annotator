@@ -45,7 +45,7 @@ export const SelectionHull = ({
         setHulls(
             refs
                 .reduce((result, ref) => {
-                    const el = document.querySelector(`[data-id='${ref}']`) as SVGGElement
+                    const el = document.querySelector(`[data-id='${ref}']`)?.querySelector('.notehead') as SVGGElement
                     if (!el) return result
 
                     const systemId = el.closest('.system')?.getAttribute('data-id') || ''
